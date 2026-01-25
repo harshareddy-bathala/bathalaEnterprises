@@ -1,12 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
 import { BriefcaseBusiness, ShieldCheck, Sparkles, Wrench } from "lucide-react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import type { Service } from "@/lib/supabase-queries";
-import Modal from "@/components/modal";
 
 const iconMap = {
   ShieldCheck,
@@ -16,7 +15,6 @@ const iconMap = {
 };
 
 export default function ServicesGrid({ services }: { services: Service[] }) {
-  const [showModal, setShowModal] = useState(false);
   const displayedServices = services.slice(0, 6);
   const hasMore = services.length > 6;
 
@@ -68,37 +66,44 @@ export default function ServicesGrid({ services }: { services: Service[] }) {
           ))}
         </div>
 
+        {/* Empty State */}
+        {services.length === 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center py-16"
+          >
+            <div className="glass-panel rounded-2xl p-8 max-w-md mx-auto">
+              <h3 className="text-xl font-bold text-slate-900 mb-2">Services Coming Soon</h3>
+              <p className="text-slateInk mb-4">
+                We're preparing our comprehensive service offerings. Check back soon for updates!
+              </p>
+              <Button asChild variant="primary">
+                <Link href="/contact">Contact Us</Link>
+              </Button>
+            </div>
+          </motion.div>
+        )}
+
         {/* View More Button */}
-        {hasMore && (
+        {hasMore && services.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
             className="mt-8 flex justify-center"
           >
-            <Button
-              onClick={() => setShowModal(true)}
-              size="lg"
-              className="bg-gradient-to-r from-royal to-purple hover:shadow-glow"
-            >
-              View All Services
-            </Button>
+            <Link href="/all-services">
+              <Button
+                size="lg"
+                className="bg-gradient-to-r from-royal to-purple hover:shadow-glow"
+              >
+                View All Services
+              </Button>
+            </Link>
           </motion.div>
         )}
       </section>
-
-      {/* Modal for All Services */}
-      <Modal
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
-        title="All Services"
-      >
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {services.map((service, idx) => (
-            <ServiceCard key={service.id} service={service} idx={idx} />
-          ))}
-        </div>
-      </Modal>
     </>
   );
 }

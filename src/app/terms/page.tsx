@@ -1,8 +1,9 @@
 import { Metadata } from "next";
+import { siteConfig } from "@/lib/site-config";
 
 export const metadata: Metadata = {
   title: "Terms of Service",
-  description: "Terms of Service for Bathala Enterprises - Terms and conditions for using our services.",
+  description: `Terms of Service for ${siteConfig.businessName} - Terms and conditions for using our services.`,
 };
 
 export default function TermsPage() {
@@ -90,9 +91,9 @@ export default function TermsPage() {
             For questions about these Terms of Service, please contact us at:
           </p>
           <p className="text-slateInk">
-            <strong>Email:</strong> legal@bathalaenterprises.com<br />
-            <strong>Phone:</strong> +91 98765 43210<br />
-            <strong>Address:</strong> Chikkapatre Main Road, 5th Cross, Basapura, Bangalore 560100
+            <strong>Email:</strong> {siteConfig.contact.legalEmail}<br />
+            <strong>Phone:</strong> {siteConfig.contact.phoneDisplay}<br />
+            <strong>Address:</strong> {siteConfig.address.full}
           </p>
         </section>
       </div>

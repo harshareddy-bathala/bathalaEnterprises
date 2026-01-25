@@ -13,10 +13,10 @@ const contextAwareFAQ: Record<string, string> = {
   leasing: "We offer flexible lease terms from 12 to 60 months with fit-out support across Bangalore.",
   pricing: "Pricing is tailored to your needs. Submit the contact form and we will send a proposal within 24 hours.",
   bangalore: "We operate across all major areas of Bangalore including Whitefield, Indiranagar, Koramangala, HSR Layout, and more.",
-  location: "Our head office is located at Chikkapatre Main Road, 5th Cross, Basapura, Bangalore 560100.",
-  properties: "We have over 500+ premium properties available for sale, lease, and rent across Bangalore.",
-  services: "Our services include property management, advisory, maintenance, and security solutions.",
-  contact: "You can reach us at +91 98765 43210 or visit our website contact form for inquiries.",
+  location: "Please visit our Contact page or check the footer for our office address and contact details.",
+  properties: "Browse our Properties page to see our available properties for sale, lease, and rent across Bangalore.",
+  services: "Our services include property management, advisory, maintenance, and security solutions. Visit our Services page for details.",
+  contact: "Please use our contact form or visit the Contact page for inquiries. We typically respond within 24 hours.",
   default: "Thank you for reaching out to Bathala Enterprises! How can I assist you with your real estate needs today?"
 };
 

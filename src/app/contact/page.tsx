@@ -1,4 +1,5 @@
 import ContactForm from "@/components/contact-form";
+import { siteConfig } from "@/lib/site-config";
 
 export const metadata = {
   title: "Contact | Bathala Enterprises"
@@ -17,11 +18,11 @@ export default function ContactPage() {
         <div className="glass-panel rounded-3xl p-6 shadow-xl">
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-royal">Visit</p>
           <h3 className="text-xl font-black text-slate-900">Head office</h3>
-          <p className="text-slateInk">Chikkapatre Main Road, 5th Cross, Basapura, Bangalore 560100</p>
+          <p className="text-slateInk">{siteConfig.address.full}</p>
           <div className="mt-4 overflow-hidden rounded-2xl">
             <iframe
               title="Bathala HQ"
-              src="https://maps.google.com/maps?q=basapura,bangalore&t=&z=15&ie=UTF8&iwloc=&output=embed"
+              src={siteConfig.mapEmbedUrl}
               className="h-72 w-full border-0"
               loading="lazy"
             />

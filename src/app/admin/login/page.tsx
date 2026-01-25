@@ -36,9 +36,6 @@ export default function AdminLoginPage() {
     try {
       // Authenticate with Supabase
       await signInAdmin(values.email, values.password);
-      // Store auth in localStorage
-      localStorage.setItem("admin_auth", "true");
-      localStorage.setItem("admin_email", values.email);
       setStatus("success");
       
       // Redirect to dashboard

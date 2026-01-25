@@ -61,6 +61,10 @@ Run the SQL from `SUPABASE_SETUP.sql` in your Supabase SQL Editor:
 3. Paste the contents of `SUPABASE_SETUP.sql`
 4. Click **Run**
 
+**Important:** This creates empty tables with no sample data. All properties and services must be added by admin through the admin console after deployment.
+
+If you have existing sample data to remove, run `CLEANUP_DATA.sql` first.
+
 ### Step 3: Configure Row Level Security (RLS)
 
 The SQL file already includes RLS policies. Verify they're active:

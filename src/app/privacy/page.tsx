@@ -1,8 +1,9 @@
 import { Metadata } from "next";
+import { siteConfig } from "@/lib/site-config";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
-  description: "Privacy Policy for Bathala Enterprises - How we collect, use, and protect your personal information.",
+  description: `Privacy Policy for ${siteConfig.businessName} - How we collect, use, and protect your personal information.`,
 };
 
 export default function PrivacyPage() {
@@ -73,9 +74,9 @@ export default function PrivacyPage() {
             If you have any questions about this Privacy Policy, please contact us at:
           </p>
           <p className="text-slateInk">
-            <strong>Email:</strong> info@bathalaenterprises.com<br />
-            <strong>Phone:</strong> +91 98765 43210<br />
-            <strong>Address:</strong> Chikkapatre Main Road, 5th Cross, Basapura, Bangalore 560100
+            <strong>Email:</strong> {siteConfig.contact.email}<br />
+            <strong>Phone:</strong> {siteConfig.contact.phoneDisplay}<br />
+            <strong>Address:</strong> {siteConfig.address.full}
           </p>
         </section>
       </div>

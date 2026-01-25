@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Phone, Mail, MapPin, Clock } from "lucide-react";
+import { siteConfig } from "@/lib/site-config";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -9,11 +10,11 @@ export default function Footer() {
       <div className="container-wide py-12">
         <div className="grid gap-8 mb-8 md:grid-cols-4">
           <div className="space-y-4">
-            <p className="text-lg font-black text-royal uppercase tracking-wide">Bathala Enterprises</p>
-            <p className="text-sm text-slateInk">Building trust, one property at a time. Your trusted partner for premium real estate services in Bangalore.</p>
+            <p className="text-lg font-black text-royal uppercase tracking-wide">{siteConfig.businessName}</p>
+            <p className="text-sm text-slateInk">{siteConfig.tagline} Your trusted partner for premium real estate services in Bangalore.</p>
             <div className="flex items-center gap-2 text-sm text-slateInk">
               <Clock className="h-4 w-4 text-royal" />
-              <span>Mon - Sat: 9:00 AM - 7:00 PM</span>
+              <span>{siteConfig.hours.weekdays}</span>
             </div>
           </div>
           <div>
@@ -36,17 +37,17 @@ export default function Footer() {
           <div>
             <p className="text-sm font-semibold text-slate-900 mb-3 uppercase tracking-wide">Contact Info</p>
             <div className="space-y-3 text-sm">
-              <a href="tel:+919876543210" className="flex items-center gap-2 text-slateInk hover:text-royal transition">
+              <a href={`tel:${siteConfig.contact.phone.replace(/\s/g, '')}`} className="flex items-center gap-2 text-slateInk hover:text-royal transition">
                 <Phone className="h-4 w-4" />
-                +91 98765 43210
+                {siteConfig.contact.phoneDisplay}
               </a>
-              <a href="mailto:info@bathalaenterprises.com" className="flex items-center gap-2 text-slateInk hover:text-royal transition">
+              <a href={`mailto:${siteConfig.contact.email}`} className="flex items-center gap-2 text-slateInk hover:text-royal transition">
                 <Mail className="h-4 w-4" />
-                info@bathalaenterprises.com
+                {siteConfig.contact.email}
               </a>
               <div className="flex items-start gap-2 text-slateInk">
                 <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                <span>Chikkapatre Main Road, 5th Cross, Basapura, Bangalore 560100</span>
+                <span>{siteConfig.address.full}</span>
               </div>
             </div>
           </div>
@@ -66,7 +67,7 @@ export default function Footer() {
           </div>
         </div>
         <div className="border-t border-slate-200/60 pt-8 flex flex-col sm:flex-row sm:items-center sm:justify-between text-sm text-slateInk">
-          <p>© {currentYear} Bathala Enterprises. All rights reserved.</p>
+          <p>© {currentYear} {siteConfig.businessName}. All rights reserved.</p>
           <p className="mt-4 sm:mt-0">Made with ❤️ in Bangalore, India</p>
         </div>
       </div>

@@ -54,11 +54,11 @@ export default function Hero() {
           className="flex gap-6 text-sm text-slateInk"
         >
           <div>
-            <p className="font-bold text-slate-900">15+ years</p>
+            <p className="font-bold text-slate-900">Expert Team</p>
             <p>Industry leadership</p>
           </div>
           <div>
-            <p className="font-bold text-slate-900">500+ Properties</p>
+            <p className="font-bold text-slate-900">Premium Properties</p>
             <p>Across Bangalore</p>
           </div>
           <div>

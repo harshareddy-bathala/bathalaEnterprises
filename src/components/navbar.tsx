@@ -16,9 +16,9 @@ type NavbarProps = {
 
 const links = [
   { href: "/", label: "Home" },
-  { href: "#services", label: "Services" },
+  { href: "/all-services", label: "Services" },
   { href: "/all-properties", label: "Properties" },
-  { href: "#contact", label: "Contact" }
+  { href: "/contact", label: "Contact" }
 ];
 
 export default function Navbar({ brandFont, scriptFont }: NavbarProps) {
@@ -40,25 +40,21 @@ export default function Navbar({ brandFont, scriptFont }: NavbarProps) {
           </Link>
 
           <nav className="hidden items-center gap-6 md:flex">
-            {links.map((link) => {
-              const isExternalLink = link.href.startsWith("#");
-              const Component = isExternalLink ? "a" : Link;
-              return (
-                <Component
-                  key={link.href}
-                  href={link.href}
-                  className="text-sm font-semibold text-slate-700 hover:text-royal transition-colors"
-                >
-                  {link.label}
-                </Component>
-              );
-            })}
-            <a
-              href="#contact"
+            {links.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="text-sm font-semibold text-slate-700 hover:text-royal transition-colors"
+              >
+                {link.label}
+              </Link>
+            ))}
+            <Link
+              href="/contact"
               className="rounded-full bg-amberGlow px-4 py-2 text-sm font-semibold text-slate-900 shadow-lg shadow-amberGlow/30 hover:bg-amber-400 transition-colors"
             >
               Get in touch
-            </a>
+            </Link>
           </nav>
 
           <button
@@ -72,27 +68,23 @@ export default function Navbar({ brandFont, scriptFont }: NavbarProps) {
 
         {open && (
           <div className="glass-panel mt-2 flex flex-col gap-2 rounded-2xl px-4 py-3 md:hidden">
-            {links.map((link) => {
-              const isExternalLink = link.href.startsWith("#");
-              const Component = isExternalLink ? "a" : Link;
-              return (
-                <Component
-                  key={link.href}
-                  href={link.href}
-                  className="block rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-white/70"
-                  onClick={handleLinkClick}
-                >
-                  {link.label}
-                </Component>
-              );
-            })}
-            <a
-              href="#contact"
+            {links.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="block rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-white/70"
+                onClick={handleLinkClick}
+              >
+                {link.label}
+              </Link>
+            ))}
+            <Link
+              href="/contact"
               className="block rounded-lg bg-amberGlow px-3 py-2 text-center text-sm font-semibold text-slate-900 hover:bg-amber-400"
               onClick={handleLinkClick}
             >
               Get in touch
-            </a>
+            </Link>
           </div>
         )}
       </div>

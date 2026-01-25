@@ -96,8 +96,46 @@ export default function PropertiesCarousel({ properties }: { properties: Propert
           ))}
         </div>
 
+        {/* Empty State */}
+        {properties.length === 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center py-16"
+          >
+            <div className="glass-panel rounded-2xl p-8 max-w-md mx-auto">
+              <h3 className="text-xl font-bold text-slate-900 mb-2">No Properties Available</h3>
+              <p className="text-slateInk mb-4">
+                We're currently updating our property portfolio. New listings will be added soon!
+              </p>
+              <Button asChild variant="primary">
+                <Link href="/contact">Get Notified</Link>
+              </Button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Filtered Empty State */}
+        {properties.length > 0 && displayedProperties.length === 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center py-12"
+          >
+            <p className="text-slateInk mb-4">
+              No properties found for the selected filter.
+            </p>
+            <Button
+              variant="ghost"
+              onClick={() => setActive(undefined)}
+            >
+              Clear Filter
+            </Button>
+          </motion.div>
+        )}
+
         {/* View More Button */}
-        {hasMore && (
+        {hasMore && properties.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

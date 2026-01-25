@@ -82,8 +82,13 @@ GOOGLE_SITE_VERIFICATION=your-verification-code
 ### Database Setup
 
 1. Create a Supabase project
-2. Run `SUPABASE_SETUP.sql` in the SQL Editor
-3. Enable Row Level Security (RLS)
+2. Run `SUPABASE_SETUP.sql` in the SQL Editor (creates empty tables)
+3. Create an admin user and grant admin privileges (see ADMIN_GUIDE.md)
+4. Add properties and services through the admin console
+
+**Note:** The database starts completely empty. All content must be added by admins through the admin dashboard.
+
+If you have existing sample data to remove, run `CLEANUP_DATA.sql` first.
 
 ## 📁 Project Structure
 
@@ -124,7 +129,8 @@ npm run typecheck # Run TypeScript check
 |----------|-------------|
 | [PRODUCTION_DEPLOYMENT.md](./PRODUCTION_DEPLOYMENT.md) | Complete deployment guide with Vercel, domain, and SEO setup |
 | [ADMIN_GUIDE.md](./ADMIN_GUIDE.md) | Admin setup and content management guide |
-| [SUPABASE_SETUP.sql](./SUPABASE_SETUP.sql) | Database schema and sample data |
+| [SUPABASE_SETUP.sql](./SUPABASE_SETUP.sql) | Database schema with empty tables and RLS policies |
+| [CLEANUP_DATA.sql](./CLEANUP_DATA.sql) | Script to remove existing sample/mock data |
 
 ## 🔒 Security Features
 

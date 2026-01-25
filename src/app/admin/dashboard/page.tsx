@@ -75,27 +75,25 @@ export default function DashboardPage() {
   // Check authentication and load data
   useEffect(() => {
     const checkAuth = async () => {
-      // Check Supabase session first
-      if (supabase) {
-        const { data } = await supabase.auth.getSession();
-        if (!data.session) {
-          router.push("/admin/login");
-          return;
-        }
-        // Verify user has admin role
-        const { data: userData } = await supabase.auth.getUser();
-        if (!userData.user?.user_metadata?.is_admin) {
-          router.push("/admin/login");
-          return;
-        }
-      } else {
-        // Fallback to localStorage for demo mode
-        const isAuth = localStorage.getItem("admin_auth");
-        if (!isAuth) {
-          router.push("/admin/login");
-          return;
-        }
+      // Require Supabase authentication
+      if (!supabase) {
+        console.error("Supabase not configured. Admin access requires proper authentication.");
+        router.push("/admin/login");
+        return;
       }
+
+      const { data } = await supabase.auth.getSession();
+      if (!data.session) {
+        router.push("/admin/login");
+        return;
+      }
+      // Verify user has admin role
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user?.user_metadata?.is_admin) {
+        router.push("/admin/login");
+        return;
+      }
+      
       setIsAuthenticated(true);
       await loadData();
     };
@@ -198,8 +196,6 @@ export default function DashboardPage() {
     if (supabase) {
       await supabase.auth.signOut();
     }
-    localStorage.removeItem("admin_auth");
-    localStorage.removeItem("admin_email");
     router.push("/admin/login");
   };
 

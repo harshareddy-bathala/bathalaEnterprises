@@ -124,37 +124,17 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
           {/* Description */}
           <div className="space-y-4">
             <h2 className="text-2xl font-black text-slate-900">About This Property</h2>
-            <p className="text-slateInk leading-relaxed">
-              This premium {property.type} property is located in {property.location}, one of Bangalore's most desirable neighborhoods. 
-              Featuring {property.bedrooms} spacious bedrooms and {formatNumber(property.sqft)} square feet of modern living space, 
-              this property is perfect for discerning buyers and renters looking for quality and convenience.
-            </p>
-            <p className="text-slateInk leading-relaxed">
-              The property includes modern amenities, excellent connectivity, and is in close proximity to shopping malls, 
-              restaurants, and business districts. An ideal investment for long-term returns or immediate occupancy.
-            </p>
-          </div>
-
-          {/* Amenities */}
-          <div className="space-y-4">
-            <h2 className="text-2xl font-black text-slate-900">Amenities</h2>
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                "Modern Kitchen",
-                "Air Conditioning",
-                "Parking",
-                "24/7 Security",
-                "Gym Facility",
-                "Swimming Pool",
-                "Power Backup",
-                "Water Supply"
-              ].map((amenity) => (
-                <div key={amenity} className="flex items-center gap-2 p-3 rounded-lg bg-white/60 border border-white/50">
-                  <div className="h-2 w-2 rounded-full bg-gradient-to-r from-royal to-purple" />
-                  <span className="text-slateInk font-medium">{amenity}</span>
-                </div>
-              ))}
-            </div>
+            {property.description ? (
+              <p className="text-slateInk leading-relaxed whitespace-pre-line">
+                {property.description}
+              </p>
+            ) : (
+              <p className="text-slateInk leading-relaxed">
+                This premium {property.type.toLowerCase()} property is located in {property.location}. 
+                Featuring {property.bedrooms} bedroom{property.bedrooms !== 1 ? 's' : ''} and {formatNumber(property.sqft)} square feet of living space.
+                Contact us for more details about this property.
+              </p>
+            )}
           </div>
         </div>
 
@@ -195,10 +175,10 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
                   variant="secondary"
                   className="w-full gap-2"
                 >
-                  <a href="tel:+919876543210">
+                  <Link href="/contact">
                     <Phone className="h-4 w-4" />
-                    Call Agent
-                  </a>
+                    Contact Us
+                  </Link>
                 </Button>
               </div>
             </CardContent>
