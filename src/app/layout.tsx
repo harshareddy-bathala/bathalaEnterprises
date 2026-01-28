@@ -63,11 +63,11 @@ export const metadata: Metadata = {
     },
   },
   icons: {
-    icon: "/favicon.ico",
-    shortcut: "/favicon-16x16.png",
-    apple: "/apple-touch-icon.png",
+    icon: new URL("../favicon_io/favicon.ico", import.meta.url).toString(),
+    shortcut: new URL("../favicon_io/favicon-16x16.png", import.meta.url).toString(),
+    apple: new URL("../favicon_io/apple-touch-icon.png", import.meta.url).toString(),
   },
-  manifest: "/site.webmanifest",
+  manifest: new URL("../favicon_io/site.webmanifest", import.meta.url).toString(),
   verification: {
     google: process.env.GOOGLE_SITE_VERIFICATION,
   },

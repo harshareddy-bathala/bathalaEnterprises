@@ -17,8 +17,7 @@ type NavbarProps = {
 const links = [
   { href: "/", label: "Home" },
   { href: "/all-services", label: "Services" },
-  { href: "/all-properties", label: "Properties" },
-  { href: "/contact", label: "Contact" }
+  { href: "/all-properties", label: "Properties" }
 ];
 
 export default function Navbar({ brandFont, scriptFont }: NavbarProps) {

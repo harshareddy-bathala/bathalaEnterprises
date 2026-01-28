@@ -68,7 +68,6 @@ export default function Footer() {
         </div>
         <div className="border-t border-slate-200/60 pt-8 flex flex-col sm:flex-row sm:items-center sm:justify-between text-sm text-slateInk">
           <p>© {currentYear} {siteConfig.businessName}. All rights reserved.</p>
-          <p className="mt-4 sm:mt-0">Made with ❤️ in Bangalore, India</p>
         </div>
       </div>
     </footer>

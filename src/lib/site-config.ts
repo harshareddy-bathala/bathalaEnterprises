@@ -12,21 +12,21 @@ export const siteConfig = {
   
   // Contact Information - UPDATE THESE FOR PRODUCTION
   contact: {
-    phone: "+91 98765 43210",
-    phoneDisplay: "+91 98765 43210",
-    email: "info@bathalaenterprises.com",
-    legalEmail: "legal@bathalaenterprises.com",
+    phone: "+91 97410 00396",
+    phoneDisplay: "+91 97410 00396",
+    email: "bathalaenterprises@gmail.com",
+    legalEmail: "bathalaenterprises@gmail.com",
   },
   
   // Address - UPDATE FOR PRODUCTION
   address: {
-    street: "Chikkapatre Main Road, 5th Cross",
-    area: "Basapura",
-    city: "Bangalore",
+    street: "VJ2X+PV3, Green House Layout",
+    area: "Chikkathoguru, Electronic City",
+    city: "Bengaluru",
     state: "Karnataka",
     pincode: "560100",
     country: "India",
-    full: "Chikkapatre Main Road, 5th Cross, Basapura, Bangalore 560100",
+    full: "BATHALA ENTERPRISES VJ2X+PV3, Green House Layout, Chikkathoguru, Electronic City, Bengaluru, Karnataka 560100",
   },
   
   // Business Hours
@@ -44,7 +44,7 @@ export const siteConfig = {
   },
   
   // Map embed URL for contact page
-  mapEmbedUrl: "https://maps.google.com/maps?q=basapura,bangalore&t=&z=15&ie=UTF8&iwloc=&output=embed",
+  mapEmbedUrl: "https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d3889.8678967463497!2d77.6471197!3d12.8518078!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bae6dba0005a597%3A0x969fb3e583ff1adb!2sBathala%20Enterprises!5e0!3m2!1sen!2sin!4v1769447957833!5m2!1sen!2sin",
 } as const;
 
 export type SiteConfig = typeof siteConfig;
