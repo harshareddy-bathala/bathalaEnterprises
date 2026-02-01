@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { BriefcaseBusiness, ShieldCheck, Sparkles, Wrench } from "lucide-react";
+import { BriefcaseBusiness, ShieldCheck, Sparkles, Wrench, Home, Building, Key, Users, FileText, Landmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Service } from "@/lib/supabase-queries";
@@ -13,7 +13,13 @@ const iconMap = {
   ShieldCheck,
   Wrench,
   Sparkles,
-  BriefcaseBusiness
+  BriefcaseBusiness,
+  Home,
+  Building,
+  Key,
+  Users,
+  FileText,
+  Landmark
 };
 
 export default function AllServicesPage() {

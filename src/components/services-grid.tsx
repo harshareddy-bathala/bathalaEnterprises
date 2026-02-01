@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { BriefcaseBusiness, ShieldCheck, Sparkles, Wrench } from "lucide-react";
+import { BriefcaseBusiness, ShieldCheck, Sparkles, Wrench, Home, Building, Key, Users, FileText, Landmark } from "lucide-react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,13 @@ const iconMap = {
   ShieldCheck,
   Wrench,
   Sparkles,
-  BriefcaseBusiness
+  BriefcaseBusiness,
+  Home,
+  Building,
+  Key,
+  Users,
+  FileText,
+  Landmark
 };
 
 export default function ServicesGrid({ services }: { services: Service[] }) {

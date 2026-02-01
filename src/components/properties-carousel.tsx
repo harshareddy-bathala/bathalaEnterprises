@@ -37,7 +37,7 @@ export default function PropertiesCarousel({ properties }: { properties: Propert
         <Card className="group h-full overflow-hidden border border-white/70 transition-all duration-300 cursor-pointer hover:shadow-glow hover:border-purple/50">
           <div className="relative aspect-[4/3] overflow-hidden">
             <img
-              src={property.image_url}
+              src={property.thumbnail_url || property.image_url}
               alt={property.title}
               className="h-full w-full object-cover transition-transform group-hover:scale-105"
             />
@@ -55,7 +55,7 @@ export default function PropertiesCarousel({ properties }: { properties: Propert
               <span>{property.bedrooms} beds</span>
               <span>{formatNumber(property.sqft)} sqft</span>
               <span className="font-semibold text-slate-900">
-                {property.type === "Sale" ? "₹" : "₹/mo"} {formatNumber(property.price)}
+                ₹{formatNumber(property.price)}{property.type === "Rent" ? "/mo" : property.type === "Lease" ? "/yr" : ""}
               </span>
             </div>
             <Button variant="secondary" className="w-full">

@@ -10,6 +10,8 @@ export type Property = {
   type: "Rent" | "Lease" | "Sale";
   description?: string;
   image_url?: string;
+  thumbnail_url?: string;
+  gallery_images?: string[];
 };
 
 export type Service = {
@@ -52,6 +54,8 @@ export async function getPropertiesFromSupabase(): Promise<Property[]> {
       type: p.type,
       description: p.description,
       image_url: p.image_url,
+      thumbnail_url: p.thumbnail_url || p.image_url,
+      gallery_images: p.gallery_images || [],
     }));
   } catch (error: any) {
     if (error.message?.includes("Connect Timeout") || error.message?.includes("ECONNREFUSED")) {
@@ -136,6 +140,8 @@ export async function getPropertyById(id: string): Promise<Property | null> {
       type: data.type,
       description: data.description,
       image_url: data.image_url,
+      thumbnail_url: data.thumbnail_url || data.image_url,
+      gallery_images: data.gallery_images || [],
     };
   } catch (error) {
     console.error("Failed to fetch property:", error);

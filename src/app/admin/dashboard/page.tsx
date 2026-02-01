@@ -9,8 +9,22 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Edit, Trash2, LogOut, X, Save, AlertCircle, CheckCircle, Loader2 } from "lucide-react";
+import { Plus, Edit, Trash2, LogOut, X, Save, AlertCircle, CheckCircle, Loader2, ShieldCheck, Wrench, Sparkles, BriefcaseBusiness, Home, Building, Key, Users, FileText, Landmark, Upload, Image as ImageIcon } from "lucide-react";
 import { supabase } from "@/lib/supabase-client";
+
+// Icon options for services
+const ICON_OPTIONS = [
+  { name: "ShieldCheck", label: "Shield Check", icon: ShieldCheck },
+  { name: "Wrench", label: "Maintenance", icon: Wrench },
+  { name: "Sparkles", label: "Premium", icon: Sparkles },
+  { name: "BriefcaseBusiness", label: "Business", icon: BriefcaseBusiness },
+  { name: "Home", label: "Home", icon: Home },
+  { name: "Building", label: "Building", icon: Building },
+  { name: "Key", label: "Key", icon: Key },
+  { name: "Users", label: "Users", icon: Users },
+  { name: "FileText", label: "Documents", icon: FileText },
+  { name: "Landmark", label: "Landmark", icon: Landmark },
+];
 
 type Property = {
   id: string;
@@ -22,6 +36,8 @@ type Property = {
   type: "Rent" | "Lease" | "Sale";
   description: string;
   image_url: string;
+  thumbnail_url: string;
+  gallery_images: string[];
 };
 
 type Service = {
@@ -43,6 +59,8 @@ export default function DashboardPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [notification, setNotification] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<string>("");
 
   // Form state
   const [formData, setFormData] = useState<{
@@ -54,6 +72,8 @@ export default function DashboardPage() {
     type: "Rent" | "Lease" | "Sale";
     description: string;
     image_url: string;
+    thumbnail_url: string;
+    gallery_images: string[];
   }>({
     title: "",
     location: "",
@@ -63,7 +83,11 @@ export default function DashboardPage() {
     type: "Rent",
     description: "",
     image_url: "",
+    thumbnail_url: "",
+    gallery_images: [],
   });
+
+  const [galleryInput, setGalleryInput] = useState("");
 
   const [serviceForm, setServiceForm] = useState({
     title: "",
@@ -138,6 +162,8 @@ export default function DashboardPage() {
           type: p.type,
           description: p.description,
           image_url: p.image_url,
+          thumbnail_url: p.thumbnail_url || p.image_url,
+          gallery_images: p.gallery_images || [],
         }))
       );
     } catch (error: any) {
@@ -192,6 +218,107 @@ export default function DashboardPage() {
     setTimeout(() => setNotification(null), 3000);
   };
 
+  // Upload image to Supabase Storage
+  const uploadImage = async (file: File, folder: string = "properties"): Promise<string | null> => {
+    if (!supabase) {
+      showNotification("error", "Supabase not initialized");
+      return null;
+    }
+
+    const fileExt = file.name.split('.').pop()?.toLowerCase();
+    const allowedTypes = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+    
+    if (!fileExt || !allowedTypes.includes(fileExt)) {
+      showNotification("error", "Invalid file type. Use JPG, PNG, WebP, or GIF.");
+      return null;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      showNotification("error", "File too large. Maximum size is 5MB.");
+      return null;
+    }
+
+    const fileName = `${folder}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+    try {
+      const { data, error } = await supabase.storage
+        .from('property-images')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (error) {
+        console.error("Upload error:", error);
+        if (error.message.includes("Bucket not found")) {
+          showNotification("error", "Storage bucket not configured. Run SUPABASE_ALTER_TABLE.sql first.");
+        } else {
+          showNotification("error", `Upload failed: ${error.message}`);
+        }
+        return null;
+      }
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('property-images')
+        .getPublicUrl(data.path);
+
+      return urlData.publicUrl;
+    } catch (error) {
+      console.error("Upload error:", error);
+      showNotification("error", "Failed to upload image");
+      return null;
+    }
+  };
+
+  // Handle thumbnail upload
+  const handleThumbnailUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    setUploadProgress("Uploading thumbnail...");
+
+    const url = await uploadImage(file, "thumbnails");
+    if (url) {
+      setFormData({ ...formData, thumbnail_url: url, image_url: url });
+      showNotification("success", "Thumbnail uploaded successfully");
+    }
+
+    setIsUploading(false);
+    setUploadProgress("");
+    e.target.value = ""; // Reset input
+  };
+
+  // Handle gallery images upload
+  const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setIsUploading(true);
+    const uploadedUrls: string[] = [];
+
+    for (let i = 0; i < files.length; i++) {
+      setUploadProgress(`Uploading image ${i + 1} of ${files.length}...`);
+      const url = await uploadImage(files[i], "gallery");
+      if (url) {
+        uploadedUrls.push(url);
+      }
+    }
+
+    if (uploadedUrls.length > 0) {
+      setFormData({
+        ...formData,
+        gallery_images: [...formData.gallery_images, ...uploadedUrls],
+      });
+      showNotification("success", `${uploadedUrls.length} image(s) uploaded successfully`);
+    }
+
+    setIsUploading(false);
+    setUploadProgress("");
+    e.target.value = ""; // Reset input
+  };
+
   const handleLogout = async () => {
     if (supabase) {
       await supabase.auth.signOut();
@@ -210,7 +337,10 @@ export default function DashboardPage() {
       type: "Rent",
       description: "",
       image_url: "",
+      thumbnail_url: "",
+      gallery_images: [],
     });
+    setGalleryInput("");
     setIsCreating(true);
   };
 
@@ -240,6 +370,8 @@ export default function DashboardPage() {
             type: formData.type,
             description: formData.description,
             image_url: formData.image_url,
+            thumbnail_url: formData.thumbnail_url || formData.image_url,
+            gallery_images: formData.gallery_images,
             updated_at: new Date().toISOString(),
           })
           .eq("id", editingId);
@@ -257,6 +389,8 @@ export default function DashboardPage() {
             type: formData.type,
             description: formData.description,
             image_url: formData.image_url,
+            thumbnail_url: formData.thumbnail_url || formData.image_url,
+            gallery_images: formData.gallery_images,
           },
         ]);
 
@@ -276,7 +410,10 @@ export default function DashboardPage() {
         type: "Rent",
         description: "",
         image_url: "",
+        thumbnail_url: "",
+        gallery_images: [],
       });
+      setGalleryInput("");
     } catch (error) {
       console.error("Error saving property:", error);
       showNotification("error", "Failed to save property");
@@ -295,7 +432,10 @@ export default function DashboardPage() {
       type: prop.type as "Rent" | "Lease" | "Sale",
       description: prop.description,
       image_url: prop.image_url,
+      thumbnail_url: prop.thumbnail_url || prop.image_url,
+      gallery_images: prop.gallery_images || [],
     });
+    setGalleryInput("");
     setEditingId(prop.id);
     setIsCreating(true);
   };
@@ -533,8 +673,37 @@ export default function DashboardPage() {
                         onChange={(e) =>
                           setFormData({ ...formData, location: e.target.value })
                         }
-                        placeholder="City, State"
+                        placeholder="e.g., Koramangala, Bangalore"
                       />
+                      <p className="text-xs text-slateInk mt-1">Enter area name for map preview below</p>
+                      
+                      {/* Map Preview */}
+                      {formData.location && (
+                        <div className="mt-3 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <Label className="text-xs">Map Preview</Label>
+                            <a
+                              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(formData.location + ', Bangalore')}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-royal hover:underline"
+                            >
+                              Open in Google Maps ↗
+                            </a>
+                          </div>
+                          <div className="rounded-lg overflow-hidden border border-slate-200 h-40">
+                            <iframe
+                              src={`https://maps.google.com/maps?q=${encodeURIComponent(formData.location)},bangalore&t=&z=15&ie=UTF8&iwloc=&output=embed`}
+                              className="w-full h-full border-0"
+                              loading="lazy"
+                              title="Location preview"
+                            />
+                          </div>
+                          <p className="text-xs text-amber-600">
+                            💡 If location is not accurate, try adding more details like &quot;Near [landmark]&quot; or full address
+                          </p>
+                        </div>
+                      )}
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
@@ -619,18 +788,104 @@ export default function DashboardPage() {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="image">Image URL</Label>
-                      <Input
-                        id="image"
-                        value={formData.image_url}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            image_url: e.target.value,
-                          })
-                        }
-                        placeholder="https://example.com/image.jpg"
-                      />
+                      <Label htmlFor="thumbnail">Thumbnail Image *</Label>
+                      <div className="mt-2 space-y-3">
+                        {/* Current thumbnail preview */}
+                        {formData.thumbnail_url && (
+                          <div className="relative inline-block">
+                            <img
+                              src={formData.thumbnail_url}
+                              alt="Thumbnail preview"
+                              className="h-24 w-32 object-cover rounded-lg border-2 border-slate-200"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='96'%3E%3Crect fill='%23e2e8f0' width='128' height='96'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%2394a3b8' font-size='12'%3ENo Image%3C/text%3E%3C/svg%3E";
+                              }}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setFormData({ ...formData, thumbnail_url: "", image_url: "" })}
+                              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </div>
+                        )}
+                        {/* Upload button */}
+                        <div className="flex items-center gap-3">
+                          <label className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 border-dashed cursor-pointer transition ${isUploading ? 'bg-slate-100 border-slate-300' : 'border-royal/50 hover:border-royal hover:bg-royal/5'}`}>
+                            <Upload className="h-4 w-4 text-royal" />
+                            <span className="text-sm font-medium text-royal">
+                              {isUploading ? uploadProgress : (formData.thumbnail_url ? "Change Image" : "Upload Thumbnail")}
+                            </span>
+                            <input
+                              type="file"
+                              accept="image/jpeg,image/png,image/webp,image/gif"
+                              onChange={handleThumbnailUpload}
+                              disabled={isUploading}
+                              className="hidden"
+                            />
+                          </label>
+                          {isUploading && <Loader2 className="h-4 w-4 animate-spin text-royal" />}
+                        </div>
+                        <p className="text-xs text-slateInk">Main image shown in property cards. Max 5MB (JPG, PNG, WebP)</p>
+                      </div>
+                    </div>
+                    <div>
+                      <Label htmlFor="gallery">Gallery Images</Label>
+                      <div className="mt-2 space-y-3">
+                        {/* Upload button */}
+                        <div className="flex items-center gap-3">
+                          <label className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 border-dashed cursor-pointer transition ${isUploading ? 'bg-slate-100 border-slate-300' : 'border-purple/50 hover:border-purple hover:bg-purple/5'}`}>
+                            <ImageIcon className="h-4 w-4 text-purple" />
+                            <span className="text-sm font-medium text-purple">
+                              {isUploading ? uploadProgress : "Add Gallery Images"}
+                            </span>
+                            <input
+                              type="file"
+                              accept="image/jpeg,image/png,image/webp,image/gif"
+                              multiple
+                              onChange={handleGalleryUpload}
+                              disabled={isUploading}
+                              className="hidden"
+                            />
+                          </label>
+                          {isUploading && <Loader2 className="h-4 w-4 animate-spin text-purple" />}
+                        </div>
+                        <p className="text-xs text-slateInk">Select multiple images for the gallery. Max 5MB each.</p>
+                        
+                        {/* Gallery preview */}
+                        {formData.gallery_images.length > 0 && (
+                          <div className="space-y-2">
+                            <p className="text-xs font-medium text-slate-700">Gallery ({formData.gallery_images.length} images):</p>
+                            <div className="flex flex-wrap gap-2">
+                              {formData.gallery_images.map((img, idx) => (
+                                <div key={idx} className="relative group">
+                                  <img
+                                    src={img}
+                                    alt={`Gallery ${idx + 1}`}
+                                    className="h-16 w-16 object-cover rounded-lg border"
+                                    onError={(e) => {
+                                      (e.target as HTMLImageElement).src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Crect fill='%23e2e8f0' width='64' height='64'/%3E%3C/svg%3E";
+                                    }}
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setFormData({
+                                        ...formData,
+                                        gallery_images: formData.gallery_images.filter((_, i) => i !== idx),
+                                      });
+                                    }}
+                                    className="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition shadow-sm"
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </>
                 ) : (
@@ -675,22 +930,37 @@ export default function DashboardPage() {
                             price_range: e.target.value,
                           })
                         }
-                        placeholder="e.g., $500 - $2000"
+                        placeholder="e.g., ₹500 - ₹2000"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="svc-icon">Icon (Emoji)</Label>
-                      <Input
-                        id="svc-icon"
-                        value={serviceForm.icon}
-                        onChange={(e) =>
-                          setServiceForm({
-                            ...serviceForm,
-                            icon: e.target.value,
-                          })
-                        }
-                        placeholder="🏠"
-                      />
+                      <Label htmlFor="svc-icon">Icon</Label>
+                      <div className="grid grid-cols-5 gap-2 mt-2">
+                        {ICON_OPTIONS.map((option) => {
+                          const IconComponent = option.icon;
+                          return (
+                            <button
+                              key={option.name}
+                              type="button"
+                              onClick={() =>
+                                setServiceForm({
+                                  ...serviceForm,
+                                  icon: option.name,
+                                })
+                              }
+                              className={`p-3 rounded-lg border-2 transition-all flex flex-col items-center gap-1 ${
+                                serviceForm.icon === option.name
+                                  ? "border-royal bg-royal/10"
+                                  : "border-slate-200 hover:border-slate-300"
+                              }`}
+                              title={option.label}
+                            >
+                              <IconComponent className="h-5 w-5 text-royal" />
+                              <span className="text-[10px] text-slate-600">{option.label}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
                   </>
                 )}
@@ -764,7 +1034,7 @@ export default function DashboardPage() {
                       </div>
                       <div className="flex items-center justify-between pt-2">
                         <span className="font-bold text-xl text-slate-900">
-                          ${formData.price.toLocaleString()}
+                          ₹{formData.price.toLocaleString('en-IN')}
                         </span>
                         <Badge className="bg-slate-200 text-slate-700">{formData.type}</Badge>
                       </div>
@@ -780,8 +1050,16 @@ export default function DashboardPage() {
                 <div className="flex flex-col gap-4">
                   <h3 className="font-semibold text-slate-900">Preview</h3>
                   <div className="rounded-xl border border-slate-200 bg-gradient-to-br from-white/80 to-purple/5 p-6 text-center space-y-3 h-fit">
-                    <div className="text-4xl">
-                      {serviceForm.icon || "🏠"}
+                    <div className="flex justify-center">
+                      {(() => {
+                        const IconOption = ICON_OPTIONS.find(opt => opt.name === serviceForm.icon);
+                        const IconComponent = IconOption?.icon || Sparkles;
+                        return (
+                          <div className="rounded-2xl bg-gradient-to-br from-royal/10 to-purple/10 p-4">
+                            <IconComponent className="h-8 w-8 text-royal" />
+                          </div>
+                        );
+                      })()}
                     </div>
                     <div>
                       <h3 className="font-bold text-lg text-slate-900">
@@ -863,7 +1141,7 @@ export default function DashboardPage() {
                   </div>
                   <div className="flex items-center justify-between pt-2">
                     <span className="font-bold text-slate-900">
-                      ${prop.price.toLocaleString()}
+                      ₹{prop.price.toLocaleString('en-IN')}
                     </span>
                   </div>
                   <div className="flex gap-2 pt-2">
@@ -927,45 +1205,53 @@ export default function DashboardPage() {
           </div>
 
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {services.map((svc) => (
-              <motion.div
-                key={svc.id}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="rounded-xl border border-slate-200 bg-gradient-to-br from-white/80 to-purple/5 p-6 text-center space-y-3 hover:shadow-lg transition"
-              >
-                <div className="text-4xl">{svc.icon}</div>
-                <div>
-                  <h3 className="font-bold text-slate-900">{svc.title}</h3>
-                  <p className="text-sm text-slateInk mt-2">
-                    {svc.description}
-                  </p>
-                </div>
-                {svc.price_range && (
-                  <p className="text-royal font-semibold">{svc.price_range}</p>
-                )}
-                <div className="flex gap-2 pt-2">
-                  <Button
-                    onClick={() => handleEditService(svc)}
-                    size="sm"
-                    variant="secondary"
-                    className="flex-1 gap-1"
-                  >
-                    <Edit className="h-3 w-3" />
-                    Edit
-                  </Button>
-                  <Button
-                    onClick={() => handleDeleteService(svc.id)}
-                    size="sm"
-                    variant="secondary"
-                    className="flex-1 gap-1 text-red-600 hover:bg-red-50"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                    Delete
-                  </Button>
-                </div>
-              </motion.div>
-            ))}
+            {services.map((svc) => {
+              const IconOption = ICON_OPTIONS.find(opt => opt.name === svc.icon);
+              const IconComponent = IconOption?.icon || Sparkles;
+              return (
+                <motion.div
+                  key={svc.id}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="rounded-xl border border-slate-200 bg-gradient-to-br from-white/80 to-purple/5 p-6 text-center space-y-3 hover:shadow-lg transition"
+                >
+                  <div className="flex justify-center">
+                    <div className="rounded-2xl bg-gradient-to-br from-royal/10 to-purple/10 p-3">
+                      <IconComponent className="h-6 w-6 text-royal" />
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-slate-900">{svc.title}</h3>
+                    <p className="text-sm text-slateInk mt-2">
+                      {svc.description}
+                    </p>
+                  </div>
+                  {svc.price_range && (
+                    <p className="text-royal font-semibold">{svc.price_range}</p>
+                  )}
+                  <div className="flex gap-2 pt-2">
+                    <Button
+                      onClick={() => handleEditService(svc)}
+                      size="sm"
+                      variant="secondary"
+                      className="flex-1 gap-1"
+                    >
+                      <Edit className="h-3 w-3" />
+                      Edit
+                    </Button>
+                    <Button
+                      onClick={() => handleDeleteService(svc.id)}
+                      size="sm"
+                      variant="secondary"
+                      className="flex-1 gap-1 text-red-600 hover:bg-red-50"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                      Delete
+                    </Button>
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
 
           {services.length === 0 && (

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowLeft, Bed, Maximize2, MapPin, Phone } from "lucide-react";
+import { ArrowLeft, Bed, Maximize2, MapPin, Phone, ChevronLeft, ChevronRight, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,11 @@ import type { Property } from "@/lib/supabase-queries";
 export default function PropertyDetailPage({ params }: { params: { id: string } }) {
   const [property, setProperty] = useState<Property | null>(null);
   const [loading, setLoading] = useState(true);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+
+  // Only gallery images for lightbox (exclude thumbnail)
+  const galleryImages = property?.gallery_images?.filter(Boolean) as string[] || [];
 
   useEffect(() => {
     const loadProperty = async () => {
@@ -22,6 +27,33 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
     };
     loadProperty();
   }, [params.id]);
+
+  const openLightbox = (index: number) => {
+    setLightboxIndex(index);
+    setLightboxOpen(true);
+  };
+
+  const closeLightbox = () => {
+    setLightboxOpen(false);
+  };
+
+  const nextImage = () => {
+    setLightboxIndex((prev) => (prev + 1) % galleryImages.length);
+  };
+
+  const prevImage = () => {
+    setLightboxIndex((prev) => (prev - 1 + galleryImages.length) % galleryImages.length);
+  };
+
+  // Generate contact URL with pre-filled property info
+  const getContactUrl = () => {
+    const params = new URLSearchParams({
+      property_id: property?.id || '',
+      property_title: property?.title || '',
+      property_type: property?.type || '',
+    });
+    return `/contact?${params.toString()}`;
+  };
 
   if (loading) {
     return (
@@ -55,7 +87,7 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
         </Link>
       </div>
 
-      {/* Hero Section */}
+      {/* Hero Section - Thumbnail (no click/hover effects) */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -63,7 +95,7 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
       >
         <div className="rounded-3xl overflow-hidden shadow-2xl shadow-purple/20">
           <img
-            src={property.image_url}
+            src={property.thumbnail_url || property.image_url}
             alt={property.title}
             className="w-full h-96 object-cover"
           />
@@ -95,7 +127,8 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
             <p className="text-sm text-slateInk mb-2">Price</p>
             <p className="text-4xl font-black text-slate-900">
               ₹{formatNumber(property.price)}
-              {property.type !== "Sale" && <span className="text-xl">/month</span>}
+              {property.type === "Rent" && <span className="text-xl">/month</span>}
+              {property.type === "Lease" && <span className="text-xl">/year</span>}
             </p>
           </div>
 
@@ -136,6 +169,31 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
               </p>
             )}
           </div>
+
+          {/* Image Gallery */}
+          {galleryImages.length > 0 && (
+            <div className="space-y-4">
+              <h2 className="text-2xl font-black text-slate-900">Photo Gallery</h2>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {galleryImages.map((img, idx) => (
+                  <motion.div
+                    key={idx}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: idx * 0.1 }}
+                    className="aspect-[4/3] rounded-xl overflow-hidden cursor-pointer group"
+                    onClick={() => openLightbox(idx)}
+                  >
+                    <img
+                      src={img}
+                      alt={`${property.title} - Image ${idx + 1}`}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                    />
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Sidebar */}
@@ -154,7 +212,7 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
               </div>
 
               <Button asChild size="lg" className="w-full" variant="primary">
-                <Link href="/contact">Request More Info</Link>
+                <Link href={getContactUrl()}>Request More Info</Link>
               </Button>
 
               <div className="space-y-3 pt-4 border-t border-white/50">
@@ -175,7 +233,7 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
                   variant="secondary"
                   className="w-full gap-2"
                 >
-                  <Link href="/contact">
+                  <Link href={getContactUrl()}>
                     <Phone className="h-4 w-4" />
                     Contact Us
                   </Link>
@@ -202,6 +260,55 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
           />
         </div>
       </motion.div>
+
+      {/* Lightbox Modal - Gallery images only */}
+      {lightboxOpen && galleryImages.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center"
+          onClick={closeLightbox}
+        >
+          <button
+            onClick={closeLightbox}
+            className="absolute top-4 right-4 text-white hover:text-gray-300 transition z-50"
+            aria-label="Close lightbox"
+          >
+            <X className="h-8 w-8" />
+          </button>
+
+          {galleryImages.length > 1 && (
+            <>
+              <button
+                onClick={(e) => { e.stopPropagation(); prevImage(); }}
+                className="absolute left-4 text-white hover:text-gray-300 transition z-50 p-2 rounded-full bg-black/30 hover:bg-black/50"
+                aria-label="Previous image"
+              >
+                <ChevronLeft className="h-8 w-8" />
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); nextImage(); }}
+                className="absolute right-4 text-white hover:text-gray-300 transition z-50 p-2 rounded-full bg-black/30 hover:bg-black/50"
+                aria-label="Next image"
+              >
+                <ChevronRight className="h-8 w-8" />
+              </button>
+            </>
+          )}
+
+          <div className="max-w-5xl max-h-[85vh] mx-4" onClick={(e) => e.stopPropagation()}>
+            <img
+              src={galleryImages[lightboxIndex]}
+              alt={`${property.title} - Image ${lightboxIndex + 1}`}
+              className="max-w-full max-h-[85vh] object-contain rounded-lg"
+            />
+            <p className="text-white text-center mt-4 text-sm">
+              {lightboxIndex + 1} / {galleryImages.length}
+            </p>
+          </div>
+        </motion.div>
+      )}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -29,8 +30,14 @@ const queryTypes = [
 ];
 
 export default function ContactForm() {
+  const searchParams = useSearchParams();
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error" | "rate-limited">("idle");
   const [errorMessage, setErrorMessage] = useState("");
+
+  // Get property info from URL params
+  const propertyId = searchParams.get('property_id');
+  const propertyTitle = searchParams.get('property_title');
+  const propertyType = searchParams.get('property_type');
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -38,11 +45,22 @@ export default function ContactForm() {
       name: "",
       email: "",
       phone: "",
-      query_type: "",
-      service_type: "",
-      message: ""
+      query_type: propertyId ? "properties" : "",
+      service_type: propertyId ? `${propertyType} - ${propertyTitle}` : "",
+      message: propertyId 
+        ? `I am interested in the property: ${propertyTitle} (ID: ${propertyId}). Please provide more details.`
+        : ""
     }
   });
+
+  // Update form when URL params change
+  useEffect(() => {
+    if (propertyId && propertyTitle) {
+      form.setValue('query_type', 'properties');
+      form.setValue('service_type', `${propertyType} - ${propertyTitle}`);
+      form.setValue('message', `I am interested in the property: ${propertyTitle} (ID: ${propertyId}). Please provide more details.`);
+    }
+  }, [propertyId, propertyTitle, propertyType, form]);
 
   const selectedQuery = form.watch("query_type");
 

@@ -22,6 +22,8 @@ export interface Property {
   price: number;
   type: PropertyType;
   image_url?: string;
+  thumbnail_url?: string;
+  gallery_images?: string[];
   description?: string;
   bedrooms: number;
   sqft: number;
