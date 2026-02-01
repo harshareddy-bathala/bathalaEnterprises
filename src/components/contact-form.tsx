@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { supabase } from "@/lib/supabase-client";
 import { sanitizeString, sanitizeEmail, checkRateLimit } from "@/lib/security";
 import { Loader2, CheckCircle, AlertCircle } from "lucide-react";
 
@@ -66,21 +65,20 @@ export default function ContactForm() {
         phone: values.phone ? sanitizeString(values.phone) : null,
         message: sanitizeString(values.message),
         service_type: sanitizeString(values.service_type),
-        query_type: sanitizeString(values.query_type),
-        status: "new" as const
+        query_type: sanitizeString(values.query_type)
       };
 
-      if (!supabase) {
-        console.info("Supabase not configured; contact form submission not persisted", sanitizedData);
-        form.reset();
-        setStatus("success");
-        setTimeout(() => setStatus("idle"), 5000);
-        return;
-      }
+      // Send email via API route
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(sanitizedData),
+      });
 
-      const { error } = await supabase.from("inquiries").insert(sanitizedData);
-      
-      if (error) throw error;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to submit inquiry');
+      }
 
       form.reset();
       setStatus("success");
