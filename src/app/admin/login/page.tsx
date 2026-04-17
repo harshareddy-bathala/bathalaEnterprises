@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -20,6 +20,7 @@ type FormValues = z.infer<typeof schema>;
 
 export default function AdminLoginPage() {
   const router = useRouter();
+  const pathname = usePathname();
   const [status, setStatus] = useState<"idle" | "loading" | "error" | "success">("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -28,6 +29,26 @@ export default function AdminLoginPage() {
     resolver: zodResolver(schema),
     defaultValues: { email: "", password: "" }
   });
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const hasSensitiveParams = params.has("email") || params.has("password");
+
+    if (!hasSensitiveParams) {
+      return;
+    }
+
+    params.delete("email");
+    params.delete("password");
+
+    const nextQuery = params.toString();
+    const nextUrl = nextQuery ? `${pathname}?${nextQuery}` : pathname;
+    window.history.replaceState({}, "", nextUrl);
+  }, [pathname]);
 
   const onSubmit = async (values: FormValues) => {
     setStatus("loading");
@@ -112,7 +133,7 @@ export default function AdminLoginPage() {
           <h2 className="headline-display mt-2 text-3xl leading-tight text-[var(--color-text-primary)] md:text-4xl">Secure Sign In</h2>
           <p className="mt-2 text-sm text-[var(--color-text-muted)]">Use your authorized Bathala admin credentials.</p>
 
-          <form onSubmit={form.handleSubmit(onSubmit)} className="mt-8 space-y-5">
+          <form method="post" onSubmit={form.handleSubmit(onSubmit)} className="mt-8 space-y-5">
             <div className="space-y-2">
               <Label htmlFor="email" className="text-[11px] tracking-[0.18em] text-[var(--color-slate-secondary)]">Email</Label>
               <Input
