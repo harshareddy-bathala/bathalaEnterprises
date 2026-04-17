@@ -4,7 +4,6 @@ import { NextResponse } from "next/server";
 function buildCsp(nonce: string) {
   const scriptSrc = [
     "'self'",
-    `'nonce-${nonce}'`,
     "'unsafe-inline'",
     "https://www.googletagmanager.com",
     "https://www.google-analytics.com",
@@ -17,7 +16,7 @@ function buildCsp(nonce: string) {
   return [
     "default-src 'self'",
     `script-src ${scriptSrc.join(" ")}`,
-    `style-src 'self' 'nonce-${nonce}' 'unsafe-inline' https://fonts.googleapis.com`,
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com data:",
     "img-src 'self' data: blob: https://images.unsplash.com https://*.supabase.co https://maps.google.com https://www.google.com",
     "frame-src 'self' https://www.google.com https://maps.google.com",
