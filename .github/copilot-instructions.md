@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-This is a Next.js 14 real estate web application for Bathala Enterprises, featuring:
+This is a Next.js real estate web application for Bathala Enterprises, featuring:
 
 - Property listings with filtering (Rent/Lease/Sale)
 - Service showcase
@@ -12,8 +12,8 @@ This is a Next.js 14 real estate web application for Bathala Enterprises, featur
 
 ## Tech Stack
 
-- **Framework:** Next.js 14 (App Router)
-- **Language:** TypeScript 5.5
+- **Framework:** Next.js (App Router)
+- **Language:** TypeScript 5.9
 - **Styling:** Tailwind CSS 3.4
 - **Database:** Supabase (PostgreSQL)
 - **Authentication:** Supabase Auth
@@ -59,5 +59,4 @@ npm run typecheck # Type check
 ## Documentation
 
 - [README.md](../README.md) - Project overview
-- [PRODUCTION_DEPLOYMENT.md](../PRODUCTION_DEPLOYMENT.md) - Deployment guide
-- [ADMIN_GUIDE.md](../ADMIN_GUIDE.md) - Admin setup guide
+- [SUPABASE_UNIVERSAL_SETUP.sql](../SUPABASE_UNIVERSAL_SETUP.sql) - Unified production schema, policies, and baseline setup

@@ -2,7 +2,6 @@
 
 import { Component, ReactNode } from "react";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, RefreshCw } from "lucide-react";
 
 interface Props {
   children: ReactNode;
@@ -36,11 +35,11 @@ export class ErrorBoundary extends Component<Props, State> {
 
       return (
         <div className="flex min-h-[400px] flex-col items-center justify-center p-8 text-center">
-          <div className="rounded-full bg-red-100 p-4 mb-4">
-            <AlertTriangle className="h-8 w-8 text-red-600" />
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-50">
+            <span className="material-symbols-outlined text-3xl text-red-600">warning</span>
           </div>
-          <h2 className="text-2xl font-bold text-slate-900 mb-2">Something went wrong</h2>
-          <p className="text-slateInk mb-6 max-w-md">
+          <h2 className="mb-2 font-display text-2xl font-semibold text-[#1a1f2e]">Something went wrong</h2>
+          <p className="mb-6 max-w-md text-[#6b7280]">
             We encountered an unexpected error. Please try refreshing the page.
           </p>
           <Button
@@ -50,7 +49,7 @@ export class ErrorBoundary extends Component<Props, State> {
             }}
             className="gap-2"
           >
-            <RefreshCw className="h-4 w-4" />
+            <span className="material-symbols-outlined text-base">refresh</span>
             Refresh Page
           </Button>
         </div>

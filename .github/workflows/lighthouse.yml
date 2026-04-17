@@ -1,0 +1,51 @@
+name: Lighthouse Audit
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: anon-key-placeholder
+      NEXT_PUBLIC_SITE_URL: https://bathalaenterprises.com
+      GOOGLE_AI_API_KEY: ai-key-placeholder
+      CONTACT_EMAIL_NOTIFICATIONS: "false"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build app for production Lighthouse run
+        run: npm run build
+
+      - name: Install Chrome
+        id: chrome
+        uses: browser-actions/setup-chrome@v1
+
+      - name: Run Lighthouse CI with score gates
+        env:
+          CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}
+        run: npm run lighthouse:production
+
+      - name: Upload Lighthouse artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-production-results
+          path: lighthouse-results/production
+          if-no-files-found: warn

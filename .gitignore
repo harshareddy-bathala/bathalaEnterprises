@@ -1,23 +1,29 @@
 # Dependencies
-node_modules
+node_modules/
 .pnp
 .pnp.js
 
-# Testing
-coverage
+# Build output and caches
+.next/
+.next-build-output.log
+out/
+build/
+dist/
+*.tsbuildinfo
 
-# Production
-build
-.next
-out
+# Test and report artifacts
+coverage/
+playwright-report/
+test-results/
+lighthouse-results/
+.lighthouseci/
 
-# Misc
-.DS_Store
-*.log
-.env.local
+# Environment files
+.env
 .env.*
 !.env.example
-package-lock.json
-yarn.lock
-pnpm-lock.yaml
-bun.lockb
+
+# Misc
+*.log
+.DS_Store
+.vscode/

@@ -1,0 +1,76 @@
+{
+  "ci": {
+    "collect": {
+      "url": [
+        "http://127.0.0.1:3000/",
+        "http://127.0.0.1:3000/all-properties",
+        "http://127.0.0.1:3000/all-services",
+        "http://127.0.0.1:3000/contact"
+      ],
+      "numberOfRuns": 2,
+      "startServerCommand": "npx next dev -H 127.0.0.1 -p 3000",
+      "startServerReadyPattern": "(Local:|Ready in|started server)",
+      "startServerReadyTimeout": 180000,
+      "settings": {
+        "preset": "desktop",
+        "chromeFlags": "--no-sandbox --disable-dev-shm-usage"
+      }
+    },
+    "assert": {
+      "assertions": {
+        "categories:performance": [
+          "warn",
+          {
+            "minScore": 0.85
+          }
+        ],
+        "categories:accessibility": [
+          "error",
+          {
+            "minScore": 0.9
+          }
+        ],
+        "server-response-time": [
+          "warn",
+          {
+            "maxNumericValue": 800
+          }
+        ],
+        "first-contentful-paint": [
+          "warn",
+          {
+            "maxNumericValue": 2500
+          }
+        ],
+        "largest-contentful-paint": [
+          "warn",
+          {
+            "maxNumericValue": 3500
+          }
+        ],
+        "interactive": [
+          "warn",
+          {
+            "maxNumericValue": 5000
+          }
+        ],
+        "total-blocking-time": [
+          "warn",
+          {
+            "maxNumericValue": 300
+          }
+        ],
+        "cumulative-layout-shift": [
+          "warn",
+          {
+            "maxNumericValue": 0.1
+          }
+        ]
+      }
+    },
+    "upload": {
+      "target": "filesystem",
+      "outputDir": "lighthouse-results/qa"
+    }
+  }
+}

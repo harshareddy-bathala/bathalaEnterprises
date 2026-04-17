@@ -1,32 +1,50 @@
 import { Button } from "@/components/ui/button";
-import { Home, Search, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
 export default function NotFound() {
   return (
-    <div className="container-wide flex min-h-[70vh] flex-col items-center justify-center text-center">
-      <div className="rounded-full bg-gradient-to-br from-royal/10 to-purple/10 p-8 mb-6">
-        <Search className="h-16 w-16 text-royal" />
+    <div className="bathala-page flex min-h-[70vh] flex-col items-center justify-center px-6 text-center">
+      <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-[#f6f1e5]">
+        <span className="material-symbols-outlined text-4xl text-primary">search_off</span>
       </div>
-      <h1 className="text-5xl font-black text-slate-900 mb-4">404</h1>
-      <h2 className="text-2xl font-bold text-slate-700 mb-4">Page Not Found</h2>
-      <p className="text-slateInk mb-8 max-w-md">
-        The page you're looking for doesn't exist or has been moved. 
-        Let's get you back on track.
+      <h1 className="mb-2 font-display text-5xl font-semibold text-[#1a1f2e]">404</h1>
+      <h2 className="mb-4 font-display text-2xl font-semibold text-[#2c3340]">Page Not Found</h2>
+      <p className="mb-8 max-w-md text-[#6b7280]">
+        The page you&apos;re looking for doesn&apos;t exist or has been moved.
+        Let&apos;s get you back on track.
       </p>
-      <div className="flex flex-wrap gap-4 justify-center">
+
+      <form action="/all-properties" className="mb-6 flex w-full max-w-md items-center gap-2">
+        <input
+          type="search"
+          name="q"
+          placeholder="Search properties by title or location"
+          className="h-11 flex-1 rounded-md border border-[var(--color-border)] bg-white px-4 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+        />
+        <Button type="submit" variant="outline" size="md">
+          Search
+        </Button>
+      </form>
+
+      <div className="flex flex-wrap justify-center gap-4">
         <Button asChild size="lg">
           <Link href="/" className="gap-2">
-            <Home className="h-4 w-4" />
+            <span className="material-symbols-outlined text-base">home</span>
             Go Home
           </Link>
         </Button>
         <Button variant="secondary" asChild size="lg">
           <Link href="/all-properties" className="gap-2">
-            <ArrowLeft className="h-4 w-4" />
+            <span className="material-symbols-outlined text-base">arrow_back</span>
             View Properties
           </Link>
         </Button>
+      </div>
+
+      <div className="mt-6 flex flex-wrap justify-center gap-3 text-sm text-[var(--color-text-muted)]">
+        <Link href="/all-services" className="rounded-full border border-[var(--color-border)] px-3 py-1.5 hover:text-[var(--color-slate-primary)]">Services</Link>
+        <Link href="/about" className="rounded-full border border-[var(--color-border)] px-3 py-1.5 hover:text-[var(--color-slate-primary)]">About</Link>
+        <Link href="/contact" className="rounded-full border border-[var(--color-border)] px-3 py-1.5 hover:text-[var(--color-slate-primary)]">Contact</Link>
       </div>
     </div>
   );

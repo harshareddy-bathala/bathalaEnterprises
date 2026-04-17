@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  quality-and-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: anon-key-placeholder
+      NEXT_PUBLIC_SITE_URL: https://bathalaenterprises.com
+      GOOGLE_AI_API_KEY: ai-key-placeholder
+      CONTACT_EMAIL_NOTIFICATIONS: "false"
+      NEXT_PUBLIC_ENABLE_RUM: "true"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Lint
+        run: npm run lint:ci
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Build verification
+        run: npm run build
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run critical user-flow tests
+        run: npm run test:critical-flows
+
+      - name: Upload Playwright report artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: critical-flow-artifacts
+          path: |
+            playwright-report/critical
+            test-results/critical-artifacts
+            test-results/critical-results.json
+          if-no-files-found: ignore

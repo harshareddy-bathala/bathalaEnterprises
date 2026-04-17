@@ -1,88 +1,182 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { BLUR_DATA_URL } from "@/lib/image-utils";
+import { useReducedMotionPreference } from "@/lib/use-reduced-motion";
+import CountUp from "@/components/ui/count-up";
+
+const revealDelay = (ms: number) => ({ "--reveal-delay": `${ms}ms` } as CSSProperties);
+const clampParallax = (value: number, max: number) => Math.max(0, Math.min(max, value));
 
 export default function Hero() {
-  const handleScrollClick = (sectionId: string) => {
-    const element = document.getElementById(sectionId);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
+  const reduceMotion = useReducedMotionPreference();
+  const [scrollY, setScrollY] = useState(0);
+
+  useEffect(() => {
+    if (reduceMotion || typeof window === "undefined") {
+      return;
     }
-  };
+
+    let frame = 0;
+
+    const updatePosition = () => {
+      setScrollY(window.scrollY || 0);
+      frame = 0;
+    };
+
+    const handleScroll = () => {
+      if (frame !== 0) {
+        return;
+      }
+
+      frame = window.requestAnimationFrame(updatePosition);
+    };
+
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      if (frame !== 0) {
+        window.cancelAnimationFrame(frame);
+      }
+    };
+  }, [reduceMotion]);
+
+  const heroImageStyle = useMemo<CSSProperties | undefined>(() => {
+    if (reduceMotion) {
+      return undefined;
+    }
+
+    const imageOffset = clampParallax(scrollY * 0.12, 38);
+    return {
+      transform: `translate3d(0, ${imageOffset}px, 0) scale(1.045)`,
+      transformOrigin: "center top",
+      willChange: "transform",
+    };
+  }, [reduceMotion, scrollY]);
+
+  const insetImageStyle = useMemo<CSSProperties | undefined>(() => {
+    if (reduceMotion) {
+      return undefined;
+    }
+
+    const imageOffset = clampParallax(scrollY * 0.08, 22);
+    return {
+      transform: `translate3d(0, ${imageOffset}px, 0) scale(1.03)`,
+      transformOrigin: "center top",
+      willChange: "transform",
+    };
+  }, [reduceMotion, scrollY]);
 
   return (
-    <section className="container-wide mt-8 grid gap-10 overflow-hidden rounded-3xl bg-gradient-to-br from-white/90 via-white/70 to-purple/5 px-6 py-16 shadow-xl sm:grid-cols-2 sm:items-center">
-      <div className="space-y-6">
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.05 }}
-          className="text-sm font-semibold uppercase tracking-[0.2em] text-royal"
-        >
-          Bathala Enterprises
-        </motion.p>
-        <motion.h1
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="text-4xl font-black leading-tight gradient-title sm:text-5xl"
-        >
-          Building Trust, One Property at a Time
-        </motion.h1>
-        <motion.p
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
-          className="max-w-xl text-lg text-slateInk"
-        >
-          Exceptional property services, advisory, and management delivered with precision, transparency, and a
-          commitment to long-term partnerships across Bangalore.
-        </motion.p>
-        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="flex flex-wrap gap-3">
-          <Button size="lg" variant="primary" onClick={() => handleScrollClick("properties")}>
-            Explore Properties
-          </Button>
-          <Button size="lg" variant="accent" onClick={() => handleScrollClick("contact")}>
-            Book a Consultation
-          </Button>
-        </motion.div>
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.25 }}
-          className="flex gap-6 text-sm text-slateInk"
-        >
-          <div>
-            <p className="font-bold text-slate-900">Expert Team</p>
-            <p>Industry leadership</p>
+    <section className="overflow-hidden border-b border-[#ece7de] bg-[#f8f6f2]">
+      <div className="mx-auto grid max-w-[1200px] gap-8 xs:gap-11 px-4 xs:px-5 pb-10 xs:pb-12 pt-6 xs:pt-8 sm:pb-14 sm:pt-10 md:px-10 md:pb-16 lg:grid-cols-[1.02fr_0.98fr] lg:items-center lg:gap-[76px] lg:pb-[54px] lg:pt-[34px]">
+        <div className="reveal-up max-w-[430px]" style={revealDelay(40)}>
+          <div className="reveal-up flex items-center gap-2" style={revealDelay(80)}>
+            <span className="h-[1.5px] w-6 rounded-full bg-[#b89a5e]" />
+            <span className="text-[10px] xs:text-[11px] font-medium uppercase tracking-[0.18em] text-[#b89a5e]">
+              Electronic City, Bangalore
+            </span>
           </div>
-          <div>
-            <p className="font-bold text-slate-900">Premium Properties</p>
-            <p>Across Bangalore</p>
-          </div>
-          <div>
-            <p className="font-bold text-slate-900">24/7</p>
-            <p>Dedicated support</p>
-          </div>
-        </motion.div>
-      </div>
 
-      <motion.div
-        initial={{ opacity: 0, scale: 0.96 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.18 }}
-        className="relative h-full"
-      >
-        <div className="glass-panel relative h-full w-full overflow-hidden rounded-3xl shadow-2xl shadow-purple/20">
-          <img
-            src="https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1600&q=80"
-            alt="Modern property"
-            className="h-full w-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-tr from-purple/40 via-transparent to-amberGlow/20" />
+          <h1
+            className="reveal-up mt-4 xs:mt-5 font-display text-[clamp(1.85rem,9vw,45.8px)] leading-[1.1] tracking-[-0.02em] text-[#1a1f2e]"
+            style={revealDelay(130)}
+          >
+            Find Your Place in <span className="italic text-[#2c3340]">Bangalore&apos;s</span> Finest Addresses
+          </h1>
+
+          <p className="reveal-up mt-4 xs:mt-5 max-w-[410px] text-[14px] xs:text-[15px] leading-[1.65] text-[#6b7280]" style={revealDelay(180)}>
+            Premium apartments and villas for rent, lease and sale in Electronic City - managed with
+            care, delivered with trust.
+          </p>
+
+          <div className="reveal-up mt-6 xs:mt-8 flex flex-col gap-3 sm:mt-9 sm:flex-row sm:flex-wrap" style={revealDelay(220)}>
+            <Link
+              href="/all-properties"
+              className="inline-flex h-[47px] min-h-[44px] w-full items-center justify-center gap-2 rounded-[8px] bg-[#b89a5e] px-7 text-[14px] font-semibold text-[#2c3340] transition-colors hover:bg-[#a88c52] touch-manipulation sm:w-auto"
+            >
+              Explore Properties
+              <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+            </Link>
+
+            <Link
+              href="/all-services"
+              className="inline-flex h-[49px] min-h-[44px] w-full items-center justify-center rounded-[8px] border border-[#2c3340] px-7 text-[14px] font-medium text-[#2c3340] transition-colors hover:bg-[#efebe4] touch-manipulation sm:w-auto"
+            >
+              Our Services
+            </Link>
+          </div>
+
+          <div className="reveal-up mt-7 xs:mt-9 border-t border-[#e8e4dc] pt-4 xs:pt-5 sm:mt-10" style={revealDelay(270)}>
+            <div className="grid grid-cols-2 gap-y-4 sm:grid-cols-3 sm:gap-3">
+              <div className="border-r border-[#b89a5e]/35 pr-4">
+                <p className="font-display text-[20px] xs:text-[22px] font-bold leading-[22px] text-[#1a1f2e]"><CountUp value={50} suffix="+" /></p>
+                <p className="mt-1 text-[11px] xs:text-[12px] leading-[18px] tracking-[0.03em] text-[#6b7280]">Properties</p>
+              </div>
+              <div className="pl-4 sm:border-r sm:border-[#b89a5e]/35 sm:px-4">
+                <p className="font-display text-[20px] xs:text-[22px] font-bold leading-[22px] text-[#1a1f2e]"><CountUp value={200} suffix="+" /></p>
+                <p className="mt-1 text-[11px] xs:text-[12px] leading-[18px] tracking-[0.03em] text-[#6b7280]">Happy Families</p>
+              </div>
+              <div className="col-span-2 border-t border-[#ece7de] pt-4 sm:col-span-1 sm:border-t-0 sm:pl-4 sm:pt-0">
+                <p className="font-display text-[20px] xs:text-[22px] font-bold leading-[22px] text-[#1a1f2e]"><CountUp value={10} suffix="+" /></p>
+                <p className="mt-1 text-[11px] xs:text-[12px] leading-[18px] tracking-[0.03em] text-[#6b7280]">Years of Trust</p>
+              </div>
+            </div>
+          </div>
         </div>
-      </motion.div>
+
+        <div className="reveal-up relative mx-auto w-full max-w-[430px] lg:mx-0" style={revealDelay(140)}>
+          <div className="relative h-[320px] overflow-hidden rounded-[20px] border border-[#ddd5c8] bg-[#e8e4dc] shadow-[0_2px_8px_rgba(0,0,0,0.07),0_12px_40px_rgba(0,0,0,0.09)] xs:h-[370px] xs:rounded-[24px] sm:h-[430px] md:h-[520px] lg:h-[543px]">
+            <Image
+              src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1080&q=80"
+              alt="Luxury property exterior"
+              fill
+              priority
+              sizes="(max-width: 1024px) 100vw, 40vw"
+              placeholder="blur"
+              blurDataURL={BLUR_DATA_URL.hero}
+              className="object-cover"
+              style={heroImageStyle}
+            />
+
+            <div className="absolute left-4 xs:left-5 top-4 xs:top-5 inline-flex h-[28px] xs:h-[30px] items-center gap-[6px] rounded-full bg-[rgba(255,255,255,0.95)] px-[8px] xs:px-[10px] shadow-[0_2px_12px_rgba(0,0,0,0.12)]">
+              <span className="h-[7px] w-[7px] rounded-full bg-[#b89a5e]" />
+              <span className="text-[10px] xs:text-[11px] font-bold uppercase tracking-[0.1em] text-[#1a1f2e]">New Listing</span>
+            </div>
+          </div>
+
+          <div
+            className="reveal-up absolute -bottom-7 left-0 hidden w-[200px] overflow-hidden rounded-[16px] border border-[#f0ede7] bg-white shadow-[0_4px_24px_rgba(0,0,0,0.1),0_1px_4px_rgba(0,0,0,0.06)] lg:-left-[22px] md:block"
+            style={revealDelay(250)}
+          >
+            <div className="relative h-[186px] w-full overflow-hidden">
+              <Image
+                src="https://images.unsplash.com/photo-1617104551722-3b2d51366400?auto=format&fit=crop&w=800&q=80"
+                alt="Property interior"
+                fill
+                sizes="200px"
+                loading="lazy"
+                placeholder="blur"
+                blurDataURL={BLUR_DATA_URL.property}
+                className="object-cover"
+                style={insetImageStyle}
+              />
+            </div>
+          </div>
+
+          <div
+            className="absolute -top-4 right-2 xs:right-4 inline-flex h-[27px] xs:h-[29px] items-center gap-1 rounded-full border border-[#e8e4dc] bg-white px-[12px] xs:px-[15px] text-[9px] xs:text-[10px] font-semibold uppercase tracking-[0.08em] text-[#4a5568] shadow-[0_2px_10px_rgba(0,0,0,0.07)]"
+            style={revealDelay(310)}
+          >
+            <span className="material-symbols-outlined text-[13px] xs:text-[14px] text-[#b89a5e]">verified</span>
+            RERA Approved
+          </div>
+        </div>
+      </div>
     </section>
   );
 }

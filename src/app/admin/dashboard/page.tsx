@@ -1,1273 +1,570 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Plus, Edit, Trash2, LogOut, X, Save, AlertCircle, CheckCircle, Loader2, ShieldCheck, Wrench, Sparkles, BriefcaseBusiness, Home, Building, Key, Users, FileText, Landmark, Upload, Image as ImageIcon } from "lucide-react";
+import AdminLayout, {
+  AdminCard,
+  ErrorAlert,
+  InfoBanner,
+  LoadingState,
+} from "@/components/admin/admin-layout";
+import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase-client";
+import { getAdminUser } from "@/lib/admin-auth";
 
-// Icon options for services
-const ICON_OPTIONS = [
-  { name: "ShieldCheck", label: "Shield Check", icon: ShieldCheck },
-  { name: "Wrench", label: "Maintenance", icon: Wrench },
-  { name: "Sparkles", label: "Premium", icon: Sparkles },
-  { name: "BriefcaseBusiness", label: "Business", icon: BriefcaseBusiness },
-  { name: "Home", label: "Home", icon: Home },
-  { name: "Building", label: "Building", icon: Building },
-  { name: "Key", label: "Key", icon: Key },
-  { name: "Users", label: "Users", icon: Users },
-  { name: "FileText", label: "Documents", icon: FileText },
-  { name: "Landmark", label: "Landmark", icon: Landmark },
-];
+type ListingType = "Rent" | "Lease" | "Sale";
+type InquiryStatus = "new" | "in-progress" | "resolved";
 
-type Property = {
+type DashboardProperty = {
   id: string;
   title: string;
-  location: string;
-  bedrooms: number;
-  sqft: number;
-  price: number;
-  type: "Rent" | "Lease" | "Sale";
-  description: string;
-  image_url: string;
-  thumbnail_url: string;
-  gallery_images: string[];
+  type: ListingType;
+  created_at: string | null;
 };
 
-type Service = {
+type DashboardInquiry = {
   id: string;
-  title: string;
-  description: string;
-  price_range: string;
+  name: string;
+  query_type: "properties" | "services" | "other";
+  service_type: string;
+  status: InquiryStatus;
+  is_read: boolean;
+  created_at: string | null;
+};
+
+type MetricCard = {
+  id: string;
   icon: string;
+  accentClassName: string;
+  value: number;
+  label: string;
+  subtitle: string;
 };
+
+const STATUS_STYLES: Record<
+  InquiryStatus,
+  { label: string; badgeClassName: string; dotClassName: string }
+> = {
+  new: {
+    label: "New",
+    badgeClassName: "bg-[#eff6ff] text-[#2563eb]",
+    dotClassName: "bg-[#3b82f6]",
+  },
+  "in-progress": {
+    label: "Contacted",
+    badgeClassName: "bg-[#fff7ed] text-[#c2410c]",
+    dotClassName: "bg-[#f97316]",
+  },
+  resolved: {
+    label: "Closed",
+    badgeClassName: "bg-[#ecfdf3] text-[#059669]",
+    dotClassName: "bg-[#10b981]",
+  },
+};
+
+function normalizeInquiryStatus(value: string | null | undefined): InquiryStatus {
+  if (value === "new" || value === "in-progress" || value === "resolved") {
+    return value;
+  }
+
+  return "new";
+}
+
+function normalizeQueryType(value: string | null | undefined): "properties" | "services" | "other" {
+  if (value === "properties" || value === "services") {
+    return value;
+  }
+
+  return "other";
+}
+
+function formatLongDate(value: Date): string {
+  const weekday = new Intl.DateTimeFormat("en-IN", { weekday: "long" }).format(value);
+  const day = new Intl.DateTimeFormat("en-IN", { day: "2-digit" }).format(value);
+  const month = new Intl.DateTimeFormat("en-IN", { month: "long" }).format(value);
+  const year = new Intl.DateTimeFormat("en-IN", { year: "numeric" }).format(value);
+  return `${weekday} ${day} ${month}, ${year}`;
+}
+
+function formatShortDate(value: string | null): string {
+  if (!value) {
+    return "--";
+  }
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return "--";
+  }
+
+  return new Intl.DateTimeFormat("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(parsed);
+}
+
+function isThisMonth(value: string | null): boolean {
+  if (!value) {
+    return false;
+  }
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return false;
+  }
+
+  const now = new Date();
+  return parsed.getMonth() === now.getMonth() && parsed.getFullYear() === now.getFullYear();
+}
+
+function isWithinDays(value: string | null, days: number): boolean {
+  if (!value) {
+    return false;
+  }
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return false;
+  }
+
+  const now = Date.now();
+  const diffMs = now - parsed.getTime();
+  return diffMs >= 0 && diffMs <= days * 24 * 60 * 60 * 1000;
+}
+
+function getInitials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) {
+    return "AD";
+  }
+
+  if (parts.length === 1) {
+    return parts[0].slice(0, 2).toUpperCase();
+  }
+
+  return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+}
 
 export default function DashboardPage() {
   const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"properties" | "services">("properties");
-  const [properties, setProperties] = useState<Property[]>([]);
-  const [services, setServices] = useState<Service[]>([]);
-  const [isCreating, setIsCreating] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
-  const [notification, setNotification] = useState<{ type: "success" | "error"; message: string } | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState<string>("");
+  const [adminName, setAdminName] = useState("Admin");
+  const [properties, setProperties] = useState<DashboardProperty[]>([]);
+  const [inquiries, setInquiries] = useState<DashboardInquiry[]>([]);
+  const [isInquiryDataAvailable, setIsInquiryDataAvailable] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  // Form state
-  const [formData, setFormData] = useState<{
-    title: string;
-    location: string;
-    bedrooms: number;
-    sqft: number;
-    price: number;
-    type: "Rent" | "Lease" | "Sale";
-    description: string;
-    image_url: string;
-    thumbnail_url: string;
-    gallery_images: string[];
-  }>({
-    title: "",
-    location: "",
-    bedrooms: 1,
-    sqft: 1000,
-    price: 0,
-    type: "Rent",
-    description: "",
-    image_url: "",
-    thumbnail_url: "",
-    gallery_images: [],
-  });
+  const todayLabel = useMemo(() => formatLongDate(new Date()), []);
 
-  const [galleryInput, setGalleryInput] = useState("");
-
-  const [serviceForm, setServiceForm] = useState({
-    title: "",
-    description: "",
-    price_range: "",
-    icon: "",
-  });
-
-  // Check authentication and load data
-  useEffect(() => {
-    const checkAuth = async () => {
-      // Require Supabase authentication
-      if (!supabase) {
-        console.error("Supabase not configured. Admin access requires proper authentication.");
-        router.push("/admin/login");
-        return;
-      }
-
-      const { data } = await supabase.auth.getSession();
-      if (!data.session) {
-        router.push("/admin/login");
-        return;
-      }
-      // Verify user has admin role
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user?.user_metadata?.is_admin) {
-        router.push("/admin/login");
-        return;
-      }
-      
-      setIsAuthenticated(true);
-      await loadData();
-    };
-
-    checkAuth();
-  }, [router]);
-
-  const loadData = async () => {
-    try {
-      await Promise.all([loadProperties(), loadServices()]);
-    } finally {
-      setLoading(false);
+  const fetchProperties = useCallback(async (): Promise<DashboardProperty[]> => {
+    if (!supabase) {
+      return [];
     }
-  };
-
-  const loadProperties = async () => {
-    if (!supabase) return;
 
     try {
       const { data, error } = await supabase
         .from("properties")
-        .select("*")
+        .select("id, title, type, created_at")
         .order("created_at", { ascending: false });
 
       if (error) {
-        if (error.message.includes("relations") || error.message.includes("does not exist")) {
-          showNotification("error", "Properties table not found. Run SUPABASE_SETUP.sql first.");
-        } else {
-          throw error;
-        }
-        return;
+        throw error;
       }
 
-      setProperties(
-        (data || []).map((p: any) => ({
-          id: p.id,
-          title: p.title,
-          location: p.location,
-          bedrooms: p.bedrooms,
-          sqft: p.sqft,
-          price: p.price,
-          type: p.type,
-          description: p.description,
-          image_url: p.image_url,
-          thumbnail_url: p.thumbnail_url || p.image_url,
-          gallery_images: p.gallery_images || [],
-        }))
-      );
-    } catch (error: any) {
-      if (error.message?.includes("Connect Timeout")) {
-        showNotification("error", "Database connection timeout. Ensure SUPABASE_SETUP.sql has been run.");
-      } else {
-        console.error("Error loading properties:", error);
-        showNotification("error", "Failed to load properties");
-      }
+      return (data || []).map((item: any) => ({
+        id: String(item.id),
+        title: typeof item.title === "string" ? item.title : "Untitled Property",
+        type: item.type === "Lease" || item.type === "Sale" ? item.type : "Rent",
+        created_at: typeof item.created_at === "string" ? item.created_at : null,
+      }));
+    } catch (error) {
+      console.error("Failed to load dashboard properties:", error);
+      setLoadError((prev) => prev || "Some dashboard data could not be loaded right now.");
+      return [];
     }
-  };
+  }, []);
 
-  const loadServices = async () => {
-    if (!supabase) return;
+  const fetchInquiries = useCallback(async (): Promise<DashboardInquiry[]> => {
+    if (!supabase) {
+      return [];
+    }
 
     try {
       const { data, error } = await supabase
-        .from("services")
-        .select("*")
+        .from("messages")
+        .select("id, name, query_type, service_type, status, is_read, created_at")
         .order("created_at", { ascending: false });
 
       if (error) {
-        if (error.message.includes("relations") || error.message.includes("does not exist")) {
-          showNotification("error", "Services table not found. Run SUPABASE_SETUP.sql first.");
-        } else {
-          throw error;
+        const message = error.message.toLowerCase();
+        if (message.includes("relation") || message.includes("does not exist") || message.includes("schema cache")) {
+          setIsInquiryDataAvailable(false);
+          return [];
         }
+
+        throw error;
+      }
+
+      setIsInquiryDataAvailable(true);
+
+      return (data || []).map((item: any) => ({
+        id: String(item.id),
+        name: typeof item.name === "string" ? item.name : "Unknown",
+        query_type: normalizeQueryType(item.query_type),
+        service_type: typeof item.service_type === "string" ? item.service_type : "General Inquiry",
+        status: normalizeInquiryStatus(item.status),
+        is_read: Boolean(item.is_read),
+        created_at: typeof item.created_at === "string" ? item.created_at : null,
+      }));
+    } catch (error) {
+      console.error("Failed to load dashboard messages:", error);
+      setLoadError((prev) => prev || "Some dashboard data could not be loaded right now.");
+      return [];
+    }
+  }, []);
+
+  useEffect(() => {
+    const initializeDashboard = async () => {
+      if (!supabase) {
+        router.push("/admin/login");
         return;
       }
 
-      setServices(
-        (data || []).map((s: any) => ({
-          id: s.id,
-          title: s.title,
-          description: s.description,
-          price_range: s.price_range,
-          icon: s.icon,
-        }))
-      );
-    } catch (error: any) {
-      if (error.message?.includes("Connect Timeout")) {
-        showNotification("error", "Database connection timeout. Ensure SUPABASE_SETUP.sql has been run.");
-      } else {
-        console.error("Error loading services:", error);
-        showNotification("error", "Failed to load services");
-      }
-    }
-  };
-
-  const showNotification = (type: "success" | "error", message: string) => {
-    setNotification({ type, message });
-    setTimeout(() => setNotification(null), 3000);
-  };
-
-  // Upload image to Supabase Storage
-  const uploadImage = async (file: File, folder: string = "properties"): Promise<string | null> => {
-    if (!supabase) {
-      showNotification("error", "Supabase not initialized");
-      return null;
-    }
-
-    const fileExt = file.name.split('.').pop()?.toLowerCase();
-    const allowedTypes = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
-    
-    if (!fileExt || !allowedTypes.includes(fileExt)) {
-      showNotification("error", "Invalid file type. Use JPG, PNG, WebP, or GIF.");
-      return null;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      showNotification("error", "File too large. Maximum size is 5MB.");
-      return null;
-    }
-
-    const fileName = `${folder}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-
-    try {
-      const { data, error } = await supabase.storage
-        .from('property-images')
-        .upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
-
-      if (error) {
-        console.error("Upload error:", error);
-        if (error.message.includes("Bucket not found")) {
-          showNotification("error", "Storage bucket not configured. Run SUPABASE_ALTER_TABLE.sql first.");
-        } else {
-          showNotification("error", `Upload failed: ${error.message}`);
+      try {
+        const adminUser = await getAdminUser();
+        if (!adminUser) {
+          router.push("/admin/login");
+          return;
         }
-        return null;
-      }
 
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from('property-images')
-        .getPublicUrl(data.path);
+        const nextAdminName =
+          adminUser.user_metadata?.full_name ||
+          adminUser.user_metadata?.name ||
+          adminUser.email?.split("@")[0] ||
+          "Admin";
 
-      return urlData.publicUrl;
-    } catch (error) {
-      console.error("Upload error:", error);
-      showNotification("error", "Failed to upload image");
-      return null;
-    }
-  };
+        setAdminName(nextAdminName);
+        setIsAuthenticated(true);
 
-  // Handle thumbnail upload
-  const handleThumbnailUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setIsUploading(true);
-    setUploadProgress("Uploading thumbnail...");
-
-    const url = await uploadImage(file, "thumbnails");
-    if (url) {
-      setFormData({ ...formData, thumbnail_url: url, image_url: url });
-      showNotification("success", "Thumbnail uploaded successfully");
-    }
-
-    setIsUploading(false);
-    setUploadProgress("");
-    e.target.value = ""; // Reset input
-  };
-
-  // Handle gallery images upload
-  const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-
-    setIsUploading(true);
-    const uploadedUrls: string[] = [];
-
-    for (let i = 0; i < files.length; i++) {
-      setUploadProgress(`Uploading image ${i + 1} of ${files.length}...`);
-      const url = await uploadImage(files[i], "gallery");
-      if (url) {
-        uploadedUrls.push(url);
-      }
-    }
-
-    if (uploadedUrls.length > 0) {
-      setFormData({
-        ...formData,
-        gallery_images: [...formData.gallery_images, ...uploadedUrls],
-      });
-      showNotification("success", `${uploadedUrls.length} image(s) uploaded successfully`);
-    }
-
-    setIsUploading(false);
-    setUploadProgress("");
-    e.target.value = ""; // Reset input
-  };
-
-  const handleLogout = async () => {
-    if (supabase) {
-      await supabase.auth.signOut();
-    }
-    router.push("/admin/login");
-  };
-
-  const handleAddProperty = () => {
-    setEditingId(null);
-    setFormData({
-      title: "",
-      location: "",
-      bedrooms: 1,
-      sqft: 1000,
-      price: 0,
-      type: "Rent",
-      description: "",
-      image_url: "",
-      thumbnail_url: "",
-      gallery_images: [],
-    });
-    setGalleryInput("");
-    setIsCreating(true);
-  };
-
-  const handleSaveProperty = async () => {
-    if (!formData.title || !formData.location) {
-      showNotification("error", "Please fill in required fields");
-      return;
-    }
-
-    if (!supabase) {
-      showNotification("error", "Supabase not initialized");
-      return;
-    }
-
-    setIsSaving(true);
-
-    try {
-      if (editingId) {
-        const { error } = await supabase
-          .from("properties")
-          .update({
-            title: formData.title,
-            location: formData.location,
-            bedrooms: formData.bedrooms,
-            sqft: formData.sqft,
-            price: formData.price,
-            type: formData.type,
-            description: formData.description,
-            image_url: formData.image_url,
-            thumbnail_url: formData.thumbnail_url || formData.image_url,
-            gallery_images: formData.gallery_images,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", editingId);
-
-        if (error) throw error;
-        showNotification("success", "Property updated successfully");
-      } else {
-        const { error } = await supabase.from("properties").insert([
-          {
-            title: formData.title,
-            location: formData.location,
-            bedrooms: formData.bedrooms,
-            sqft: formData.sqft,
-            price: formData.price,
-            type: formData.type,
-            description: formData.description,
-            image_url: formData.image_url,
-            thumbnail_url: formData.thumbnail_url || formData.image_url,
-            gallery_images: formData.gallery_images,
-          },
+        const [propertyRows, inquiryRows] = await Promise.all([
+          fetchProperties(),
+          fetchInquiries(),
         ]);
 
-        if (error) throw error;
-        showNotification("success", "Property added successfully");
+        setProperties(propertyRows);
+        setInquiries(inquiryRows);
+      } finally {
+        setLoading(false);
       }
+    };
 
-      await loadProperties();
-      setIsCreating(false);
-      setEditingId(null);
-      setFormData({
-        title: "",
-        location: "",
-        bedrooms: 1,
-        sqft: 1000,
-        price: 0,
-        type: "Rent",
-        description: "",
-        image_url: "",
-        thumbnail_url: "",
-        gallery_images: [],
-      });
-      setGalleryInput("");
-    } catch (error) {
-      console.error("Error saving property:", error);
-      showNotification("error", "Failed to save property");
-    } finally {
-      setIsSaving(false);
-    }
-  };
+    void initializeDashboard();
+  }, [fetchInquiries, fetchProperties, router]);
 
-  const handleEditProperty = (prop: Property) => {
-    setFormData({
-      title: prop.title,
-      location: prop.location,
-      bedrooms: prop.bedrooms,
-      sqft: prop.sqft,
-      price: prop.price,
-      type: prop.type as "Rent" | "Lease" | "Sale",
-      description: prop.description,
-      image_url: prop.image_url,
-      thumbnail_url: prop.thumbnail_url || prop.image_url,
-      gallery_images: prop.gallery_images || [],
-    });
-    setGalleryInput("");
-    setEditingId(prop.id);
-    setIsCreating(true);
-  };
-
-  const handleDeleteProperty = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this property?")) return;
-
-    if (!supabase) return;
-
-    try {
-      const { error } = await supabase.from("properties").delete().eq("id", id);
-
-      if (error) throw error;
-      showNotification("success", "Property deleted successfully");
-      await loadProperties();
-    } catch (error) {
-      console.error("Error deleting property:", error);
-      showNotification("error", "Failed to delete property");
-    }
-  };
-
-  const handleAddService = () => {
-    setServiceForm({ title: "", description: "", price_range: "", icon: "" });
-    setEditingId(null);
-    setIsCreating(true);
-    setActiveTab("services");
-  };
-
-  const handleSaveService = async () => {
-    if (!serviceForm.title || !serviceForm.description) {
-      showNotification("error", "Please fill in required fields");
+  useEffect(() => {
+    if (!supabase || !isAuthenticated) {
       return;
     }
 
-    if (!supabase) {
-      showNotification("error", "Supabase not initialized");
-      return;
+    const client = supabase;
+    const channel = client
+      .channel("admin-dashboard-live")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "messages" },
+        () => {
+          void fetchInquiries().then((rows) => {
+            setInquiries(rows);
+          });
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "properties" },
+        () => {
+          void fetchProperties().then((rows) => {
+            setProperties(rows);
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      void client.removeChannel(channel);
+    };
+  }, [fetchInquiries, fetchProperties, isAuthenticated]);
+
+  const totalProperties = properties.length;
+  const activeListings = properties.filter((item) => item.type !== "Sale").length;
+  const saleListings = properties.filter((item) => item.type === "Sale").length;
+  const propertiesAddedThisMonth = properties.filter((item) => isThisMonth(item.created_at)).length;
+  const enquiriesThisWeek = inquiries.filter((item) => isWithinDays(item.created_at, 7)).length;
+  const newEnquiriesCount = inquiries.filter((item) => item.status === "new").length;
+  const unreadMessagesCount = inquiries.filter((item) => !item.is_read).length;
+
+  const listingMix = useMemo(() => {
+    const mix: Record<ListingType, number> = {
+      Rent: 0,
+      Lease: 0,
+      Sale: 0,
+    };
+
+    for (const item of properties) {
+      mix[item.type] += 1;
     }
 
-    setIsSaving(true);
+    return mix;
+  }, [properties]);
 
-    try {
-      if (editingId) {
-        const { error } = await supabase
-          .from("services")
-          .update({
-            title: serviceForm.title,
-            description: serviceForm.description,
-            price_range: serviceForm.price_range,
-            icon: serviceForm.icon,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", editingId);
+  const metrics: MetricCard[] = [
+    {
+      id: "total-properties",
+      icon: "home_work",
+      accentClassName: "bg-[#f6efe1] text-[#7c6442]",
+      value: totalProperties,
+      label: "Total Properties",
+      subtitle: `+${propertiesAddedThisMonth} this month`,
+    },
+    {
+      id: "active-listings",
+      icon: "schedule",
+      accentClassName: "bg-[#e6f2f9] text-[#2563eb]",
+      value: activeListings,
+      label: "Active Listings",
+      subtitle: `${totalProperties === 0 ? 0 : Math.round((activeListings / totalProperties) * 100)}% of total`,
+    },
+    {
+      id: "new-enquiries",
+      icon: "chat",
+      accentClassName: "bg-[#fcefe7] text-[#c2410c]",
+      value: enquiriesThisWeek,
+      label: "New Messages",
+      subtitle: `+${newEnquiriesCount} unresolved`,
+    },
+    {
+      id: "unread-inbox",
+      icon: "mark_email_unread",
+      accentClassName: "bg-[#f2f1ef] text-[#4b5563]",
+      value: unreadMessagesCount,
+      label: "Unread Inbox",
+      subtitle: "Requires attention",
+    },
+  ];
 
-        if (error) throw error;
-        showNotification("success", "Service updated successfully");
-      } else {
-        const { error } = await supabase.from("services").insert([
-          {
-            title: serviceForm.title,
-            description: serviceForm.description,
-            price_range: serviceForm.price_range,
-            icon: serviceForm.icon,
-          },
-        ]);
-
-        if (error) throw error;
-        showNotification("success", "Service added successfully");
-      }
-
-      await loadServices();
-      setIsCreating(false);
-      setEditingId(null);
-      setServiceForm({ title: "", description: "", price_range: "", icon: "" });
-    } catch (error) {
-      console.error("Error saving service:", error);
-      showNotification("error", "Failed to save service");
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleEditService = (svc: Service) => {
-    setServiceForm(svc);
-    setEditingId(svc.id);
-    setIsCreating(true);
-  };
-
-  const handleDeleteService = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this service?")) return;
-
-    if (!supabase) return;
-
-    try {
-      const { error } = await supabase.from("services").delete().eq("id", id);
-
-      if (error) throw error;
-      showNotification("success", "Service deleted successfully");
-      await loadServices();
-    } catch (error) {
-      console.error("Error deleting service:", error);
-      showNotification("error", "Failed to delete service");
-    }
-  };
-
-  if (!isAuthenticated || loading) {
+  if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-royal"></div>
+      <div className="min-h-screen px-4 py-8 sm:px-5 lg:px-6">
+        <LoadingState message="Loading dashboard..." />
       </div>
     );
   }
 
+  if (!isAuthenticated) {
+    return null;
+  }
+
   return (
-    <div className="space-y-8 pb-8">
-      {/* Notification */}
-      {notification && (
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className={`fixed top-4 right-4 z-50 rounded-lg p-4 flex items-center gap-3 ${
-            notification.type === "success"
-              ? "bg-green-50 text-green-700 border border-green-200"
-              : "bg-red-50 text-red-700 border border-red-200"
-          }`}
-        >
-          {notification.type === "success" ? (
-            <CheckCircle className="h-5 w-5" />
-          ) : (
-            <AlertCircle className="h-5 w-5" />
-          )}
-          <span>{notification.message}</span>
-        </motion.div>
-      )}
-
-      {/* Header */}
-      <motion.header
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between border-b border-slate-200 pb-6"
-      >
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-royal">Admin</p>
-          <h1 className="text-3xl font-black text-slate-900">Content Manager</h1>
-          <p className="text-slateInk">Manage properties and services from Supabase</p>
-        </div>
-        <Button
-          onClick={handleLogout}
-          variant="secondary"
-          size="sm"
-          className="gap-2 hover:bg-red-50"
-        >
-          <LogOut className="h-4 w-4" />
-          Logout
+    <AdminLayout
+      title="Dashboard"
+      description={todayLabel}
+      unreadCount={unreadMessagesCount}
+      adminName={adminName}
+      action={
+        <Button asChild variant="secondary" size="sm">
+          <Link href="/admin/messages" prefetch>
+            <span className="material-symbols-outlined mr-2 text-[18px]">mark_email_unread</span>
+            {unreadMessagesCount} unread
+          </Link>
         </Button>
-      </motion.header>
+      }
+    >
+      {loadError ? <ErrorAlert message={loadError} /> : null}
 
-      {/* Tabs */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex gap-2 border-b border-slate-200"
-      >
-        <button
-          onClick={() => setActiveTab("properties")}
-          className={`px-4 py-2 font-semibold transition-all ${
-            activeTab === "properties"
-              ? "text-royal border-b-2 border-royal"
-              : "text-slateInk hover:text-slate-900"
-          }`}
-        >
-          Properties ({properties.length})
-        </button>
-        <button
-          onClick={() => setActiveTab("services")}
-          className={`px-4 py-2 font-semibold transition-all ${
-            activeTab === "services"
-              ? "text-royal border-b-2 border-royal"
-              : "text-slateInk hover:text-slate-900"
-          }`}
-        >
-          Services ({services.length})
-        </button>
-      </motion.div>
+      {!isInquiryDataAvailable ? (
+        <InfoBanner
+          message="Message records are not available in this environment yet. The dashboard is showing available data only."
+          icon="info"
+        />
+      ) : null}
 
-      {/* Create/Edit Modal */}
-      {isCreating && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-          onClick={() => setIsCreating(false)}
-        >
-          <motion.div
-            initial={{ scale: 0.95 }}
-            animate={{ scale: 1 }}
-            onClick={(e) => e.stopPropagation()}
-            className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
-          >
-            <div className="sticky top-0 bg-white border-b border-slate-200 p-6 flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-slate-900">
-                {editingId
-                  ? `Edit ${activeTab === "properties" ? "Property" : "Service"}`
-                  : `New ${activeTab === "properties" ? "Property" : "Service"}`}
-              </h2>
-              <button
-                onClick={() => setIsCreating(false)}
-                className="text-slate-400 hover:text-slate-600"
-              >
-                <X className="h-6 w-6" />
-              </button>
+      <header className="mb-7">
+        <h1 className="text-[clamp(1.7rem,2.4vw,2.2rem)] font-semibold leading-tight text-[var(--admin-text)]">
+          Good morning, {adminName}
+        </h1>
+        <p className="mt-1 text-sm text-[var(--admin-text-muted)]">{todayLabel}</p>
+      </header>
+
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {metrics.map((metric) => (
+          <AdminCard key={metric.id} className="flex flex-col p-5 sm:p-6">
+            <div className="mb-4 flex items-center justify-between">
+              <div className={cn("grid h-10 w-10 place-items-center rounded-xl", metric.accentClassName)}>
+                <span className="material-symbols-outlined text-[20px]">{metric.icon}</span>
+              </div>
             </div>
+            <p className="text-sm font-medium text-[var(--admin-text-muted)]">{metric.label}</p>
+            <div className="mt-1 flex items-baseline gap-2">
+              <p className="text-3xl font-bold tracking-tight text-[var(--admin-text)]">{metric.value.toLocaleString()}</p>
+              <p className="text-xs font-medium text-[var(--admin-text-muted)]">{metric.subtitle}</p>
+            </div>
+          </AdminCard>
+        ))}
+      </section>
 
-            <div className="p-6 grid md:grid-cols-2 gap-6">
-              {/* Form */}
-              <div className="space-y-4">
-                {activeTab === "properties" ? (
-                  <>
-                    <div>
-                      <Label htmlFor="title">Title *</Label>
-                      <Input
-                        id="title"
-                        value={formData.title}
-                        onChange={(e) =>
-                          setFormData({ ...formData, title: e.target.value })
-                        }
-                        placeholder="Property name"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="location">Location *</Label>
-                      <Input
-                        id="location"
-                        value={formData.location}
-                        onChange={(e) =>
-                          setFormData({ ...formData, location: e.target.value })
-                        }
-                        placeholder="e.g., Koramangala, Bangalore"
-                      />
-                      <p className="text-xs text-slateInk mt-1">Enter area name for map preview below</p>
-                      
-                      {/* Map Preview */}
-                      {formData.location && (
-                        <div className="mt-3 space-y-2">
-                          <div className="flex items-center justify-between">
-                            <Label className="text-xs">Map Preview</Label>
-                            <a
-                              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(formData.location + ', Bangalore')}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs text-royal hover:underline"
-                            >
-                              Open in Google Maps ↗
-                            </a>
-                          </div>
-                          <div className="rounded-lg overflow-hidden border border-slate-200 h-40">
-                            <iframe
-                              src={`https://maps.google.com/maps?q=${encodeURIComponent(formData.location)},bangalore&t=&z=15&ie=UTF8&iwloc=&output=embed`}
-                              className="w-full h-full border-0"
-                              loading="lazy"
-                              title="Location preview"
-                            />
-                          </div>
-                          <p className="text-xs text-amber-600">
-                            💡 If location is not accurate, try adding more details like &quot;Near [landmark]&quot; or full address
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="bedrooms">Bedrooms</Label>
-                        <Input
-                          id="bedrooms"
-                          type="number"
-                          value={formData.bedrooms}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              bedrooms: parseInt(e.target.value),
-                            })
-                          }
-                          min="0"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="sqft">Sq Ft</Label>
-                        <Input
-                          id="sqft"
-                          type="number"
-                          value={formData.sqft}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              sqft: parseInt(e.target.value),
-                            })
-                          }
-                          min="100"
-                        />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="price">Price</Label>
-                        <Input
-                          id="price"
-                          type="number"
-                          value={formData.price}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              price: parseFloat(e.target.value),
-                            })
-                          }
-                          min="0"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="type">Type</Label>
-                        <select
-                          id="type"
-                          value={formData.type}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              type: e.target.value as "Rent" | "Lease" | "Sale",
-                            })
-                          }
-                          className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-royal"
-                        >
-                          <option value="Rent">Rent</option>
-                          <option value="Lease">Lease</option>
-                          <option value="Sale">Sale</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div>
-                      <Label htmlFor="description">Description</Label>
-                      <Textarea
-                        id="description"
-                        value={formData.description}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            description: e.target.value,
-                          })
-                        }
-                        placeholder="Property description"
-                        rows={3}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="thumbnail">Thumbnail Image *</Label>
-                      <div className="mt-2 space-y-3">
-                        {/* Current thumbnail preview */}
-                        {formData.thumbnail_url && (
-                          <div className="relative inline-block">
-                            <img
-                              src={formData.thumbnail_url}
-                              alt="Thumbnail preview"
-                              className="h-24 w-32 object-cover rounded-lg border-2 border-slate-200"
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='96'%3E%3Crect fill='%23e2e8f0' width='128' height='96'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%2394a3b8' font-size='12'%3ENo Image%3C/text%3E%3C/svg%3E";
-                              }}
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setFormData({ ...formData, thumbnail_url: "", image_url: "" })}
-                              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition"
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
-                          </div>
-                        )}
-                        {/* Upload button */}
-                        <div className="flex items-center gap-3">
-                          <label className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 border-dashed cursor-pointer transition ${isUploading ? 'bg-slate-100 border-slate-300' : 'border-royal/50 hover:border-royal hover:bg-royal/5'}`}>
-                            <Upload className="h-4 w-4 text-royal" />
-                            <span className="text-sm font-medium text-royal">
-                              {isUploading ? uploadProgress : (formData.thumbnail_url ? "Change Image" : "Upload Thumbnail")}
+      <div className="mt-8 grid gap-5 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)]">
+        <section
+          id="enquiries-section"
+          className="flex flex-col overflow-hidden rounded-2xl border border-[var(--admin-border)] bg-white shadow-sm"
+        >
+          <div className="flex items-center justify-between border-b border-[var(--admin-border)] px-5 py-4">
+            <h2 className="text-lg font-semibold text-[var(--admin-text)]">Recent Messages</h2>
+            <Link href="/admin/messages" prefetch className="text-xs font-semibold text-[var(--admin-accent)]">
+              View all
+            </Link>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead className="bg-[#fafaf8]">
+                <tr className="text-left text-[10px] font-bold uppercase tracking-[0.1em] text-[var(--admin-text-muted)]">
+                  <th className="px-4 py-3 sm:px-5">Contact</th>
+                  <th className="hidden px-3 py-3 sm:table-cell">Interest</th>
+                  <th className="hidden px-3 py-3 md:table-cell">Date</th>
+                  <th className="px-3 py-3">Status</th>
+                  <th className="px-4 py-3 text-right sm:px-5">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[var(--admin-border)]">
+                {inquiries.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-5 py-10 text-center text-sm text-[var(--admin-text-muted)]">
+                      No message records available yet.
+                    </td>
+                  </tr>
+                ) : (
+                  inquiries.slice(0, 5).map((entry) => {
+                    const statusStyle = STATUS_STYLES[entry.status];
+                    const interestLabel =
+                      entry.service_type ||
+                      (entry.query_type === "services" ? "Service inquiry" : "Property inquiry");
+
+                    return (
+                      <tr key={entry.id} className="group transition-colors hover:bg-[#fcfaf7]">
+                        <td className="px-4 py-4 sm:px-5 align-middle">
+                          <div className="flex items-center gap-3">
+                            <span className="grid h-9 w-9 flex-shrink-0 place-items-center rounded-full bg-[#ece7db] text-[11px] font-bold text-[var(--admin-text)]">
+                              {getInitials(entry.name)}
                             </span>
-                            <input
-                              type="file"
-                              accept="image/jpeg,image/png,image/webp,image/gif"
-                              onChange={handleThumbnailUpload}
-                              disabled={isUploading}
-                              className="hidden"
-                            />
-                          </label>
-                          {isUploading && <Loader2 className="h-4 w-4 animate-spin text-royal" />}
-                        </div>
-                        <p className="text-xs text-slateInk">Main image shown in property cards. Max 5MB (JPG, PNG, WebP)</p>
-                      </div>
-                    </div>
-                    <div>
-                      <Label htmlFor="gallery">Gallery Images</Label>
-                      <div className="mt-2 space-y-3">
-                        {/* Upload button */}
-                        <div className="flex items-center gap-3">
-                          <label className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 border-dashed cursor-pointer transition ${isUploading ? 'bg-slate-100 border-slate-300' : 'border-purple/50 hover:border-purple hover:bg-purple/5'}`}>
-                            <ImageIcon className="h-4 w-4 text-purple" />
-                            <span className="text-sm font-medium text-purple">
-                              {isUploading ? uploadProgress : "Add Gallery Images"}
-                            </span>
-                            <input
-                              type="file"
-                              accept="image/jpeg,image/png,image/webp,image/gif"
-                              multiple
-                              onChange={handleGalleryUpload}
-                              disabled={isUploading}
-                              className="hidden"
-                            />
-                          </label>
-                          {isUploading && <Loader2 className="h-4 w-4 animate-spin text-purple" />}
-                        </div>
-                        <p className="text-xs text-slateInk">Select multiple images for the gallery. Max 5MB each.</p>
-                        
-                        {/* Gallery preview */}
-                        {formData.gallery_images.length > 0 && (
-                          <div className="space-y-2">
-                            <p className="text-xs font-medium text-slate-700">Gallery ({formData.gallery_images.length} images):</p>
-                            <div className="flex flex-wrap gap-2">
-                              {formData.gallery_images.map((img, idx) => (
-                                <div key={idx} className="relative group">
-                                  <img
-                                    src={img}
-                                    alt={`Gallery ${idx + 1}`}
-                                    className="h-16 w-16 object-cover rounded-lg border"
-                                    onError={(e) => {
-                                      (e.target as HTMLImageElement).src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Crect fill='%23e2e8f0' width='64' height='64'/%3E%3C/svg%3E";
-                                    }}
-                                  />
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setFormData({
-                                        ...formData,
-                                        gallery_images: formData.gallery_images.filter((_, i) => i !== idx),
-                                      });
-                                    }}
-                                    className="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition shadow-sm"
-                                  >
-                                    <X className="h-3 w-3" />
-                                  </button>
-                                </div>
-                              ))}
+                            <div className="flex flex-col justify-center">
+                              <span className="font-semibold text-[var(--admin-text)] line-clamp-1">{entry.name}</span>
+                              <span className="mt-0.5 text-[11px] text-[var(--admin-text-muted)] line-clamp-1 sm:hidden">{interestLabel}</span>
                             </div>
                           </div>
-                        )}
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div>
-                      <Label htmlFor="svc-title">Title *</Label>
-                      <Input
-                        id="svc-title"
-                        value={serviceForm.title}
-                        onChange={(e) =>
-                          setServiceForm({
-                            ...serviceForm,
-                            title: e.target.value,
-                          })
-                        }
-                        placeholder="Service name"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="svc-description">Description *</Label>
-                      <Textarea
-                        id="svc-description"
-                        value={serviceForm.description}
-                        onChange={(e) =>
-                          setServiceForm({
-                            ...serviceForm,
-                            description: e.target.value,
-                          })
-                        }
-                        placeholder="Service description"
-                        rows={3}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="svc-price">Price Range</Label>
-                      <Input
-                        id="svc-price"
-                        value={serviceForm.price_range}
-                        onChange={(e) =>
-                          setServiceForm({
-                            ...serviceForm,
-                            price_range: e.target.value,
-                          })
-                        }
-                        placeholder="e.g., ₹500 - ₹2000"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="svc-icon">Icon</Label>
-                      <div className="grid grid-cols-5 gap-2 mt-2">
-                        {ICON_OPTIONS.map((option) => {
-                          const IconComponent = option.icon;
-                          return (
-                            <button
-                              key={option.name}
-                              type="button"
-                              onClick={() =>
-                                setServiceForm({
-                                  ...serviceForm,
-                                  icon: option.name,
-                                })
-                              }
-                              className={`p-3 rounded-lg border-2 transition-all flex flex-col items-center gap-1 ${
-                                serviceForm.icon === option.name
-                                  ? "border-royal bg-royal/10"
-                                  : "border-slate-200 hover:border-slate-300"
-                              }`}
-                              title={option.label}
-                            >
-                              <IconComponent className="h-5 w-5 text-royal" />
-                              <span className="text-[10px] text-slate-600">{option.label}</span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </>
+                        </td>
+                        <td className="hidden px-3 py-4 text-sm text-[var(--admin-text)] sm:table-cell align-middle">{interestLabel}</td>
+                        <td className="hidden px-3 py-4 text-sm text-[var(--admin-text-muted)] md:table-cell align-middle">{formatShortDate(entry.created_at)}</td>
+                        <td className="px-3 py-4 align-middle">
+                          <span
+                            className={cn(
+                              "inline-flex items-center justify-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-bold uppercase tracking-wide",
+                              statusStyle.badgeClassName
+                            )}
+                          >
+                            <span className={cn("h-1.5 w-1.5 rounded-full", statusStyle.dotClassName)} />
+                            {statusStyle.label}
+                          </span>
+                        </td>
+                        <td className="px-4 py-4 text-right sm:px-5 align-middle">
+                          <Link
+                            href="/admin/messages"
+                            prefetch
+                            className="inline-flex h-8 items-center justify-center rounded-md bg-white border border-[var(--admin-border)] px-3 text-xs font-semibold text-[var(--admin-text)] shadow-sm transition hover:bg-[#faf9f6]"
+                          >
+                            View
+                          </Link>
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
+              </tbody>
+            </table>
+          </div>
+        </section>
 
-                <div className="flex gap-2 pt-4">
-                  <Button
-                    onClick={() =>
-                      activeTab === "properties"
-                        ? handleSaveProperty()
-                        : handleSaveService()
-                    }
-                    disabled={isSaving}
-                    className="flex-1 gap-2 bg-royal hover:bg-royal/90 text-white"
-                  >
-                    {isSaving ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Save className="h-4 w-4" />
-                    )}
-                    {isSaving ? "Saving..." : "Save"}
-                  </Button>
-                  <Button
-                    onClick={() => setIsCreating(false)}
-                    variant="secondary"
-                    className="flex-1"
-                    disabled={isSaving}
-                  >
-                    Cancel
-                  </Button>
-                </div>
+        <div className="space-y-5">
+          <section className="rounded-2xl border border-[var(--admin-border)] bg-white p-5 shadow-sm sm:p-6">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-[15px] font-bold tracking-tight text-[var(--admin-text)]">Listing Breakdown</h3>
+            </div>
+
+            <div className="space-y-4">
+              {(Object.keys(listingMix) as ListingType[]).map((key) => {
+                const value = listingMix[key];
+                const width = totalProperties === 0 ? 0 : Math.max(8, (value / totalProperties) * 100);
+
+                return (
+                  <div key={key} className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-semibold text-[var(--admin-text)]">{key}</span>
+                      <span className="font-medium text-[var(--admin-text-muted)]">{value}</span>
+                    </div>
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#f1eee7]">
+                      <div
+                        className="h-full rounded-full bg-[var(--admin-accent)] transition-all duration-500 ease-out"
+                        style={{ width: `${width}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            
+            {saleListings > 0 && (
+              <div className="mt-6 rounded-lg bg-[#faf8f4] p-3 text-xs font-medium text-[var(--admin-text-muted)]">
+                <span className="font-bold text-[var(--admin-text)]">{saleListings} items</span> are currently listed for sale.
               </div>
+            )}
+          </section>
+        </div>
+      </div>
 
-              {/* Preview */}
-              {activeTab === "properties" && (
-                <div className="flex flex-col gap-4">
-                  <h3 className="font-semibold text-slate-900">Preview</h3>
-                  <div className="rounded-xl border border-slate-200 overflow-hidden bg-white hover:shadow-lg transition h-fit">
-                    {formData.image_url ? (
-                      <div className="h-48 bg-gradient-to-br from-royal/20 to-pink/20 flex items-center justify-center">
-                        <img
-                          src={formData.image_url}
-                          alt={formData.title}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).style.display =
-                              "none";
-                          }}
-                        />
-                      </div>
-                    ) : (
-                      <div className="h-48 bg-gradient-to-br from-royal/20 to-pink/20 flex items-center justify-center text-slate-400">
-                        No image
-                      </div>
-                    )}
-                    <div className="p-4 space-y-3">
-                      <div>
-                        <h3 className="font-bold text-lg text-slate-900">
-                          {formData.title || "Property Name"}
-                        </h3>
-                        <p className="text-sm text-slateInk">
-                          {formData.location || "Location"}
-                        </p>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        <Badge className="bg-royal/10 text-royal">
-                          {formData.bedrooms} Bed
-                        </Badge>
-                        <Badge className="bg-pink/10 text-pink">
-                          {formData.sqft.toLocaleString()} Sq Ft
-                        </Badge>
-                      </div>
-                      <div className="flex items-center justify-between pt-2">
-                        <span className="font-bold text-xl text-slate-900">
-                          ₹{formData.price.toLocaleString('en-IN')}
-                        </span>
-                        <Badge className="bg-slate-200 text-slate-700">{formData.type}</Badge>
-                      </div>
-                      <p className="text-sm text-slateInk">
-                        {formData.description || "Property description"}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {activeTab === "services" && (
-                <div className="flex flex-col gap-4">
-                  <h3 className="font-semibold text-slate-900">Preview</h3>
-                  <div className="rounded-xl border border-slate-200 bg-gradient-to-br from-white/80 to-purple/5 p-6 text-center space-y-3 h-fit">
-                    <div className="flex justify-center">
-                      {(() => {
-                        const IconOption = ICON_OPTIONS.find(opt => opt.name === serviceForm.icon);
-                        const IconComponent = IconOption?.icon || Sparkles;
-                        return (
-                          <div className="rounded-2xl bg-gradient-to-br from-royal/10 to-purple/10 p-4">
-                            <IconComponent className="h-8 w-8 text-royal" />
-                          </div>
-                        );
-                      })()}
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-lg text-slate-900">
-                        {serviceForm.title || "Service Name"}
-                      </h3>
-                      <p className="text-sm text-slateInk mt-2">
-                        {serviceForm.description || "Service description"}
-                      </p>
-                    </div>
-                    {serviceForm.price_range && (
-                      <p className="text-royal font-semibold pt-2">
-                        {serviceForm.price_range}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
-
-      {/* Properties Content */}
-      {activeTab === "properties" && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="space-y-4"
+      <div className="mt-5">
+        <section
+          id="properties-section"
+          className="rounded-2xl border border-[var(--admin-border)] bg-white p-5 shadow-sm sm:p-6"
         >
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-slate-900">
-              All Properties ({properties.length})
-            </h2>
-            <Button
-              onClick={handleAddProperty}
-              className="gap-2 bg-royal hover:bg-royal/90 text-white"
-            >
-              <Plus className="h-4 w-4" />
-              Add Property
-            </Button>
+          <div className="mb-5 flex items-center justify-between">
+            <h3 className="text-[15px] font-bold tracking-tight text-[var(--admin-text)]">Recent Properties</h3>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {properties.map((prop) => (
-              <motion.div
-                key={prop.id}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="rounded-xl border border-slate-200 overflow-hidden bg-white hover:shadow-lg transition"
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {properties.slice(0, 4).map((property) => (
+              <div
+                key={property.id}
+                className="flex flex-col justify-between rounded-xl border border-[var(--admin-border)] bg-[#faf9f6] p-4 transition-colors hover:bg-white"
               >
-                {prop.image_url && (
-                  <div className="h-40 bg-gradient-to-br from-royal/20 to-pink/20">
-                    <img
-                      src={prop.image_url}
-                      alt={prop.title}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display =
-                          "none";
-                      }}
-                    />
-                  </div>
-                )}
-                <div className="p-4 space-y-3">
-                  <div>
-                    <h3 className="font-bold text-slate-900">{prop.title}</h3>
-                    <p className="text-sm text-slateInk">{prop.location}</p>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <Badge className="bg-royal/10 text-royal text-xs">
-                      {prop.bedrooms} Bed
-                    </Badge>
-                    <Badge className="bg-pink/10 text-pink text-xs">
-                      {prop.sqft.toLocaleString()} Sq Ft
-                    </Badge>
-                    <Badge className="bg-slate-200 text-slate-700 text-xs">
-                      {prop.type}
-                    </Badge>
-                  </div>
-                  <div className="flex items-center justify-between pt-2">
-                    <span className="font-bold text-slate-900">
-                      ₹{prop.price.toLocaleString('en-IN')}
-                    </span>
-                  </div>
-                  <div className="flex gap-2 pt-2">
-                    <Button
-                      onClick={() => handleEditProperty(prop)}
-                      size="sm"
-                      variant="secondary"
-                      className="flex-1 gap-1"
-                    >
-                      <Edit className="h-3 w-3" />
-                      Edit
-                    </Button>
-                    <Button
-                      onClick={() => handleDeleteProperty(prop.id)}
-                      size="sm"
-                      variant="secondary"
-                      className="flex-1 gap-1 text-red-600 hover:bg-red-50"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                      Delete
-                    </Button>
-                  </div>
+                <div>
+                  <span className="mb-2 inline-flex items-center rounded-md bg-[#e8e4db] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[var(--admin-text)]">
+                    {property.type}
+                  </span>
+                  <p className="text-sm font-semibold text-[var(--admin-text)] line-clamp-1">{property.title}</p>
                 </div>
-              </motion.div>
+                <p className="mt-3 text-xs font-medium text-[var(--admin-text-muted)]">{formatShortDate(property.created_at)}</p>
+              </div>
             ))}
+
+            {properties.length === 0 ? (
+              <p className="col-span-full rounded-xl border border-dashed border-[var(--admin-border)] px-4 py-8 text-center text-sm font-medium text-[var(--admin-text-muted)]">
+                No properties available yet.
+              </p>
+            ) : null}
           </div>
-
-          {properties.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-slateInk mb-4">No properties yet</p>
-              <Button
-                onClick={handleAddProperty}
-                className="gap-2 bg-royal hover:bg-royal/90 text-white"
-              >
-                <Plus className="h-4 w-4" />
-                Add First Property
-              </Button>
-            </div>
-          )}
-        </motion.div>
-      )}
-
-      {/* Services Content */}
-      {activeTab === "services" && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="space-y-4"
-        >
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-slate-900">
-              All Services ({services.length})
-            </h2>
-            <Button
-              onClick={handleAddService}
-              className="gap-2 bg-royal hover:bg-royal/90 text-white"
-            >
-              <Plus className="h-4 w-4" />
-              Add Service
-            </Button>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {services.map((svc) => {
-              const IconOption = ICON_OPTIONS.find(opt => opt.name === svc.icon);
-              const IconComponent = IconOption?.icon || Sparkles;
-              return (
-                <motion.div
-                  key={svc.id}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="rounded-xl border border-slate-200 bg-gradient-to-br from-white/80 to-purple/5 p-6 text-center space-y-3 hover:shadow-lg transition"
-                >
-                  <div className="flex justify-center">
-                    <div className="rounded-2xl bg-gradient-to-br from-royal/10 to-purple/10 p-3">
-                      <IconComponent className="h-6 w-6 text-royal" />
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-slate-900">{svc.title}</h3>
-                    <p className="text-sm text-slateInk mt-2">
-                      {svc.description}
-                    </p>
-                  </div>
-                  {svc.price_range && (
-                    <p className="text-royal font-semibold">{svc.price_range}</p>
-                  )}
-                  <div className="flex gap-2 pt-2">
-                    <Button
-                      onClick={() => handleEditService(svc)}
-                      size="sm"
-                      variant="secondary"
-                      className="flex-1 gap-1"
-                    >
-                      <Edit className="h-3 w-3" />
-                      Edit
-                    </Button>
-                    <Button
-                      onClick={() => handleDeleteService(svc.id)}
-                      size="sm"
-                      variant="secondary"
-                      className="flex-1 gap-1 text-red-600 hover:bg-red-50"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                      Delete
-                    </Button>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-
-          {services.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-slateInk mb-4">No services yet</p>
-              <Button
-                onClick={handleAddService}
-                className="gap-2 bg-royal hover:bg-royal/90 text-white"
-              >
-                <Plus className="h-4 w-4" />
-                Add First Service
-              </Button>
-            </div>
-          )}
-        </motion.div>
-      )}
-    </div>
+        </section>
+      </div>
+    </AdminLayout>
   );
 }

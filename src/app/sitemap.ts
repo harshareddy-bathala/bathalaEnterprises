@@ -1,65 +1,86 @@
 import { MetadataRoute } from 'next';
 import { getPropertiesFromSupabase } from '@/lib/supabase-queries';
+import { getServicesFromSupabase } from '@/lib/supabase-queries';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://bathalaenterprises.com';
+  const now = new Date();
   
-  // Get all properties for dynamic routes
-  const properties = await getPropertiesFromSupabase();
+  const [properties, services] = await Promise.all([
+    getPropertiesFromSupabase(),
+    getServicesFromSupabase(),
+  ]);
   
-  // Static pages
   const staticPages: MetadataRoute.Sitemap = [
     {
       url: baseUrl,
-      lastModified: new Date(),
+      lastModified: now,
       changeFrequency: 'daily',
       priority: 1,
     },
     {
+      url: `${baseUrl}/about`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
       url: `${baseUrl}/all-properties`,
-      lastModified: new Date(),
+      lastModified: now,
       changeFrequency: 'daily',
       priority: 0.9,
     },
     {
-      url: `${baseUrl}/services`,
-      lastModified: new Date(),
+      url: `${baseUrl}/properties`,
+      lastModified: now,
       changeFrequency: 'weekly',
-      priority: 0.8,
+      priority: 0.85,
     },
     {
       url: `${baseUrl}/all-services`,
-      lastModified: new Date(),
+      lastModified: now,
       changeFrequency: 'weekly',
-      priority: 0.8,
+      priority: 0.85,
     },
     {
       url: `${baseUrl}/contact`,
-      lastModified: new Date(),
+      lastModified: now,
       changeFrequency: 'monthly',
       priority: 0.7,
     },
     {
       url: `${baseUrl}/privacy`,
-      lastModified: new Date(),
+      lastModified: now,
       changeFrequency: 'yearly',
       priority: 0.3,
     },
     {
       url: `${baseUrl}/terms`,
-      lastModified: new Date(),
+      lastModified: now,
       changeFrequency: 'yearly',
       priority: 0.3,
     },
+    {
+      url: `${baseUrl}/maintenance`,
+      lastModified: now,
+      changeFrequency: 'yearly',
+      priority: 0.2,
+    },
   ];
 
-  // Dynamic property pages
   const propertyPages: MetadataRoute.Sitemap = properties.map((property) => ({
     url: `${baseUrl}/properties/${property.id}`,
-    lastModified: new Date(),
+    lastModified: now,
     changeFrequency: 'weekly' as const,
     priority: 0.6,
   }));
 
-  return [...staticPages, ...propertyPages];
+  const servicePages: MetadataRoute.Sitemap = services.map((service) => ({
+    url: `${baseUrl}/all-services/${service.id}`,
+    lastModified: now,
+    changeFrequency: 'weekly' as const,
+    priority: 0.58,
+  }));
+
+  return [...staticPages, ...propertyPages, ...servicePages];
 }
