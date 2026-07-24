@@ -562,6 +562,8 @@ export async function POST(request: NextRequest) {
         dbCode: supabaseError.code,
         dbMessage: supabaseError.message,
         dbDetails: supabaseError.details,
+        remediation:
+          "Database policy blocks inserts to public.messages. Run SUPABASE_FIX_MESSAGES_RLS.sql or configure SUPABASE_SERVICE_ROLE_KEY.",
       });
 
       return apiError(
@@ -570,8 +572,6 @@ export async function POST(request: NextRequest) {
         503,
         {
           requestId,
-          details:
-            "Database policy blocks inserts to public.messages. Run SUPABASE_FIX_MESSAGES_RLS.sql or configure SUPABASE_SERVICE_ROLE_KEY.",
         }
       );
     }

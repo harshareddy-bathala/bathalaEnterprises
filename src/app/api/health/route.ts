@@ -1,5 +1,10 @@
-import { apiSuccess, createRequestId } from "@/lib/api-response";
+import { NextRequest } from "next/server";
+import { apiError, apiSuccess, createRequestId } from "@/lib/api-response";
 import { fetchWithTimeout } from "@/lib/async-utils";
+import { checkRateLimit } from "@/lib/rate-limit";
+
+const HEALTH_RATE_LIMIT_MAX = 12;
+const HEALTH_RATE_LIMIT_WINDOW_MS = 60_000;
 
 type CheckState = "ok" | "warn" | "fail" | "skipped";
 
@@ -155,9 +160,31 @@ async function checkResend(): Promise<HealthCheckResult> {
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const requestId = createRequestId("health");
   const startedAt = Date.now();
+
+  // The health check fans out to three upstream APIs; rate-limit it so it
+  // cannot be used to relay traffic at Supabase/Google/Resend.
+  const ip =
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    request.headers.get("x-real-ip") ||
+    "unknown";
+
+  const rateLimitResult = await checkRateLimit({
+    namespace: "health",
+    key: ip,
+    maxRequests: HEALTH_RATE_LIMIT_MAX,
+    windowMs: HEALTH_RATE_LIMIT_WINDOW_MS,
+  });
+
+  if (!rateLimitResult.allowed) {
+    return apiError("RATE_LIMITED", "Too many health checks. Please wait.", 429, {
+      requestId,
+      retryAfterMs: rateLimitResult.retryAfterMs,
+      retryable: true,
+    });
+  }
 
   const checks = await Promise.all([checkSupabase(), checkGoogleAi(), checkResend()]);
 
