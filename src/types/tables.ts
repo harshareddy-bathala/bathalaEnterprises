@@ -12,6 +12,7 @@ export interface Admin {
 export interface Service {
   id: string;
   title: string;
+  slug?: string;                   // Public URL slug; see src/lib/slug.ts
   card_description?: string;       // Short one-liner for cards (max 180 chars)
   detailed_description?: string;   // Full description for modal
   icon_name?: string;
@@ -27,6 +28,7 @@ export interface Service {
 export interface Property {
   id: string;
   title: string;
+  slug?: string;                   // Public URL slug; see src/lib/slug.ts
   location: string;
   price: number;
   type: PropertyType;
@@ -62,6 +64,16 @@ export interface SiteSettings {
   phone?: string | null;
   email?: string | null;
   address?: string | null;
+  // Structured address + geo for schema.org. Added by
+  // SUPABASE_ADD_BUSINESS_PROFILE.sql; may be absent on older databases.
+  street_address?: string | null;
+  address_locality?: string | null;
+  address_region?: string | null;
+  postal_code?: string | null;
+  address_country?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  google_business_url?: string | null;
   facebook_url?: string | null;
   twitter_url?: string | null;
   instagram_url?: string | null;

@@ -2,17 +2,22 @@ import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
 import { JsonLd } from "@/components/json-ld";
-import { generateBreadcrumbSchema, generateWebPageSchema } from "@/lib/structured-data";
+import {
+  generateBreadcrumbSchema,
+  generateFaqSchema,
+  generateWebPageSchema,
+} from "@/lib/structured-data";
+import { FAQ_ENTRIES } from "@/lib/faq-content";
 import { cn } from "@/lib/utils";
+import { BLUR_DATA_URL } from "@/lib/image-utils";
+import { buildMetadata, siteUrl as baseUrl } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildMetadata({
   title: "About Us",
   description:
     "Learn about Bathala Enterprises, our values, journey, and what makes our property services trusted by families across Electronic City, Bangalore.",
-  alternates: {
-    canonical: "/about",
-  },
-};
+  path: "/about",
+});
 
 const trustStats = [
   { value: "50+", label: "Properties Managed" },
@@ -84,8 +89,6 @@ const differentiators = [
   "10+ years of deep Electronic City expertise",
 ] as const;
 
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://bathalaenterprises.com";
-
 export default function AboutPage() {
   const webPageSchema = generateWebPageSchema(
     `${baseUrl}/about`,
@@ -102,7 +105,8 @@ export default function AboutPage() {
     <div className="bathala-page pb-24 pt-14 sm:pt-16">
       <JsonLd data={webPageSchema} />
       <JsonLd data={breadcrumbSchema} />
-      <section className="mx-auto max-w-[1200px] px-5 md:px-10">
+      <JsonLd data={generateFaqSchema(FAQ_ENTRIES)} />
+      <section className="bathala-container">
         <div className="flex items-center gap-2">
           <span className="h-[1.5px] w-8 rounded-[2px] bg-[#b89a5e]" />
           <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#b89a5e]">About Us</p>
@@ -132,6 +136,8 @@ export default function AboutPage() {
               alt="Bathala team meeting clients"
               fill
               loading="lazy"
+              placeholder="blur"
+              blurDataURL={BLUR_DATA_URL.default}
               sizes="(max-width: 768px) 100vw, 50vw"
               className="object-cover"
             />
@@ -159,7 +165,7 @@ export default function AboutPage() {
       </section>
 
       <section className="mt-20 bg-white py-16 sm:py-20">
-        <div className="mx-auto max-w-[1200px] px-5 md:px-10">
+        <div className="bathala-container">
           <div className="text-center">
             <div className="flex items-center justify-center gap-2">
               <span className="h-[1.5px] w-8 rounded-[2px] bg-[#b89a5e]" />
@@ -182,7 +188,7 @@ export default function AboutPage() {
                 )}
               >
                 <div className="inline-flex h-[52px] w-[52px] items-center justify-center rounded-[14px] border border-[rgba(184,154,94,0.18)] bg-[rgba(184,154,94,0.08)]">
-                  <span className="material-symbols-outlined text-[22px] text-[#b89a5e]">{value.icon}</span>
+                  <span className="material-symbols-outlined text-[22px] text-[#b89a5e]" aria-hidden="true">{value.icon}</span>
                 </div>
                 <h3 className="mt-5 font-display text-[22px] font-semibold leading-[1.2] text-[#1a1f2e]">
                   {value.title}
@@ -228,6 +234,8 @@ export default function AboutPage() {
               alt="Premium interior managed by Bathala"
               fill
               loading="lazy"
+              placeholder="blur"
+              blurDataURL={BLUR_DATA_URL.default}
               sizes="(max-width: 768px) 100vw, 50vw"
               className="object-cover"
             />
@@ -248,7 +256,7 @@ export default function AboutPage() {
               {differentiators.map((item) => (
                 <li key={item} className="flex items-start gap-3 text-[14.5px] leading-[1.5] text-[#4a5568]">
                   <span className="mt-[1px] inline-flex h-5 w-5 items-center justify-center rounded-full border border-[#d9c492] text-[#b89a5e]">
-                    <span className="material-symbols-outlined text-[12px]">check</span>
+                    <span className="material-symbols-outlined text-[12px]" aria-hidden="true">check</span>
                   </span>
                   <span>{item}</span>
                 </li>
@@ -260,7 +268,7 @@ export default function AboutPage() {
               className="mt-8 inline-flex h-[47px] items-center gap-2 rounded-[10px] bg-[#b89a5e] px-7 text-[14px] font-semibold text-[#2c3340] transition-colors hover:bg-[#a88c52]"
             >
               Contact Us
-              <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+              <span className="material-symbols-outlined text-[16px]" aria-hidden="true">arrow_forward</span>
             </Link>
           </div>
         </div>

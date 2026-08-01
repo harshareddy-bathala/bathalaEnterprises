@@ -160,13 +160,25 @@ const nextConfig = {
           }
         ]
       },
-      // Stale-while-revalidate for API routes
+      // Only /api/health is safe to cache publicly. This used to be
+      // `/api/:path*`, which put `public, s-maxage=60` on POST /api/contact,
+      // POST /api/chat and POST /api/rum, and would have silently made any
+      // future authenticated GET publicly cacheable by default.
       {
-        source: '/api/:path*',
+        source: '/api/health',
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, s-maxage=60, stale-while-revalidate=300'
+            value: 'public, s-maxage=30, stale-while-revalidate=120'
+          }
+        ]
+      },
+      {
+        source: '/api/:path((?!health).*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-store'
           }
         ]
       },
@@ -189,6 +201,10 @@ const nextConfig = {
       return [];
     }
 
+    // Canonical structure is /properties[/<slug>] and /services[/<slug>].
+    // The old "all-" listing paths and the UUID detail URLs both 301 here;
+    // slug resolution and the UUID -> slug hop happen in the page itself,
+    // since this config cannot know the id -> slug mapping.
     const redirects = [
       {
         source: '/home',
@@ -196,18 +212,18 @@ const nextConfig = {
         permanent: true,
       },
       {
-        source: '/services/:id',
-        destination: '/all-services/:id',
+        source: '/all-properties',
+        destination: '/properties',
         permanent: true,
       },
       {
-        source: '/services',
-        destination: '/all-services',
+        source: '/all-services/:id',
+        destination: '/services/:id',
         permanent: true,
       },
       {
-        source: '/properties',
-        destination: '/all-properties',
+        source: '/all-services',
+        destination: '/services',
         permanent: true,
       },
     ];

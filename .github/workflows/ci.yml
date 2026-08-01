@@ -1,5 +1,13 @@
 name: CI
 
+# Quality gates and deployment live in ONE workflow on purpose.
+#
+# They used to be separate (ci.yml + deploy.yml) with no dependency between
+# them, so a push to main raced lint/typecheck/build/tests against the Vercel
+# deploy — production could ship from a red build. GitHub cannot express
+# `needs:` across workflows, so the deploy jobs moved here and now depend on
+# the quality job.
+
 on:
   pull_request:
     branches:
@@ -8,11 +16,21 @@ on:
     branches:
       - main
 
+# Supersede in-flight runs for the same ref instead of piling them up.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   quality-and-build:
+    name: Quality and build
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
+      # Placeholders so the build succeeds without real credentials. Note the
+      # DB-backed assertions in the specs therefore exercise the empty-state
+      # degradation path, not real data — point these at a seeded Supabase test
+      # project to make them meaningful.
       NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
       NEXT_PUBLIC_SUPABASE_ANON_KEY: anon-key-placeholder
       NEXT_PUBLIC_SITE_URL: https://bathalaenterprises.com
@@ -27,11 +45,13 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version-file: .nvmrc
           cache: npm
 
+      # `npm ci` honours package-lock.json; `npm install` silently ignored it,
+      # so CI could resolve different versions than any local machine.
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Lint
         run: npm run lint:ci
@@ -48,13 +68,152 @@ jobs:
       - name: Run critical user-flow tests
         run: npm run test:critical-flows
 
+      # The accessibility suite existed but ran nowhere.
+      - name: Run accessibility tests
+        run: npm run test:a11y
+
       - name: Upload Playwright report artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: critical-flow-artifacts
+          name: playwright-artifacts
           path: |
-            playwright-report/critical
-            test-results/critical-artifacts
-            test-results/critical-results.json
+            playwright-report
+            test-results
           if-no-files-found: ignore
+
+  audit:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Advisory: surfaces known vulnerabilities without blocking a release on
+      # a transitive advisory that may have no fix available yet.
+      - name: npm audit (high and above)
+        run: npm audit --audit-level=high
+        continue-on-error: true
+
+  preview-deploy:
+    name: Preview deploy
+    if: github.event_name == 'pull_request'
+    needs: quality-and-build
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      # Skipping is correct here: pull requests from forks cannot read secrets.
+      - name: Check required Vercel secrets
+        id: secrets
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          if [ -z "$VERCEL_TOKEN" ] || [ -z "$VERCEL_ORG_ID" ] || [ -z "$VERCEL_PROJECT_ID" ]; then
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Skipping preview deployment: Vercel secrets unavailable (expected for fork PRs)."
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install Vercel CLI
+        if: steps.secrets.outputs.ready == 'true'
+        run: npm install --global vercel@latest
+
+      - name: Pull Vercel preview environment
+        if: steps.secrets.outputs.ready == 'true'
+        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build preview artifacts
+        if: steps.secrets.outputs.ready == 'true'
+        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy preview
+        if: steps.secrets.outputs.ready == 'true'
+        id: deploy
+        run: |
+          url=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      - name: Comment preview URL on pull request
+        if: steps.secrets.outputs.ready == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const url = "${{ steps.deploy.outputs.url }}";
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `Preview deployment ready: ${url}`,
+            });
+
+  production-deploy:
+    name: Production deploy
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: quality-and-build
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      # Fails the run rather than skipping. A missing secret previously produced
+      # a green check with nothing deployed — the worst outcome, because it
+      # looks shipped and is not.
+      - name: Require Vercel secrets
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          missing=""
+          [ -z "$VERCEL_TOKEN" ] && missing="$missing VERCEL_TOKEN"
+          [ -z "$VERCEL_ORG_ID" ] && missing="$missing VERCEL_ORG_ID"
+          [ -z "$VERCEL_PROJECT_ID" ] && missing="$missing VERCEL_PROJECT_ID"
+          if [ -n "$missing" ]; then
+            echo "::error::Production deploy aborted. Missing repository secrets:$missing"
+            exit 1
+          fi
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Pull Vercel production environment
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build production artifacts
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy production
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}

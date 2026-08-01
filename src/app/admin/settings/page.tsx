@@ -18,6 +18,11 @@ import {
 import AdminLayout, { AdminCard, ErrorAlert, SuccessAlert, LoadingState } from "@/components/admin/admin-layout";
 import type { SiteSettings, AdminNotificationSettings } from "@/types/tables";
 
+/** Narrow an unknown caught value to a displayable message. */
+function errorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error && error.message ? error.message : fallback;
+}
+
 type TabType = "general" | "profile" | "notifications";
 
 const AVATAR_BUCKETS = ["testimonial-avatars", "property-images"] as const;
@@ -199,9 +204,9 @@ export default function SettingsPage() {
 
       setSiteSettings(site);
       setNotificationSettings(notifications);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error fetching settings:", err);
-      setError(err.message || "Failed to load settings");
+      setError(errorMessage(err, "Failed to load settings"));
     } finally {
       setLoading(false);
     }
@@ -275,9 +280,9 @@ export default function SettingsPage() {
       setAvatarMarkedForRemoval(false);
       setSuccess("Profile updated successfully.");
       setTimeout(() => setSuccess(null), 3000);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error saving profile:", err);
-      setError(err.message || "Failed to save profile settings");
+      setError(errorMessage(err, "Failed to save profile settings"));
     } finally {
       setProfileSaving(false);
     }
@@ -344,9 +349,9 @@ export default function SettingsPage() {
       setConfirmPassword("");
       setSuccess("Password updated successfully.");
       setTimeout(() => setSuccess(null), 3000);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error updating password:", err);
-      setError(err.message || "Failed to update password");
+      setError(errorMessage(err, "Failed to update password"));
     } finally {
       setPasswordSaving(false);
     }
@@ -408,8 +413,8 @@ export default function SettingsPage() {
 
       setSuccess("Settings saved successfully!");
       setTimeout(() => setSuccess(null), 3000);
-    } catch (err: any) {
-      setError(err.message || "Failed to save settings");
+    } catch (err: unknown) {
+      setError(errorMessage(err, "Failed to save settings"));
     } finally {
       setSaving(false);
     }
@@ -435,8 +440,8 @@ export default function SettingsPage() {
 
       setSuccess("Notification settings saved successfully!");
       setTimeout(() => setSuccess(null), 3000);
-    } catch (err: any) {
-      setError(err.message || "Failed to save notification settings");
+    } catch (err: unknown) {
+      setError(errorMessage(err, "Failed to save notification settings"));
     } finally {
       setSaving(false);
     }
@@ -475,7 +480,7 @@ export default function SettingsPage() {
                   : "border-transparent text-[#6b7280] hover:text-[#1a1f2e]"
               }`}
             >
-              <span className="material-symbols-outlined text-lg">{tab.icon}</span>
+              <span className="material-symbols-outlined text-lg" aria-hidden="true">{tab.icon}</span>
               <span>{tab.label}</span>
             </button>
           ))}

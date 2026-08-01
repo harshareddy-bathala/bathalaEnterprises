@@ -3,6 +3,11 @@ import { z } from "zod";
 import { apiError, apiSuccess, createRequestId, zodIssuesToFieldErrors } from "@/lib/api-response";
 import { fetchWithTimeout } from "@/lib/async-utils";
 import { logInfo, logWarn } from "@/lib/logger";
+import { checkRateLimit } from "@/lib/rate-limit";
+
+// Generous: a real page view emits a handful of web-vitals beacons.
+const RUM_RATE_LIMIT_MAX = 60;
+const RUM_RATE_LIMIT_WINDOW_MS = 60_000;
 
 const rumPayloadSchema = z.object({
   name: z.string().min(1).max(40),
@@ -60,6 +65,25 @@ export async function POST(request: NextRequest) {
   const requestId = createRequestId("rum");
 
   try {
+    const clientIpForLimit =
+      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      request.headers.get("x-real-ip") ||
+      "unknown";
+
+    const rateLimitResult = await checkRateLimit({
+      namespace: "rum",
+      key: clientIpForLimit,
+      maxRequests: RUM_RATE_LIMIT_MAX,
+      windowMs: RUM_RATE_LIMIT_WINDOW_MS,
+    });
+
+    if (!rateLimitResult.allowed) {
+      return apiError("RATE_LIMITED", "Too many metrics.", 429, {
+        requestId,
+        retryAfterMs: rateLimitResult.retryAfterMs,
+      });
+    }
+
     const payload = await request.json();
     const parsedPayload = rumPayloadSchema.safeParse(payload);
 
@@ -70,15 +94,10 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const clientIp =
-      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-      request.headers.get("x-real-ip") ||
-      "unknown";
-
     const metricEvent = {
       ...parsedPayload.data,
       requestId,
-      ip: clientIp,
+      ip: clientIpForLimit,
       receivedAt: new Date().toISOString(),
     };
 

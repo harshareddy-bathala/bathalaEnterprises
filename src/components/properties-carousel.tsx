@@ -12,6 +12,7 @@ import { PROPERTY_FILTER_STATE_CLASSES, PROPERTY_TYPE_BADGE_CLASSES } from "@/li
 import { BLUR_DATA_URL, FALLBACK_IMAGES, getLoadingStrategy } from "@/lib/image-utils";
 import type { PropertyType } from "@/types/tables";
 import type { Property } from "@/lib/supabase-queries";
+import { propertyPath } from "@/lib/slug";
 
 const PROPERTIES_HOME_CACHE_KEY = "bathala:cache:home-properties:v1";
 
@@ -128,7 +129,7 @@ export default function PropertiesCarousel({ properties }: { properties: Propert
 
   return (
     <section id="properties" className="bg-[#f8f6f2] py-16 sm:py-20 md:py-24 lg:py-28">
-      <div className="mx-auto max-w-[1200px] px-5 sm:px-6 md:px-10">
+      <div className="bathala-container">
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div className="max-w-[390px]">
             <div className="flex items-center gap-2">
@@ -146,11 +147,11 @@ export default function PropertiesCarousel({ properties }: { properties: Propert
           </div>
 
           <Link
-            href="/all-properties"
+            href="/properties"
             className="inline-flex items-center gap-1 self-start text-[14px] font-medium text-[#b89a5e] transition-colors hover:text-[#9f8450] md:self-auto touch-manipulation"
           >
             View All Properties
-            <span className="material-symbols-outlined text-[15px]">arrow_forward</span>
+            <span className="material-symbols-outlined text-[15px]" aria-hidden="true">arrow_forward</span>
           </Link>
         </div>
 
@@ -159,7 +160,7 @@ export default function PropertiesCarousel({ properties }: { properties: Propert
           <div 
             ref={scrollContainerRef}
             className="no-scrollbar -mx-1 flex items-center gap-2 overflow-x-auto px-1 pb-1 sm:flex-wrap sm:justify-center sm:overflow-visible"
-            role="tablist"
+            role="group"
             aria-label="Property type filters"
             style={{ WebkitOverflowScrolling: 'touch' }}
           >
@@ -167,9 +168,8 @@ export default function PropertiesCarousel({ properties }: { properties: Propert
               <button
                 key={filter.label}
                 onClick={() => setActive(filter.value)}
-                role="tab"
-                aria-selected={active === filter.value}
-                aria-controls="properties-grid"
+                type="button"
+                aria-pressed={active === filter.value}
                 className={cn(
                   "h-[44px] min-w-[44px] shrink-0 whitespace-nowrap rounded-full border px-5 text-[13px] tracking-[0.01em] transition-all touch-manipulation active:scale-95",
                   active === filter.value ? PROPERTY_FILTER_STATE_CLASSES.active : PROPERTY_FILTER_STATE_CLASSES.inactive
@@ -192,7 +192,7 @@ export default function PropertiesCarousel({ properties }: { properties: Propert
 
         {usingCachedData ? (
           <div className="mt-4 flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs text-amber-800">
-            <span className="material-symbols-outlined text-sm">history</span>
+            <span className="material-symbols-outlined text-sm" aria-hidden="true">history</span>
             <span>
               Refreshing listings. Showing saved properties{cachedAtLabel ? ` from ${cachedAtLabel}` : ""} for now.
             </span>
@@ -202,13 +202,13 @@ export default function PropertiesCarousel({ properties }: { properties: Propert
         {displayedProperties.length > 0 ? (
           <div 
             id="properties-grid"
-            role="tabpanel"
+            aria-live="polite"
             className="mt-10 grid gap-5 md:mt-12 md:grid-cols-2 md:gap-6"
             style={{ touchAction: 'pan-y' }}
           >
             {displayedProperties.map((property, idx) => (
               <RevealOnView key={property.id} delayMs={idx * 55} threshold={0.22}>
-                <Link href={`/properties/${property.id}`} className="block touch-manipulation">
+                <Link href={propertyPath(property)} className="block touch-manipulation">
                   <article className="group h-full cursor-pointer overflow-hidden rounded-[20px] border border-[#e8e4dc] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06),0_4px_16px_rgba(0,0,0,0.05)] transition-all duration-300 hover:-translate-y-[2px] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] active:scale-[0.99]">
                     <div className="relative h-[240px] overflow-hidden rounded-t-[18px] bg-[#e8e4dc] xs:h-[268px] sm:h-[304px] md:h-[334px] lg:h-[360px]">
                       <Image
@@ -235,7 +235,7 @@ export default function PropertiesCarousel({ properties }: { properties: Propert
                       </div>
 
                       <div className="absolute right-3 top-3 flex h-[34px] w-[34px] items-center justify-center rounded-full border border-[rgba(255,255,255,0.15)] bg-[rgba(30,30,40,0.45)] text-white">
-                        <span className="material-symbols-outlined text-[16px]">favorite</span>
+                        <span className="material-symbols-outlined text-[16px]" aria-hidden="true">favorite</span>
                       </div>
 
                       <div className="absolute bottom-3 left-3 xs:bottom-3.5 xs:left-3.5 inline-flex h-[28px] xs:h-[30px] items-center rounded-[4px] bg-[rgba(255,255,255,0.92)] px-2">
@@ -251,24 +251,24 @@ export default function PropertiesCarousel({ properties }: { properties: Propert
                       </h3>
 
                       <p className="mt-1 xs:mt-1.5 flex items-center gap-1 text-[12px] xs:text-[12.5px] text-[#6b7280]">
-                        <span className="material-symbols-outlined text-[12px] xs:text-[13px] text-[#9ca3af]">location_on</span>
+                        <span className="material-symbols-outlined text-[12px] xs:text-[13px] text-[#9ca3af]" aria-hidden="true">location_on</span>
                         {property.location}
                       </p>
 
                       <div className="mt-3 xs:mt-4 border-t border-[#f0ede7] pt-3 xs:pt-3.5">
                         <div className="flex flex-wrap items-center gap-y-2 text-[11px] xs:text-[11.5px] text-[#6b7280] sm:text-[12px]">
                           <span className="inline-flex items-center gap-1.5 pr-2">
-                            <span className="material-symbols-outlined text-[13px] xs:text-[14px]">bed</span>
+                            <span className="material-symbols-outlined text-[13px] xs:text-[14px]" aria-hidden="true">bed</span>
                             {property.bedrooms} BHK
                           </span>
                           <span className="h-3 w-px bg-[#e8e4dc]" />
                           <span className="inline-flex items-center gap-1.5 px-2">
-                            <span className="material-symbols-outlined text-[13px] xs:text-[14px]">straighten</span>
+                            <span className="material-symbols-outlined text-[13px] xs:text-[14px]" aria-hidden="true">straighten</span>
                             {formatNumber(property.sqft)} sqft
                           </span>
                           <span className="hidden xs:block h-3 w-px bg-[#e8e4dc]" />
                           <span className="hidden xs:inline-flex items-center gap-1.5 pl-2">
-                            <span className="material-symbols-outlined text-[14px]">apartment</span>
+                            <span className="material-symbols-outlined text-[14px]" aria-hidden="true">apartment</span>
                             {getMetaTone(property.type)}
                           </span>
                         </div>
@@ -286,7 +286,7 @@ export default function PropertiesCarousel({ properties }: { properties: Propert
 
                         <span className="inline-flex items-center gap-1 text-[12px] xs:text-[13px] font-medium text-[#b89a5e]">
                           View Details
-                          <span className="material-symbols-outlined text-[12px] xs:text-[13px]">arrow_forward</span>
+                          <span className="material-symbols-outlined text-[12px] xs:text-[13px]" aria-hidden="true">arrow_forward</span>
                         </span>
                       </div>
                     </div>
@@ -312,7 +312,7 @@ export default function PropertiesCarousel({ properties }: { properties: Propert
         {hasMore && (
           <RevealOnView className="mt-8 flex justify-center" threshold={0.1}>
             <Button asChild variant="outline" size="lg">
-              <Link href="/all-properties">Browse Full Portfolio</Link>
+              <Link href="/properties">Browse Full Portfolio</Link>
             </Button>
           </RevealOnView>
         )}

@@ -155,7 +155,7 @@ export function SortableTh({
         className="inline-flex items-center gap-1.5 text-inherit transition hover:text-[#6b7280]"
       >
         <span>{children}</span>
-        <span className="material-symbols-outlined text-sm">
+        <span className="material-symbols-outlined text-sm" aria-hidden="true">
           {active ? (direction === "asc" ? "arrow_upward" : "arrow_downward") : "unfold_more"}
         </span>
       </button>
@@ -215,7 +215,7 @@ export function TableEmptyState({ icon = "inbox", title, description, action }: 
         </svg>
       </div>
       <span className="mb-2 inline-flex items-center gap-1 rounded-full bg-[#f8f4ec] px-2.5 py-1 text-xs font-semibold text-[#8b6f49]">
-        <span className="material-symbols-outlined text-sm">{icon}</span>
+        <span className="material-symbols-outlined text-sm" aria-hidden="true">{icon}</span>
         Nothing here yet
       </span>
       <h3 className="text-lg font-semibold text-[#1f2937]">{title}</h3>

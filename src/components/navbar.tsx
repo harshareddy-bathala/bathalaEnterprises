@@ -7,13 +7,16 @@ import { cn } from "@/lib/utils";
 
 const links = [
   { href: "/", label: "Home" },
-  { href: "/all-properties", label: "Properties" },
-  { href: "/all-services", label: "Services" },
+  { href: "/properties", label: "Properties" },
+  { href: "/services", label: "Services" },
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
 ];
 
-const prefetchRoutes = ["/all-properties", "/all-services", "/about", "/contact", "/admin/login"];
+const prefetchRoutes = ["/properties", "/services", "/about", "/contact", "/admin/login"];
+
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
 
 function linkIsActive(pathname: string, href: string) {
   if (href.startsWith("/#")) {
@@ -33,6 +36,8 @@ export default function Navbar() {
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
   const hasPrefetched = useRef(false);
+  const mobileNavRef = useRef<HTMLElement>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (hasPrefetched.current) {
@@ -69,6 +74,66 @@ export default function Navbar() {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [mobileOpen]);
 
+  /*
+   * Focus trap + focus return.
+   *
+   * The panel was reachable by keyboard but not contained: focus stayed on the
+   * hamburger and Tab walked straight into the page content behind the open
+   * overlay, which is invisible to a sighted keyboard user. Mirrors the trap
+   * already implemented in src/components/modal.tsx.
+   */
+  useEffect(() => {
+    if (!mobileOpen) {
+      return;
+    }
+
+    const panel = mobileNavRef.current;
+    if (!panel) {
+      return;
+    }
+
+    // Capture the trigger now; reading the ref inside cleanup would read
+    // whatever it points at when the effect tears down.
+    const trigger = menuButtonRef.current;
+
+    const getFocusable = () =>
+      Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(
+        (element) => element.tabIndex !== -1
+      );
+
+    getFocusable()[0]?.focus();
+
+    const handleTabKey = (event: KeyboardEvent) => {
+      if (event.key !== "Tab") {
+        return;
+      }
+
+      const focusable = getFocusable();
+      if (focusable.length === 0) {
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener("keydown", handleTabKey);
+
+    return () => {
+      document.removeEventListener("keydown", handleTabKey);
+      // Return focus to the control that opened the panel.
+      trigger?.focus();
+    };
+  }, [mobileOpen]);
+
   // Prevent body scroll when menu is open
   useEffect(() => {
     if (mobileOpen) {
@@ -95,8 +160,8 @@ export default function Navbar() {
       />
 
       <header className="sticky top-0 z-50 border-b border-[#ece7de] bg-[rgba(248,246,242,0.95)] backdrop-blur-lg safe-area-top">
-        <div className="mx-auto max-w-[1200px] px-5 md:px-10">
-          <div className="flex h-[72px] items-center justify-between gap-5">
+        <div className="bathala-container">
+          <div className="flex h-[var(--header-height)] items-center justify-between gap-5">
             <Link
               href="/"
               className="relative flex min-h-[44px] items-center gap-2 touch-manipulation"
@@ -107,7 +172,7 @@ export default function Navbar() {
               </span>
               <span className="mb-[2px] inline-block h-[5px] w-[5px] rounded-full bg-[#b89a5e]" aria-hidden="true" />
               <span
-                className="pointer-events-none absolute left-0 top-[31px] h-[1.5px] w-[174px] bg-gradient-to-r from-[#b89a5e] to-transparent"
+                className="pointer-events-none absolute inset-x-0 top-[31px] h-[1.5px] bg-gradient-to-r from-[#b89a5e] to-transparent"
                 aria-hidden="true"
               />
             </Link>
@@ -152,6 +217,7 @@ export default function Navbar() {
               </Link>
 
               <button
+                ref={menuButtonRef}
                 type="button"
                 onClick={() => setMobileOpen((current) => !current)}
                 className="inline-flex h-11 w-11 items-center justify-center rounded-full text-[#2c3340] transition-all hover:bg-[#efebe4] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b89a5e] focus-visible:ring-offset-2 md:hidden touch-manipulation active:scale-95"
@@ -176,17 +242,18 @@ export default function Navbar() {
 
       {/* Mobile Navigation Overlay Panel */}
       <nav
+        ref={mobileNavRef}
         id="mobile-nav"
         className={cn(
           "fixed inset-x-0 z-50 md:hidden",
-          "top-[calc(72px+env(safe-area-inset-top))] transform-gpu transition-all duration-300 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)]",
+          "top-[calc(var(--header-height)+env(safe-area-inset-top))] transform-gpu transition-all duration-300 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)]",
           mobileOpen ? "pointer-events-auto translate-y-0 opacity-100" : "pointer-events-none -translate-y-2 opacity-0"
         )}
         aria-label="Mobile navigation"
         aria-hidden={!mobileOpen}
       >
-        <div className="max-h-[min(calc(100dvh-72px),520px)] overflow-y-auto border-b border-[#ece7de] bg-[rgba(248,246,242,0.98)] backdrop-blur-lg">
-          <div className="mx-auto max-w-[1200px] space-y-1 px-5 py-4 md:px-10">
+        <div className="max-h-[min(calc(100dvh-var(--header-height)),520px)] overflow-y-auto border-b border-[#ece7de] bg-[rgba(248,246,242,0.98)] backdrop-blur-lg">
+          <div className="bathala-container space-y-1 py-4">
             {links.map((link, index) => {
               const active = linkIsActive(pathname, link.href);
 

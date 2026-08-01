@@ -1,23 +1,19 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { buildMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildMetadata({
   title: "Offline",
   description: "Offline fallback page for Bathala Enterprises.",
-  robots: {
-    index: false,
-    follow: false,
-  },
-  alternates: {
-    canonical: "/offline",
-  },
-};
+  path: "/offline",
+  index: false,
+});
 
 export default function OfflinePage() {
   return (
     <div className="bathala-page flex min-h-[70vh] flex-col items-center justify-center px-6 text-center">
       <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-[#f6f1e5] text-[#b89a5e]">
-        <span className="material-symbols-outlined text-4xl">wifi_off</span>
+        <span className="material-symbols-outlined text-4xl" aria-hidden="true">wifi_off</span>
       </div>
 
       <h1 className="font-display text-3xl font-semibold text-[#1a1f2e]">You are Offline</h1>

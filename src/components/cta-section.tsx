@@ -30,11 +30,11 @@ export default function CtaSection() {
                 className="inline-flex h-[51px] w-full items-center justify-center gap-2 rounded-[10px] bg-[#b89a5e] px-8 text-[14px] font-semibold text-[#2c3340] transition-colors hover:bg-[#a88c52] sm:w-auto"
               >
                 Get in Touch
-                <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                <span className="material-symbols-outlined text-[16px]" aria-hidden="true">arrow_forward</span>
               </Link>
 
               <Link
-                href="/all-properties"
+                href="/properties"
                 className="inline-flex h-[51px] w-full items-center justify-center rounded-[10px] border border-[rgba(255,255,255,0.2)] px-7 text-[14px] font-medium text-[rgba(255,255,255,0.8)] transition-colors hover:bg-[rgba(255,255,255,0.06)] sm:w-auto"
               >
                 Browse Properties

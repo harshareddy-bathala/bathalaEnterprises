@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//mnt/skills/**)",
+      "Read(//c//**)",
+      "Bash(grep -v \"^\\\\+.*=$\")",
+      "Bash(ls -la /Users/dev/workspace-a3336222)",
+      "Bash(node -e \"console.log\\(require\\('@supabase/ssr/package.json'\\).version\\)\")",
+      "Bash(echo \"exit: $?\")",
+      "Bash(npm install *)",
+      "Bash(npm uninstall *)",
+      "Bash(npm run *)"
+    ]
+  }
+}

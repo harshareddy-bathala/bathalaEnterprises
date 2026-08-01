@@ -12,6 +12,7 @@ import EmptyState from "@/components/ui/empty-state";
 import Pagination from "@/components/ui/pagination";
 import Breadcrumb from "@/components/ui/breadcrumb";
 import type { Property } from "@/lib/supabase-queries";
+import { propertyPath } from "@/lib/slug";
 
 type FilterValue = "all" | "apartments" | "villas" | "rent" | "sale" | "lease";
 const PROPERTIES_CACHE_KEY = "bathala:cache:all-properties:v1";
@@ -154,12 +155,12 @@ export default function AllPropertiesClient({ properties }: { properties: Proper
 
   return (
     <div className="bathala-page pb-20 pt-14 sm:pt-16">
-      <div className="mx-auto max-w-[1200px] px-5 md:px-10">
+      <div className="bathala-container">
         <Breadcrumb className="mb-6 md:mb-7" items={[{ label: "Home", href: "/" }, { label: "Properties" }]} />
 
         {(isOffline || usingCachedData) && (
           <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-            <span className="material-symbols-outlined text-base">
+            <span className="material-symbols-outlined text-base" aria-hidden="true">
               {isOffline ? "wifi_off" : "sync"}
             </span>
             <span>
@@ -175,7 +176,7 @@ export default function AllPropertiesClient({ properties }: { properties: Proper
               disabled={isOffline || isRefreshing}
               className="ml-auto inline-flex h-8 items-center gap-1 rounded-full border border-amber-300 bg-white px-3 text-xs font-semibold text-amber-800 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              <span className="material-symbols-outlined text-sm">refresh</span>
+              <span className="material-symbols-outlined text-sm" aria-hidden="true">refresh</span>
               Retry
             </button>
           </div>
@@ -215,7 +216,7 @@ export default function AllPropertiesClient({ properties }: { properties: Proper
 
         <div className="grid gap-5 md:grid-cols-2 md:gap-6">
           {visibleProperties.map((property, idx) => (
-            <Link key={property.id} href={`/properties/${property.id}`}>
+            <Link key={property.id} href={propertyPath(property)}>
               <article className="group h-full cursor-pointer overflow-hidden rounded-[20px] border border-[#e8e4dc] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06),0_4px_16px_rgba(0,0,0,0.05)] transition-all duration-300 hover:-translate-y-[2px] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)]">
                 <div className="relative h-[268px] overflow-hidden rounded-t-[18px] bg-[#e8e4dc] sm:h-[304px] md:h-[334px] lg:h-[360px]">
                   <Image
@@ -239,7 +240,7 @@ export default function AllPropertiesClient({ properties }: { properties: Proper
                   </div>
 
                   <div className="absolute right-3 top-3 flex h-[34px] w-[34px] items-center justify-center rounded-full border border-[rgba(255,255,255,0.15)] bg-[rgba(30,30,40,0.45)] text-white touch-manipulation">
-                    <span className="material-symbols-outlined text-[16px]">favorite</span>
+                    <span className="material-symbols-outlined text-[16px]" aria-hidden="true">favorite</span>
                   </div>
 
                   <div className="absolute bottom-3.5 left-3.5 inline-flex h-[30px] items-center rounded-[4px] bg-[rgba(255,255,255,0.92)] px-2">
@@ -255,24 +256,24 @@ export default function AllPropertiesClient({ properties }: { properties: Proper
                   </h3>
 
                   <p className="mt-1.5 flex items-center gap-1 text-[12.5px] text-[#6b7280]">
-                    <span className="material-symbols-outlined text-[13px] text-[#9ca3af]">location_on</span>
+                    <span className="material-symbols-outlined text-[13px] text-[#9ca3af]" aria-hidden="true">location_on</span>
                     {property.location}
                   </p>
 
                   <div className="mt-4 border-t border-[#f0ede7] pt-3.5">
                     <div className="flex flex-wrap items-center gap-y-2 text-[11.5px] text-[#6b7280] sm:text-[12px]">
                       <span className="inline-flex items-center gap-1.5 pr-2">
-                        <span className="material-symbols-outlined text-[14px]">bed</span>
+                        <span className="material-symbols-outlined text-[14px]" aria-hidden="true">bed</span>
                         {property.bedrooms} BHK
                       </span>
                       <span className="h-3 w-px bg-[#e8e4dc]" />
                       <span className="inline-flex items-center gap-1.5 px-2">
-                        <span className="material-symbols-outlined text-[14px]">straighten</span>
+                        <span className="material-symbols-outlined text-[14px]" aria-hidden="true">straighten</span>
                         {formatNumber(property.sqft)} sqft
                       </span>
                       <span className="h-3 w-px bg-[#e8e4dc]" />
                       <span className="inline-flex items-center gap-1.5 pl-2">
-                        <span className="material-symbols-outlined text-[14px]">apartment</span>
+                        <span className="material-symbols-outlined text-[14px]" aria-hidden="true">apartment</span>
                         {isVilla(property) ? "Villa" : "Apartment"}
                       </span>
                     </div>
@@ -290,7 +291,7 @@ export default function AllPropertiesClient({ properties }: { properties: Proper
 
                     <span className="inline-flex items-center gap-1 text-[13px] font-medium text-[#b89a5e]">
                       View Details
-                      <span className="material-symbols-outlined text-[13px]">arrow_forward</span>
+                      <span className="material-symbols-outlined text-[13px]" aria-hidden="true">arrow_forward</span>
                     </span>
                   </div>
                 </div>
@@ -305,7 +306,7 @@ export default function AllPropertiesClient({ properties }: { properties: Proper
             description="Try switching filters or clear your current selection to view all properties."
             icon="search_off"
             actionLabel="Clear Filters"
-            actionHref="/all-properties"
+            actionHref="/properties"
           />
         )}
 
@@ -326,7 +327,7 @@ export default function AllPropertiesClient({ properties }: { properties: Proper
         <div className="reveal-up mt-10 flex justify-center" style={revealDelay(220)}>
           <Link href="/" className="inline-flex items-center gap-1 text-[14px] font-medium text-[#b89a5e] transition-colors hover:text-[#9f8450]">
             Back to Home
-            <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+            <span className="material-symbols-outlined text-[14px]" aria-hidden="true">arrow_forward</span>
           </Link>
         </div>
       </div>

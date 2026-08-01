@@ -5,11 +5,21 @@
 -- "new row violates row-level security policy for table \"messages\""
 --
 -- Run in Supabase SQL Editor (project database).
+--
+-- SECURITY NOTE: Admin access is gated on public.is_admin_user() (the
+-- admin_users registry), matching SUPABASE_UNIVERSAL_SETUP.sql. Never gate
+-- admin policies on auth.jwt() -> 'user_metadata' -> 'is_admin' — user_metadata
+-- is self-editable by any authenticated user via supabase.auth.updateUser(),
+-- which would allow privilege escalation.
 
 DO $$
 BEGIN
   IF to_regclass('public.messages') IS NULL THEN
     RAISE EXCEPTION 'public.messages table does not exist. Run SUPABASE_UNIVERSAL_SETUP.sql first.';
+  END IF;
+
+  IF to_regprocedure('public.is_admin_user()') IS NULL THEN
+    RAISE EXCEPTION 'public.is_admin_user() does not exist. Run SUPABASE_UNIVERSAL_SETUP.sql first.';
   END IF;
 END $$;
 
@@ -35,15 +45,15 @@ WITH CHECK (
 
 CREATE POLICY "admin_can_select_messages"
 ON public.messages FOR SELECT TO authenticated
-USING (COALESCE((auth.jwt() -> 'user_metadata' ->> 'is_admin')::boolean, false));
+USING (public.is_admin_user());
 
 CREATE POLICY "admin_can_update_messages"
 ON public.messages FOR UPDATE TO authenticated
-USING (COALESCE((auth.jwt() -> 'user_metadata' ->> 'is_admin')::boolean, false))
-WITH CHECK (COALESCE((auth.jwt() -> 'user_metadata' ->> 'is_admin')::boolean, false));
+USING (public.is_admin_user())
+WITH CHECK (public.is_admin_user());
 
 CREATE POLICY "admin_can_delete_messages"
 ON public.messages FOR DELETE TO authenticated
-USING (COALESCE((auth.jwt() -> 'user_metadata' ->> 'is_admin')::boolean, false));
+USING (public.is_admin_user());
 
 COMMIT;

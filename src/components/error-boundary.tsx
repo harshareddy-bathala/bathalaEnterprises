@@ -36,7 +36,7 @@ export class ErrorBoundary extends Component<Props, State> {
       return (
         <div className="flex min-h-[400px] flex-col items-center justify-center p-8 text-center">
           <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-50">
-            <span className="material-symbols-outlined text-3xl text-red-600">warning</span>
+            <span className="material-symbols-outlined text-3xl text-red-600" aria-hidden="true">warning</span>
           </div>
           <h2 className="mb-2 font-display text-2xl font-semibold text-[#1a1f2e]">Something went wrong</h2>
           <p className="mb-6 max-w-md text-[#6b7280]">
@@ -49,7 +49,7 @@ export class ErrorBoundary extends Component<Props, State> {
             }}
             className="gap-2"
           >
-            <span className="material-symbols-outlined text-base">refresh</span>
+            <span className="material-symbols-outlined text-base" aria-hidden="true">refresh</span>
             Refresh Page
           </Button>
         </div>

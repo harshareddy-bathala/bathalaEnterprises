@@ -2,19 +2,21 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import ContactForm from "@/components/contact-form";
 import { JsonLd } from "@/components/json-ld";
-import { generateBreadcrumbSchema, generateWebPageSchema } from "@/lib/structured-data";
+import {
+  generateBreadcrumbSchema,
+  generateFaqSchema,
+  generateWebPageSchema,
+} from "@/lib/structured-data";
+import { FAQ_ENTRIES } from "@/lib/faq-content";
 import { getResolvedPublicSiteSettings } from "@/lib/public-site-settings";
+import { buildMetadata, siteUrl as baseUrl } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Contact | Bathala Enterprises",
+export const metadata: Metadata = buildMetadata({
+  title: "Contact",
   description:
     "Reach Bathala Enterprises for property rentals, sales, leasing and management support in Electronic City, Bengaluru.",
-  alternates: {
-    canonical: "/contact",
-  },
-};
-
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://bathalaenterprises.com";
+  path: "/contact",
+});
 
 type ContactPageProps = {
   searchParams?:
@@ -74,11 +76,12 @@ export default async function ContactPage({ searchParams }: ContactPageProps) {
     <div className="bathala-page pb-0">
       <JsonLd data={webPageSchema} />
       <JsonLd data={breadcrumbSchema} />
+      <JsonLd data={generateFaqSchema(FAQ_ENTRIES)} />
       <section className="relative overflow-hidden bg-[#1a1f2e]">
         <div className="pointer-events-none absolute -right-16 -top-16 hidden h-[260px] w-[260px] rounded-full bg-[rgba(184,154,94,0.06)] sm:block md:-right-20 md:-top-20 md:h-[320px] md:w-[320px]" />
         <div className="pointer-events-none absolute -left-6 -bottom-20 hidden h-[180px] w-[180px] rounded-full bg-[rgba(184,154,94,0.04)] sm:block md:-left-8 md:bottom-[-90px] md:h-[210px] md:w-[210px]" />
 
-        <div className="mx-auto max-w-[1200px] px-5 pb-16 pt-10 md:px-10 md:pb-20 md:pt-14">
+        <div className="bathala-container pb-16 pt-10 md:pb-20 md:pt-14">
           <div className="flex items-center gap-2">
             <span className="h-[1.5px] w-6 rounded-[2px] bg-[#b89a5e]" />
             <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#b89a5e]">Contact Us</p>
@@ -90,7 +93,7 @@ export default async function ContactPage({ searchParams }: ContactPageProps) {
         </div>
       </section>
 
-      <section className="mx-auto max-w-[1200px] px-5 pb-20 pt-16 md:px-10 md:pt-16">
+      <section className="bathala-container pb-20 pt-16 md:pt-16">
         <div className="grid gap-12 md:grid-cols-[minmax(0,1fr)_minmax(360px,440px)] md:gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(420px,520px)] lg:gap-16">
           <div id="contact-details" className="scroll-mt-[92px]">
             <div className="flex items-center gap-2">
@@ -112,7 +115,7 @@ export default async function ContactPage({ searchParams }: ContactPageProps) {
             <div className="mt-9 space-y-7">
               <div className="flex gap-4">
                 <div className="flex h-10 w-10 items-center justify-center rounded-[11px] border border-[rgba(184,154,94,0.18)] bg-[rgba(184,154,94,0.08)]">
-                  <span className="material-symbols-outlined text-[18px] text-[#b89a5e]">call</span>
+                  <span className="material-symbols-outlined text-[18px] text-[#b89a5e]" aria-hidden="true">call</span>
                 </div>
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#b89a5e]">Phone</p>
@@ -127,7 +130,7 @@ export default async function ContactPage({ searchParams }: ContactPageProps) {
 
               <div className="flex gap-4">
                 <div className="flex h-10 w-10 items-center justify-center rounded-[11px] border border-[rgba(184,154,94,0.18)] bg-[rgba(184,154,94,0.08)]">
-                  <span className="material-symbols-outlined text-[18px] text-[#b89a5e]">mail</span>
+                  <span className="material-symbols-outlined text-[18px] text-[#b89a5e]" aria-hidden="true">mail</span>
                 </div>
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#b89a5e]">Email</p>
@@ -143,7 +146,7 @@ export default async function ContactPage({ searchParams }: ContactPageProps) {
 
               <div className="flex gap-4">
                 <div className="flex h-10 w-10 items-center justify-center rounded-[11px] border border-[rgba(184,154,94,0.18)] bg-[rgba(184,154,94,0.08)]">
-                  <span className="material-symbols-outlined text-[18px] text-[#b89a5e]">location_on</span>
+                  <span className="material-symbols-outlined text-[18px] text-[#b89a5e]" aria-hidden="true">location_on</span>
                 </div>
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#b89a5e]">Office</p>
@@ -154,7 +157,7 @@ export default async function ContactPage({ searchParams }: ContactPageProps) {
 
               <div className="flex gap-4">
                 <div className="flex h-10 w-10 items-center justify-center rounded-[11px] border border-[rgba(184,154,94,0.18)] bg-[rgba(184,154,94,0.08)]">
-                  <span className="material-symbols-outlined text-[18px] text-[#b89a5e]">schedule</span>
+                  <span className="material-symbols-outlined text-[18px] text-[#b89a5e]" aria-hidden="true">schedule</span>
                 </div>
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#b89a5e]">Office Hours</p>

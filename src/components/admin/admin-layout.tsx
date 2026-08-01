@@ -64,13 +64,13 @@ export default function AdminLayout({
   const isActive = (href: string) => pathname === href;
 
   return (
-    <div className="h-screen w-full overflow-hidden bg-[var(--admin-bg)] [--admin-bg:#f5f4f2] [--admin-surface:#fcfcfb] [--admin-border:#e5e2db] [--admin-text:#1a1f2e] [--admin-muted:#6b7280] [--admin-text-muted:#6b7280] [--admin-accent:#b89a5e] [--admin-success:#059669] [--admin-warning:#c2410c] [--admin-error:#dc2626] [--admin-info:#2563eb] [--shadow-touch:0_2px_4px_rgba(0,0,0,0.05)] [--shadow-medium:0_8px_16px_rgba(0,0,0,0.08)] [--shadow-deep:0_16px_32px_rgba(0,0,0,0.12)]">
-      <div className="flex h-screen">
+    <div className="h-[100dvh] w-full overflow-hidden bg-[var(--admin-bg)] [--admin-sidebar-w:280px] [--admin-bg:#f5f4f2] [--admin-surface:#fcfcfb] [--admin-border:#e5e2db] [--admin-text:#1a1f2e] [--admin-muted:#6b7280] [--admin-text-muted:#6b7280] [--admin-accent:#b89a5e] [--admin-success:#059669] [--admin-warning:#c2410c] [--admin-error:#dc2626] [--admin-info:#2563eb] [--shadow-touch:0_2px_4px_rgba(0,0,0,0.05)] [--shadow-medium:0_8px_16px_rgba(0,0,0,0.08)] [--shadow-deep:0_16px_32px_rgba(0,0,0,0.12)]">
+      <div className="flex h-[100dvh]">
         {/* Mobile Menu Toggle */}
         <div className="fixed left-0 right-0 top-0 z-50 flex items-center justify-between border-b border-[#e5e2db] bg-[#fcfcfb]/95 p-4 backdrop-blur-sm lg:hidden">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#1a1f2e] to-[#2d3548] text-white shadow-md">
-              <span className="material-symbols-outlined text-lg">business</span>
+              <span className="material-symbols-outlined text-lg" aria-hidden="true">business</span>
             </div>
             <div>
               <p className="text-sm font-bold text-[#1a1f2e]">Bathala Admin</p>
@@ -81,7 +81,7 @@ export default function AdminLayout({
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className="flex h-10 w-10 items-center justify-center rounded-xl text-[#6b7280] transition-colors hover:bg-[#f3f1ed] touch-manipulation"
           >
-            <span className="material-symbols-outlined text-xl">
+            <span className="material-symbols-outlined text-xl" aria-hidden="true">
               {isMobileMenuOpen ? "close" : "menu"}
             </span>
           </button>
@@ -90,7 +90,7 @@ export default function AdminLayout({
         {/* Sidebar - Fixed, Non-scrollable structure */}
         <aside
           className={cn(
-            "fixed inset-y-0 left-0 z-40 flex h-screen w-[280px] flex-col border-r border-[var(--admin-border)] bg-[var(--admin-surface)] transition-transform duration-300 ease-out lg:translate-x-0",
+            "fixed inset-y-0 left-0 z-40 flex h-[100dvh] w-[var(--admin-sidebar-w)] flex-col border-r border-[var(--admin-border)] bg-[var(--admin-surface)] transition-transform duration-300 ease-out lg:translate-x-0",
             isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
           )}
         >
@@ -98,7 +98,7 @@ export default function AdminLayout({
           <div className="flex-shrink-0 border-b border-[var(--admin-border)]/70 p-5">
             <div className="flex items-center gap-3">
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-[#1a1f2e] to-[#2d3548] text-white shadow-lg">
-                <span className="material-symbols-outlined text-xl">business</span>
+                <span className="material-symbols-outlined text-xl" aria-hidden="true">business</span>
               </div>
               <div>
                 <p className="text-[15px] font-bold text-[#1a1f2e]">Bathala Admin</p>
@@ -131,7 +131,7 @@ export default function AdminLayout({
                     <span className={cn(
                       "material-symbols-outlined text-lg transition-transform duration-200",
                       !isActive(item.href) && "group-hover:scale-110"
-                    )}>{item.icon}</span>
+                    )} aria-hidden="true">{item.icon}</span>
                     <span>{item.label}</span>
                     {item.label === "Messages" && unreadCount > 0 && (
                       <span className="ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[11px] font-bold text-white shadow-sm">
@@ -165,7 +165,7 @@ export default function AdminLayout({
                     <span className={cn(
                       "material-symbols-outlined text-lg transition-transform duration-200",
                       !isActive(item.href) && "group-hover:scale-110"
-                    )}>{item.icon}</span>
+                    )} aria-hidden="true">{item.icon}</span>
                     <span>{item.label}</span>
                   </Link>
                 ))}
@@ -190,7 +190,7 @@ export default function AdminLayout({
                 className="flex h-9 w-9 items-center justify-center rounded-lg text-[#9ca3af] transition-all hover:bg-red-50 hover:text-red-600 touch-manipulation"
                 title="Logout"
               >
-                <span className="material-symbols-outlined text-lg">logout</span>
+                <span className="material-symbols-outlined text-lg" aria-hidden="true">logout</span>
               </button>
             </div>
           </div>
@@ -205,7 +205,7 @@ export default function AdminLayout({
         )}
 
         {/* Main Content - Full width with sidebar offset */}
-        <main className="flex h-screen min-w-0 flex-1 flex-col overflow-hidden pt-[72px] lg:ml-[280px] lg:pt-0">
+        <main className="flex h-[100dvh] min-w-0 flex-1 flex-col overflow-hidden pt-[72px] lg:ml-[var(--admin-sidebar-w)] lg:pt-0">
           {/* Page Header */}
           <header className="sticky top-0 z-20 flex flex-col gap-4 border-b border-[var(--admin-border)] bg-white/95 px-4 py-5 backdrop-blur-sm sm:flex-row sm:items-center sm:justify-between sm:px-5 lg:px-6">
             <div>
@@ -313,7 +313,7 @@ export function EmptyState({
   return (
     <div className="flex flex-col items-center justify-center py-12 text-center">
       <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#f3f1ed]">
-        <span className="material-symbols-outlined text-3xl text-[#9ca3af]">{icon}</span>
+        <span className="material-symbols-outlined text-3xl text-[#9ca3af]" aria-hidden="true">{icon}</span>
       </div>
       <h3 className="text-lg font-semibold text-[#1a1f2e]">{title}</h3>
       {description && (
@@ -344,11 +344,11 @@ export function ErrorAlert({
 }) {
   return (
     <div className="mb-4 flex items-center gap-3 rounded-xl border border-red-100 bg-red-50 p-4">
-      <span className="material-symbols-outlined text-red-600">error</span>
+      <span className="material-symbols-outlined text-red-600" aria-hidden="true">error</span>
       <p className="flex-1 text-sm text-red-700">{message}</p>
       {onDismiss && (
         <button onClick={onDismiss} className="text-red-400 hover:text-red-600">
-          <span className="material-symbols-outlined text-lg">close</span>
+          <span className="material-symbols-outlined text-lg" aria-hidden="true">close</span>
         </button>
       )}
     </div>
@@ -365,11 +365,11 @@ export function SuccessAlert({
 }) {
   return (
     <div className="mb-4 flex items-center gap-3 rounded-xl border border-green-100 bg-green-50 p-4">
-      <span className="material-symbols-outlined text-green-600">check_circle</span>
+      <span className="material-symbols-outlined text-green-600" aria-hidden="true">check_circle</span>
       <p className="flex-1 text-sm text-green-700">{message}</p>
       {onDismiss && (
         <button onClick={onDismiss} className="text-green-400 hover:text-green-600">
-          <span className="material-symbols-outlined text-lg">close</span>
+          <span className="material-symbols-outlined text-lg" aria-hidden="true">close</span>
         </button>
       )}
     </div>
@@ -386,7 +386,7 @@ export function InfoBanner({
 }) {
   return (
     <div className="mb-4 flex items-start gap-3 rounded-xl border border-blue-100 bg-blue-50 p-4">
-      <span className="material-symbols-outlined text-blue-600">{icon}</span>
+      <span className="material-symbols-outlined text-blue-600" aria-hidden="true">{icon}</span>
       <p className="text-sm text-blue-700">{message}</p>
     </div>
   );

@@ -5,7 +5,7 @@ test.describe("Critical user flows", () => {
     await page.goto("/", { waitUntil: "domcontentloaded" });
     await expect(page.locator("main")).toBeVisible();
 
-    await page.goto("/all-properties", { waitUntil: "domcontentloaded" });
+    await page.goto("/properties", { waitUntil: "domcontentloaded" });
     await expect(page.locator("main")).toBeVisible();
 
     const propertyLinks = page.locator("a[href^='/properties/']");
@@ -21,10 +21,10 @@ test.describe("Critical user flows", () => {
   });
 
   test("service listing flow", async ({ page }) => {
-    await page.goto("/all-services", { waitUntil: "domcontentloaded" });
+    await page.goto("/services", { waitUntil: "domcontentloaded" });
     await expect(page.locator("main")).toBeVisible();
 
-    const serviceLinks = page.locator("a[href^='/all-services/']");
+    const serviceLinks = page.locator("a[href^='/services/']");
     const serviceCount = await serviceLinks.count();
 
     if (serviceCount === 0) {

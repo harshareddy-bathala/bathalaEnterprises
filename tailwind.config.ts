@@ -19,15 +19,20 @@ const config: Config = {
       '2xl': '1440px',  // Large screens
     },
     extend: {
+      // rem, not px. These are numerically identical to Tailwind's defaults at
+      // a 16px root, so nothing moves visually — but in px they froze p-4,
+      // gap-6, mt-8 etc. against the user's browser font size (WCAG 1.4.4),
+      // and left the scale in mixed units since untouched steps (5, 7, 10…)
+      // stayed rem.
       spacing: {
-        1: "4px",
-        2: "8px",
-        3: "12px",
-        4: "16px",
-        6: "24px",
-        8: "32px",
-        12: "48px",
-        16: "64px"
+        1: "0.25rem",
+        2: "0.5rem",
+        3: "0.75rem",
+        4: "1rem",
+        6: "1.5rem",
+        8: "2rem",
+        12: "3rem",
+        16: "4rem"
       },
       colors: {
         primary: "var(--color-gold-accent)",
@@ -62,15 +67,19 @@ const config: Config = {
         "2xl": "var(--radius-lg)",
         "3xl": "calc(var(--radius-lg) + 8px)"
       },
+      // rem for the same reason as `spacing` above. Identical rendered sizes at
+      // a 16px root; now they respond to browser text scaling.
       fontSize: {
-        xs: ["12px", { lineHeight: "1.4" }],
-        sm: ["14px", { lineHeight: "1.5" }],
-        base: ["16px", { lineHeight: "1.6" }],
-        lg: ["18px", { lineHeight: "1.5" }],
-        xl: ["20px", { lineHeight: "1.35" }],
-        "2xl": ["24px", { lineHeight: "1.3" }],
-        "3xl": ["30px", { lineHeight: "1.2" }],
-        "4xl": ["36px", { lineHeight: "1.15" }]
+        xs: ["0.75rem", { lineHeight: "1.4" }],
+        sm: ["0.875rem", { lineHeight: "1.5" }],
+        base: ["1rem", { lineHeight: "1.6" }],
+        lg: ["1.125rem", { lineHeight: "1.5" }],
+        xl: ["1.25rem", { lineHeight: "1.35" }],
+        "2xl": ["1.5rem", { lineHeight: "1.3" }],
+        "3xl": ["1.875rem", { lineHeight: "1.2" }],
+        "4xl": ["2.25rem", { lineHeight: "1.15" }],
+        "5xl": ["3rem", { lineHeight: "1.1" }],
+        "6xl": ["3.75rem", { lineHeight: "1.05" }]
       },
       animation: {
         float: "float 3s ease-in-out infinite",

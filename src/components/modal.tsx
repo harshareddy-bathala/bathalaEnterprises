@@ -122,7 +122,7 @@ export default function Modal({ isOpen, onClose, title, description, children, s
                       className="rounded-full p-2 transition hover:bg-[#efebe4]"
                       aria-label="Close"
                     >
-                      <span className="material-symbols-outlined text-xl text-[#6b7280]">close</span>
+                      <span className="material-symbols-outlined text-xl text-[#6b7280]" aria-hidden="true">close</span>
                     </button>
                   </div>
                 ) : null}

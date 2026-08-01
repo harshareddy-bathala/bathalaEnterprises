@@ -140,20 +140,6 @@ async function isAdminUser(user: AuthUserLike | null | undefined): Promise<boole
   return false;
 }
 
-export async function signUpAdmin(email: string, password: string) {
-  if (!supabase) {
-    throw new Error("Supabase client not initialized");
-  }
-
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-  });
-
-  if (error) throw error;
-  return data;
-}
-
 export async function signInAdmin(email: string, password: string) {
   if (!supabase) {
     throw new Error("Supabase client not initialized");

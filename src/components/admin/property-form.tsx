@@ -536,7 +536,7 @@ export default function PropertyForm({
               rel="noreferrer"
               className="inline-flex items-center gap-1 rounded-full border border-[#d8c08f] bg-[#fff9ec] px-3 py-1 text-xs font-medium text-[#7c6442] transition hover:bg-[#fef4da]"
             >
-              <span className="material-symbols-outlined text-sm">map</span>
+              <span className="material-symbols-outlined text-sm" aria-hidden="true">map</span>
               Select on map
             </a>
           )}

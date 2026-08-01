@@ -22,7 +22,7 @@ export default function BackButton({ fallbackHref = "/", label = "Back", classNa
 
   return (
     <Button type="button" variant="ghost" size="sm" onClick={handleBack} className={className}>
-      <span className="material-symbols-outlined text-base">arrow_back</span>
+      <span className="material-symbols-outlined text-base" aria-hidden="true">arrow_back</span>
       {label}
     </Button>
   );

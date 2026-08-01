@@ -7,10 +7,28 @@ import PageTransition from "@/components/page-transition";
 import ConnectionStatusIndicator from "@/components/connection-status-indicator";
 import { JsonLd } from "@/components/json-ld";
 import { generateOrganizationSchema, generateLocalBusinessSchema } from "@/lib/structured-data";
+import { getResolvedPublicSiteSettings } from "@/lib/public-site-settings";
+import { getTestimonialsFromSupabase } from "@/lib/supabase-queries";
 
-export default function SiteLayout({ children }: { children: ReactNode }) {
-  const organizationSchema = generateOrganizationSchema();
-  const localBusinessSchema = generateLocalBusinessSchema();
+export default async function SiteLayout({ children }: { children: ReactNode }) {
+  // Both reads are React.cache()d, so this shares the round-trip the Footer
+  // already makes rather than adding one.
+  const [settings, testimonials] = await Promise.all([
+    getResolvedPublicSiteSettings(),
+    getTestimonialsFromSupabase(),
+  ]);
+
+  const ratings =
+    testimonials.length > 0
+      ? {
+          ratingValue:
+            testimonials.reduce((sum, item) => sum + item.rating, 0) / testimonials.length,
+          reviewCount: testimonials.length,
+        }
+      : undefined;
+
+  const organizationSchema = generateOrganizationSchema(settings, ratings);
+  const localBusinessSchema = generateLocalBusinessSchema(settings);
 
   return (
     <div className="bathala-shell relative flex min-h-screen w-full flex-col overflow-x-hidden [overscroll-behavior-y:none] safe-area-inset">

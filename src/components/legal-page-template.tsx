@@ -60,7 +60,7 @@ export default function LegalPageTemplate({
 
   return (
     <div className="bathala-page overflow-x-hidden pb-16 pt-10 sm:pb-20 sm:pt-14">
-      <section className="mx-auto max-w-[1200px] px-4 sm:px-5 md:px-10">
+      <section className="bathala-container">
         <header className="relative overflow-hidden rounded-[20px] border border-[var(--color-border)] bg-[linear-gradient(155deg,rgba(255,255,255,0.98)_0%,rgba(248,246,242,0.98)_46%,rgba(244,241,235,0.94)_100%)] px-5 py-7 sm:rounded-[22px] sm:px-8 sm:py-10 lg:px-10 lg:py-11">
           <div className="pointer-events-none absolute -right-16 -top-20 h-[180px] w-[180px] rounded-full bg-[rgba(184,154,94,0.12)] blur-3xl" />
           <div className="pointer-events-none absolute -left-14 bottom-0 h-[120px] w-[120px] rounded-full bg-[rgba(44,51,64,0.08)] blur-2xl" />

@@ -17,13 +17,16 @@
     "check:predeploy": "node scripts/predeploy/predeploy-checklist.mjs",
     "check:contact-email": "node scripts/predeploy/test-contact-email-delivery.mjs",
     "check:analytics": "node scripts/predeploy/verify-analytics-tracking.mjs",
-    "lighthouse:production": "node ./node_modules/@lhci/cli/src/cli.js autorun --config=.lighthouserc.production.json"
+    "lighthouse:production": "node ./node_modules/@lhci/cli/src/cli.js autorun --config=.lighthouserc.production.json",
+    "icons:subset": "node ./scripts/generate-icon-subset.mjs",
+    "test:a11y": "node ./node_modules/playwright/cli.js test --config=playwright.qa.config.ts tests/qa/accessibility.spec.ts --project=qa-a11y-chromium",
+    "test:qa": "node ./node_modules/playwright/cli.js test --config=playwright.qa.config.ts"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "@hookform/resolvers": "^3.10.0",
     "@radix-ui/react-slot": "^1.0.2",
-    "@supabase/auth-helpers-nextjs": "^0.10.0",
+    "@supabase/ssr": "^0.12.0",
     "@supabase/supabase-js": "^2.101.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",

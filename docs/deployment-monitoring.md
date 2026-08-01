@@ -86,7 +86,7 @@ npm run lighthouse:production
 
 Validate these paths in a production-like deployment:
 
-- Services flows: `/all-services`, `/all-services/[id]`, quick preview modal behavior.
+- Services flows: `/services`, `/services/[slug]`, quick preview modal behavior.
 - Admin flows: `/admin/login`, dashboard access for an active `public.admin_users` account.
 - Contact flow: `/contact` form submission and success response behavior.
 

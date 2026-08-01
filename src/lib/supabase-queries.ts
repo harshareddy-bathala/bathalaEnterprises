@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { supabase } from "@/lib/supabase-client";
 import {
   isTransientNetworkError,
@@ -6,6 +7,11 @@ import {
   withTimeout,
 } from "@/lib/async-utils";
 import { reportError } from "@/lib/monitoring";
+import { idPrefixFromSlug, isUuid, propertyPath, servicePath, toSlug } from "@/lib/slug";
+
+// Re-exported so route files can import their data helpers and URL builders
+// from one place.
+export { propertyPath, servicePath };
 import type { Property, Service, Testimonial } from "@/types/tables";
 
 // Re-export types for backward compatibility
@@ -27,6 +33,13 @@ type SupabaseOperationOptions = {
   isWrite?: boolean;
 };
 
+/*
+ * The generic defaults to `any` so call sites can destructure Supabase's
+ * `{ data, error }` without restating the row type. Narrowing this properly
+ * means threading generated Supabase types through every helper — worthwhile,
+ * but a separate change: `data` is cast (`as Property[]`) rather than validated
+ * at every call site today.
+ */
 async function runSupabaseOperation<T = any>(
   operation: () => PromiseLike<T> | T,
   {
@@ -221,9 +234,17 @@ function shouldIncludePropertyInPublicLists(property: PropertyWithLegacyFlags): 
   return true;
 }
 
-export async function getPropertiesFromSupabase(
+/**
+ * Property catalog.
+ *
+ * React.cache()d: within one render the home page, the (site) layout, the
+ * sitemap and /llms.txt can each ask for the same list, and Supabase calls are
+ * not `fetch`, so Next does not dedupe them the way it does fetch(). Cached per
+ * argument, so includeInactive=true and =false are separate entries.
+ */
+export const getPropertiesFromSupabase = cache(async (
   includeInactive = true
-): Promise<Property[]> {
+): Promise<Property[]> => {
   if (!supabase) {
     console.warn(
       `Supabase client not initialized. Returning empty data. Run ${PRODUCTION_SETUP_SCRIPT} to create tables.`
@@ -321,9 +342,10 @@ export async function getPropertiesFromSupabase(
     }
     return [];
   }
-}
+});
 
-export async function getServicesFromSupabase(): Promise<Service[]> {
+/** Service catalog. React.cache()d — see getPropertiesFromSupabase. */
+export const getServicesFromSupabase = cache(async (): Promise<Service[]> => {
   if (!supabase) {
     console.warn(
       `Supabase client not initialized. Returning empty data. Run ${PRODUCTION_SETUP_SCRIPT} to create tables.`
@@ -395,9 +417,9 @@ export async function getServicesFromSupabase(): Promise<Service[]> {
     }
     return [];
   }
-}
+});
 
-export async function getServiceById(id: string): Promise<Service | null> {
+export const getServiceById = cache(async (id: string): Promise<Service | null> => {
   if (!UUID_PATTERN.test(id)) {
     return null;
   }
@@ -422,10 +444,9 @@ export async function getServiceById(id: string): Promise<Service | null> {
     );
 
     if (error) {
-      if (
-        error.message.includes("relations") ||
-        error.message.includes("does not exist")
-      ) {
+      // toErrorMessage flattens PostgREST message/details/hint; `error.message`
+      // alone is undefined on some error shapes and would throw here.
+      if (isSchemaNotReadyMessage(toErrorMessage(error))) {
         console.warn(
           `Services table not found. Run ${PRODUCTION_SETUP_SCRIPT} to create tables.`
         );
@@ -440,9 +461,9 @@ export async function getServiceById(id: string): Promise<Service | null> {
     console.error("Failed to fetch service:", error);
     return null;
   }
-}
+});
 
-export async function getPropertyById(id: string): Promise<Property | null> {
+export const getPropertyById = cache(async (id: string): Promise<Property | null> => {
   if (!UUID_PATTERN.test(id)) {
     return null;
   }
@@ -467,10 +488,9 @@ export async function getPropertyById(id: string): Promise<Property | null> {
     );
 
     if (error) {
-      if (
-        error.message.includes("relations") ||
-        error.message.includes("does not exist")
-      ) {
+      // toErrorMessage flattens PostgREST message/details/hint; `error.message`
+      // alone is undefined on some error shapes and would throw here.
+      if (isSchemaNotReadyMessage(toErrorMessage(error))) {
         console.warn(
           `Properties table not found. Run ${PRODUCTION_SETUP_SCRIPT} to create tables.`
         );
@@ -484,6 +504,244 @@ export async function getPropertyById(id: string): Promise<Property | null> {
   } catch (error) {
     console.error("Failed to fetch property:", error);
     return null;
+  }
+});
+
+/** Minimal shape needed to build a URL entry (sitemap, feeds, link lists). */
+export type CatalogEntry = {
+  id: string;
+  title: string;
+  slug?: string;
+  created_at?: string;
+  updated_at?: string;
+};
+
+/**
+ * Column-projected catalog reads for URL generation.
+ *
+ * The sitemap and /llms.txt used the full `select("*")` list helpers, pulling
+ * descriptions and gallery_images JSON for every row just to emit `<loc>` and
+ * `<lastmod>`. Falls back to the full read when the `slug` column is absent.
+ */
+export const getPropertyCatalogEntries = cache(async (): Promise<CatalogEntry[]> => {
+  if (!supabase) return [];
+
+  try {
+    const { data, error } = await runSupabaseOperation(
+      () =>
+        supabase!
+          .from("properties")
+          .select("id,title,slug,created_at,updated_at")
+          .eq("status", "active")
+          .order("created_at", { ascending: false }),
+      { context: "getPropertyCatalogEntries", timeoutMs: SUPABASE_READ_TIMEOUT_MS }
+    );
+
+    if (error) {
+      return (await getPropertiesFromSupabase(false)) as CatalogEntry[];
+    }
+
+    return (data || []) as CatalogEntry[];
+  } catch {
+    return (await getPropertiesFromSupabase(false)) as CatalogEntry[];
+  }
+});
+
+/** See getPropertyCatalogEntries. */
+export const getServiceCatalogEntries = cache(async (): Promise<CatalogEntry[]> => {
+  if (!supabase) return [];
+
+  try {
+    const { data, error } = await runSupabaseOperation(
+      () =>
+        supabase!
+          .from("services")
+          .select("id,title,slug,created_at,updated_at")
+          .order("display_order", { ascending: true }),
+      { context: "getServiceCatalogEntries", timeoutMs: SUPABASE_READ_TIMEOUT_MS }
+    );
+
+    if (error) {
+      return (await getServicesFromSupabase()) as CatalogEntry[];
+    }
+
+    return (data || []) as CatalogEntry[];
+  } catch {
+    return (await getServicesFromSupabase()) as CatalogEntry[];
+  }
+});
+
+/**
+ * Resolve a property from a public URL segment.
+ *
+ * Accepts either a slug ("3-bhk-villa-electronic-city-3f9a1c") or a bare UUID,
+ * so links published before the slug migration keep resolving. Falls back to
+ * matching computed slugs in JS when the `slug` column is not present yet
+ * (i.e. SUPABASE_ADD_SLUGS.sql has not been run), consistent with the legacy
+ * schema tolerance elsewhere in this module.
+ *
+ * Wrapped in React.cache() because generateMetadata, the page body and the
+ * opengraph-image route each resolve the same row during one render.
+ */
+export const getPropertyBySlug = cache(async (slugOrId: string): Promise<Property | null> => {
+  if (isUuid(slugOrId)) {
+    return getPropertyById(slugOrId);
+  }
+
+  if (!supabase) {
+    console.warn("Supabase client not initialized");
+    return null;
+  }
+
+  try {
+    const { data, error } = await runSupabaseOperation(
+      () => supabase!.from("properties").select("*").eq("slug", slugOrId).maybeSingle(),
+      { context: "getPropertyBySlug", timeoutMs: SUPABASE_READ_TIMEOUT_MS }
+    );
+
+    if (error) {
+      if (isMissingColumnError(toErrorMessage(error), "slug")) {
+        return findPropertyByIdPrefix(slugOrId);
+      }
+      console.error("Error fetching property by slug:", error);
+      return null;
+    }
+
+    // No exact match: the title may have been edited since this URL was
+    // published. The id suffix is stable, so resolve on that and let the page
+    // 301 to the current canonical slug.
+    if (!data) {
+      return findPropertyByIdPrefix(slugOrId);
+    }
+
+    return normalizeProperty(data as Property);
+  } catch (error) {
+    console.error("Failed to fetch property by slug:", error);
+    return null;
+  }
+});
+
+/**
+ * Resolve via the trailing id fragment of a slug. Scans the catalog, so it is
+ * deliberately limited to the miss path — a stale slug or a database without
+ * the `slug` column. The catalog is small (tens of rows) and this keeps old
+ * inbound links alive after a title edit.
+ */
+async function findPropertyByIdPrefix(slug: string): Promise<Property | null> {
+  const idPrefix = idPrefixFromSlug(slug);
+  if (!idPrefix) {
+    return null;
+  }
+
+  const properties = await getPropertiesFromSupabase();
+  const match = properties.find(
+    (property) => property.id.replace(/-/g, "").slice(0, 6).toLowerCase() === idPrefix
+  );
+  return match ?? null;
+}
+
+/** Slug/UUID resolver for services. See getPropertyBySlug for the contract. */
+export const getServiceBySlug = cache(async (slugOrId: string): Promise<Service | null> => {
+  if (isUuid(slugOrId)) {
+    return getServiceById(slugOrId);
+  }
+
+  if (!supabase) {
+    console.warn("Supabase client not initialized");
+    return null;
+  }
+
+  try {
+    const { data, error } = await runSupabaseOperation(
+      () => supabase!.from("services").select("*").eq("slug", slugOrId).maybeSingle(),
+      { context: "getServiceBySlug", timeoutMs: SUPABASE_READ_TIMEOUT_MS }
+    );
+
+    if (error) {
+      if (isMissingColumnError(toErrorMessage(error), "slug")) {
+        return findServiceByIdPrefix(slugOrId);
+      }
+      console.error("Error fetching service by slug:", error);
+      return null;
+    }
+
+    if (!data) {
+      return findServiceByIdPrefix(slugOrId);
+    }
+
+    return data as Service;
+  } catch (error) {
+    console.error("Failed to fetch service by slug:", error);
+    return null;
+  }
+});
+
+/** See findPropertyByIdPrefix. */
+async function findServiceByIdPrefix(slug: string): Promise<Service | null> {
+  const idPrefix = idPrefixFromSlug(slug);
+  if (!idPrefix) {
+    return null;
+  }
+
+  const services = await getServicesFromSupabase();
+  const match = services.find(
+    (service) => service.id.replace(/-/g, "").slice(0, 6).toLowerCase() === idPrefix
+  );
+  return match ?? null;
+}
+
+/**
+ * Active properties similar to the given one, for the "Related Properties"
+ * rail. Filters and limits in the database rather than pulling the whole table
+ * and slicing in JS.
+ */
+export async function getRelatedProperties(
+  property: Pick<Property, "id" | "type" | "location">,
+  limit = 3
+): Promise<Property[]> {
+  if (!supabase) {
+    console.warn("Supabase client not initialized");
+    return [];
+  }
+
+  try {
+    // Same type OR same location, excluding the property itself.
+    const escapedLocation = (property.location ?? "").replace(/[(),"]/g, " ").trim();
+    const filters = [`type.eq.${property.type}`];
+    if (escapedLocation) {
+      filters.push(`location.eq.${escapedLocation}`);
+    }
+
+    const { data, error } = await runSupabaseOperation(
+      () =>
+        supabase!
+          .from("properties")
+          .select("*")
+          .eq("status", "active")
+          .neq("id", property.id)
+          .or(filters.join(","))
+          .order("created_at", { ascending: false })
+          .limit(limit),
+      { context: "getRelatedProperties", timeoutMs: SUPABASE_READ_TIMEOUT_MS }
+    );
+
+    if (error) {
+      // Legacy databases without `status` fall back to the generic list path.
+      console.warn("Related-properties query failed, falling back:", toErrorMessage(error));
+      const all = await getPropertiesFromSupabase(false);
+      return all
+        .filter(
+          (candidate) =>
+            candidate.id !== property.id &&
+            (candidate.type === property.type || candidate.location === property.location)
+        )
+        .slice(0, limit);
+    }
+
+    return ((data || []) as Property[]).map(normalizeProperty);
+  } catch (error) {
+    console.error("Failed to fetch related properties:", error);
+    return [];
   }
 }
 
@@ -606,12 +864,18 @@ export async function updateProperty(
     throw new Error("Supabase client not initialized");
   }
 
+  // Keep the URL keyword-accurate when the title changes. Old slugs still
+  // resolve via the stable id suffix and 301 to the new one.
+  const withSlug = updates.title
+    ? { ...updates, slug: toSlug(updates.title, id) }
+    : updates;
+
   try {
-    const { data, error } = await runSupabaseOperation(
+    let { data, error } = await runSupabaseOperation(
       () =>
         supabase!
           .from("properties")
-          .update(updates)
+          .update(withSlug)
           .eq("id", id)
           .select()
           .maybeSingle(),
@@ -621,6 +885,27 @@ export async function updateProperty(
         timeoutMs: SUPABASE_WRITE_TIMEOUT_MS,
       }
     );
+
+    // Databases that have not run SUPABASE_ADD_SLUGS.sql have no slug column;
+    // retry without it rather than failing the admin's save.
+    if (error && withSlug !== updates && isMissingColumnError(toErrorMessage(error), "slug")) {
+      const retry = await runSupabaseOperation(
+        () =>
+          supabase!
+            .from("properties")
+            .update(updates)
+            .eq("id", id)
+            .select()
+            .maybeSingle(),
+        {
+          context: "updateProperty:withoutSlug",
+          retries: 1,
+          timeoutMs: SUPABASE_WRITE_TIMEOUT_MS,
+        }
+      );
+      data = retry.data;
+      error = retry.error;
+    }
 
     if (error) {
       throw buildMutationError("update", "property", error);
@@ -753,12 +1038,17 @@ export async function updateService(
     throw new Error("Supabase client not initialized");
   }
 
+  // See updateProperty: keep the slug in step with the title.
+  const withSlug = updates.title
+    ? { ...updates, slug: toSlug(updates.title, id) }
+    : updates;
+
   try {
-    const { data, error } = await runSupabaseOperation(
+    let { data, error } = await runSupabaseOperation(
       () =>
         supabase!
           .from("services")
-          .update(updates)
+          .update(withSlug)
           .eq("id", id)
           .select()
           .maybeSingle(),
@@ -768,6 +1058,26 @@ export async function updateService(
         timeoutMs: SUPABASE_WRITE_TIMEOUT_MS,
       }
     );
+
+    // See updateProperty: tolerate a database without the slug column.
+    if (error && withSlug !== updates && isMissingColumnError(toErrorMessage(error), "slug")) {
+      const retry = await runSupabaseOperation(
+        () =>
+          supabase!
+            .from("services")
+            .update(updates)
+            .eq("id", id)
+            .select()
+            .maybeSingle(),
+        {
+          context: "updateService:withoutSlug",
+          retries: 1,
+          timeoutMs: SUPABASE_WRITE_TIMEOUT_MS,
+        }
+      );
+      data = retry.data;
+      error = retry.error;
+    }
 
     if (error) {
       throw buildMutationError("update", "service", error);
@@ -833,7 +1143,23 @@ export async function reorderServices(
     throw new Error("Supabase client not initialized");
   }
 
+  if (serviceOrders.length === 0) {
+    return true;
+  }
+
   try {
+    /*
+     * Still one UPDATE per service, but the timeout now scales with the batch
+     * instead of all N sharing a single fixed budget — that was the mechanism
+     * by which a long reorder timed out midway and left display_order
+     * half-applied.
+     *
+     * Not an upsert: PostgREST upsert issues INSERT .. ON CONFLICT, and the
+     * proposed tuple would omit `title`, which is NOT NULL on services. A truly
+     * atomic reorder needs a SECURITY DEFINER function doing
+     * `UPDATE .. FROM (VALUES ..)`; deferred, because display_order is cosmetic
+     * and the catalogue is ~10 rows.
+     */
     const results = await runSupabaseOperation(
       () =>
         Promise.all(
@@ -849,7 +1175,7 @@ export async function reorderServices(
       {
         context: "reorderServices",
         retries: 1,
-        timeoutMs: SUPABASE_WRITE_TIMEOUT_MS,
+        timeoutMs: SUPABASE_WRITE_TIMEOUT_MS + serviceOrders.length * 500,
       }
     );
 
@@ -910,7 +1236,12 @@ async function enforceFeaturedTestimonialsLimit(excludeId?: string): Promise<voi
   }
 }
 
-export async function getTestimonialsFromSupabase(): Promise<Testimonial[]> {
+/**
+ * All testimonials. React.cache()d because the (site) layout reads them for
+ * Organization.aggregateRating on every page while the home page reads them
+ * again for the testimonials section — one round-trip per render, not two.
+ */
+export const getTestimonialsFromSupabase = cache(async (): Promise<Testimonial[]> => {
   if (!supabase) {
     console.warn("Supabase client not initialized");
     return [];
@@ -939,7 +1270,51 @@ export async function getTestimonialsFromSupabase(): Promise<Testimonial[]> {
     console.error("Failed to fetch testimonials:", error);
     return [];
   }
-}
+});
+
+/**
+ * Testimonials for the home page: featured first, falling back to the most
+ * recent when nothing is featured.
+ *
+ * The page used to run this fallback itself by awaiting the entire testimonials
+ * table *after* its Promise.all and slicing three off the front — a serial
+ * round-trip plus a full-table read for three rows. Both queries are limited
+ * and the branch lives in the query layer where the other business rules are.
+ */
+export const getHomepageTestimonials = cache(async (
+  limit = MAX_FEATURED_TESTIMONIALS
+): Promise<Testimonial[]> => {
+  const featured = await getFeaturedTestimonials();
+  if (featured.length > 0) {
+    return featured.slice(0, limit);
+  }
+
+  if (!supabase) {
+    return [];
+  }
+
+  try {
+    const { data, error } = await runSupabaseOperation(
+      () =>
+        supabase!
+          .from("testimonials")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(limit),
+      { context: "getHomepageTestimonials:latest", timeoutMs: SUPABASE_READ_TIMEOUT_MS }
+    );
+
+    if (error) {
+      console.error("Error fetching latest testimonials:", error);
+      return [];
+    }
+
+    return (data || []) as Testimonial[];
+  } catch (error) {
+    console.error("Failed to fetch latest testimonials:", error);
+    return [];
+  }
+});
 
 export async function getFeaturedTestimonials(): Promise<Testimonial[]> {
   if (!supabase) {

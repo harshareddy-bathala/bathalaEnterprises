@@ -153,7 +153,7 @@ export default function MultiImageUpload({
                 ? "cursor-not-allowed opacity-50"
                 : "border-[#e8e4dc] bg-[#f8f6f2] hover:bg-[#efebe4]"
             }`}>
-              <span className="material-symbols-outlined mb-2 text-3xl text-[#6b7280]">
+              <span className="material-symbols-outlined mb-2 text-3xl text-[#6b7280]" aria-hidden="true">
                 add_photo_alternate
               </span>
               <p className="mb-1 text-sm font-medium text-[#1a1f2e]">{label}</p>
@@ -168,7 +168,7 @@ export default function MultiImageUpload({
       {/* Error Message */}
       {error && (
         <div className="flex items-start gap-2 rounded-lg bg-red-50 p-3">
-          <span className="material-symbols-outlined text-lg text-red-600">error</span>
+          <span className="material-symbols-outlined text-lg text-red-600" aria-hidden="true">error</span>
           <p className="text-sm text-red-600">{error}</p>
         </div>
       )}
@@ -195,7 +195,7 @@ export default function MultiImageUpload({
                   className="absolute right-2 top-2 rounded-full bg-red-600 p-1.5 text-white opacity-0 transition-opacity hover:bg-red-700 group-hover:opacity-100"
                   title="Remove image"
                 >
-                  <span className="material-symbols-outlined text-base">close</span>
+                  <span className="material-symbols-outlined text-base" aria-hidden="true">close</span>
                 </button>
               )}
 

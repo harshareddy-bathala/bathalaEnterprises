@@ -11,6 +11,12 @@ import {
 import { reportError } from "@/lib/monitoring";
 import { checkRateLimit as checkServerRateLimit } from "@/lib/rate-limit";
 import { getPropertiesFromSupabase, getServicesFromSupabase } from "@/lib/supabase-queries";
+import { faqAsText } from "@/lib/faq-content";
+import {
+  FALLBACK_PUBLIC_SITE_SETTINGS,
+  getResolvedPublicSiteSettings,
+  type ResolvedPublicSiteSettings,
+} from "@/lib/public-site-settings";
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || "");
 
@@ -407,7 +413,11 @@ function rankServices(
   return scored.slice(0, limit).map((entry) => entry.service);
 }
 
-function buildCatalogSummary(properties: ChatProperty[], services: ChatService[]): string {
+function buildCatalogSummary(
+  properties: ChatProperty[],
+  services: ChatService[],
+  settings: ResolvedPublicSiteSettings
+): string {
   const rentCount = properties.filter((property) => property.type === "Rent").length;
   const leaseCount = properties.filter((property) => property.type === "Lease").length;
   const saleCount = properties.filter((property) => property.type === "Sale").length;
@@ -427,13 +437,22 @@ function buildCatalogSummary(properties: ChatProperty[], services: ChatService[]
     .map(([location, count]) => `${location} (${count})`)
     .join(", ");
 
+  // Sourced from site_settings (admin-editable) with siteConfig as fallback.
+  // These were previously hardcoded placeholders — the assistant was giving
+  // users a phone number, email and address that do not exist.
+  //
+  // The FAQ block is the same content rendered as FAQPage JSON-LD on /about and
+  // /contact, so the assistant and the structured data cannot diverge.
   return `
 COMPANY INFORMATION:
-- Name: Bathala Enterprises
-- Phone: +91 98765 43210
-- Email: contact@bathalaenterprises.com
-- Location: Chikkapatre Main Road, Basapura, Bangalore 560100
-- Operating Hours: 9 AM - 6 PM (Monday to Saturday)
+- Name: ${settings.businessName}
+- Phone: ${settings.phoneDisplay}
+- Email: ${settings.email}
+- Location: ${settings.address.full}
+- Operating Hours: ${settings.hours.weekdays}; Sunday: ${settings.hours.sunday}
+
+FREQUENTLY ASKED QUESTIONS (authoritative; prefer these answers verbatim):
+${faqAsText()}
 
 DATABASE SNAPSHOT:
 - Total properties: ${properties.length}
@@ -719,9 +738,12 @@ async function getRAGContext(requestId: string): Promise<string> {
     return cachedCatalog.summary;
   }
 
-  const [propertiesResult, servicesResult] = await Promise.allSettled([
-    withTimeout(getPropertiesFromSupabase(), CONTEXT_BUILD_TIMEOUT_MS, "Fetching properties for chat context timed out."),
+  const [propertiesResult, servicesResult, settingsResult] = await Promise.allSettled([
+    // includeInactive: false — the assistant must not offer listings that are
+    // not publicly available.
+    withTimeout(getPropertiesFromSupabase(false), CONTEXT_BUILD_TIMEOUT_MS, "Fetching properties for chat context timed out."),
     withTimeout(getServicesFromSupabase(), CONTEXT_BUILD_TIMEOUT_MS, "Fetching services for chat context timed out."),
+    withTimeout(getResolvedPublicSiteSettings(), CONTEXT_BUILD_TIMEOUT_MS, "Fetching site settings for chat context timed out."),
   ]);
 
   if (propertiesResult.status === "rejected") {
@@ -740,13 +762,23 @@ async function getRAGContext(requestId: string): Promise<string> {
     });
   }
 
+  if (settingsResult.status === "rejected") {
+    reportError(settingsResult.reason, {
+      route: "/api/chat",
+      requestId,
+      stage: "load_context_settings",
+    });
+  }
+
   const properties = propertiesResult.status === "fulfilled" ? propertiesResult.value : [];
   const services = servicesResult.status === "fulfilled" ? servicesResult.value : [];
+  const settings =
+    settingsResult.status === "fulfilled" ? settingsResult.value : FALLBACK_PUBLIC_SITE_SETTINGS;
 
   cachedCatalog = {
     properties,
     services,
-    summary: buildCatalogSummary(properties, services),
+    summary: buildCatalogSummary(properties, services, settings),
   };
 
   cacheTime = now;

@@ -93,7 +93,7 @@ export default function ConfirmDialog({
                 ? { duration: 0 }
                 : { duration: 0.2, ease: [0.22, 1, 0.36, 1] }
             }
-            className="fixed left-1/2 top-1/2 z-[80] w-[min(92vw,28rem)] max-h-[calc(100vh-2rem)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl border border-[#e8e4dc] bg-white shadow-2xl lg:left-[calc(50%+140px)]"
+            className="fixed left-1/2 top-1/2 z-[80] w-[min(92vw,28rem)] max-h-[calc(100vh-2rem)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl border border-[#e8e4dc] bg-white shadow-2xl lg:left-[calc(50%+var(--admin-sidebar-w,280px)/2)]"
           >
             <div className="p-6">
               {/* Icon */}
@@ -101,8 +101,7 @@ export default function ConfirmDialog({
                 className={`mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full ${style.iconBg}`}
               >
                 <span
-                  className={`material-symbols-outlined text-2xl ${style.iconColor}`}
-                >
+                  className={`material-symbols-outlined text-2xl ${style.iconColor}`} aria-hidden="true">
                   {style.icon}
                 </span>
               </div>

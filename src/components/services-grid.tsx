@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { SERVICE_ICON_THEME } from "@/lib/theme-constants";
 import { getServiceIconFromRecord, getServiceSummary } from "@/lib/service-format";
 import type { Service } from "@/lib/supabase-queries";
+import { servicePath } from "@/lib/slug";
 
 const SERVICES_HOME_CACHE_KEY = "bathala:cache:home-services:v1";
 
@@ -70,15 +71,15 @@ function ServicesGridCard({ service, idx, onQuickPreview }: ServicesGridCardProp
           className="group/quick inline-flex min-h-[44px] touch-manipulation items-center gap-1 whitespace-nowrap text-[13px] font-medium text-[#b89a5e] hover:text-[#9f8450]"
         >
           Quick Preview
-          <span className="material-symbols-outlined text-[14px]">visibility</span>
+          <span className="material-symbols-outlined text-[14px]" aria-hidden="true">visibility</span>
         </button>
 
         <Link
-          href={`/all-services/${service.id}`}
+          href={servicePath(service)}
           className="group/details inline-flex min-h-[44px] touch-manipulation items-center gap-1 whitespace-nowrap text-[13px] font-medium text-[#b89a5e] hover:text-[#9f8450]"
         >
           View Details
-          <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+          <span className="material-symbols-outlined text-[14px]" aria-hidden="true">arrow_forward</span>
         </Link>
       </div>
     </article>
@@ -172,7 +173,7 @@ export default function ServicesGrid({
   return (
     <>
       <section id="services" className="bg-white py-16 sm:py-20 md:py-24 lg:py-28">
-        <div className="mx-auto max-w-[1200px] px-5 sm:px-6 md:px-10">
+        <div className="bathala-container">
           {showHeader && (
             <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
               <div className="max-w-[420px]">
@@ -191,11 +192,11 @@ export default function ServicesGrid({
 
               {showViewAll ? (
                 <Link
-                  href="/all-services"
+                  href="/services"
                   className="inline-flex items-center gap-1 self-start text-[14px] font-medium text-[#b89a5e] transition-colors hover:text-[#9f8450] md:mb-1 md:self-auto"
                 >
                   View All Services
-                  <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+                  <span className="material-symbols-outlined text-[14px]" aria-hidden="true">arrow_forward</span>
                 </Link>
               ) : null}
             </div>
@@ -203,7 +204,7 @@ export default function ServicesGrid({
 
           {usingCachedData ? (
             <div className="mt-4 flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs text-amber-800">
-              <span className="material-symbols-outlined text-sm">history</span>
+              <span className="material-symbols-outlined text-sm" aria-hidden="true">history</span>
               <span>
                 Refreshing services. Showing saved results{cachedAtLabel ? ` from ${cachedAtLabel}` : ""} for now.
               </span>

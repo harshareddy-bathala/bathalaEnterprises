@@ -4,16 +4,13 @@ import LegalPageTemplate, { type LegalSection } from "@/components/legal-page-te
 import { generateBreadcrumbSchema, generateWebPageSchema } from "@/lib/structured-data";
 import { siteConfig } from "@/lib/site-config";
 import { getResolvedPublicSiteSettings } from "@/lib/public-site-settings";
+import { buildMetadata, siteUrl as baseUrl } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildMetadata({
   title: "Terms of Service",
   description: `Terms of Service for ${siteConfig.businessName} - Terms and conditions for using our services.`,
-  alternates: {
-    canonical: "/terms",
-  },
-};
-
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://bathalaenterprises.com";
+  path: "/terms",
+});
 
 const termsSections: LegalSection[] = [
   {

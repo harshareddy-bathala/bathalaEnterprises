@@ -23,6 +23,7 @@ import {
 import { BulkActionBar, SelectionCell, SortableTh, Table, TableEmptyState, TableSkeleton, Tbody, Td, Th, Thead, Tr } from "@/components/admin/table";
 import AdminLayout, { AdminCard, ErrorAlert } from "@/components/admin/admin-layout";
 import type { Testimonial } from "@/types/tables";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 
 const Modal = dynamic(() => import("@/components/modal"), { loading: () => null });
 const TestimonialForm = dynamic(() => import("@/components/admin/testimonial-form"), { loading: () => null });
@@ -82,7 +83,7 @@ export default function TestimonialsPage() {
 
   useEffect(() => {
     let isMounted = true;
-    let channel: any = null;
+    let channel: RealtimeChannel | null = null;
 
     const initialize = async () => {
       if (!supabase) {
@@ -304,8 +305,7 @@ export default function TestimonialsPage() {
                 star <= rating
                   ? "'FILL' 1, 'wght' 760, 'GRAD' 200, 'opsz' 20"
                   : "'FILL' 0, 'wght' 320, 'GRAD' 0, 'opsz' 20",
-            }}
-          >
+            }} aria-hidden="true">
             star
           </span>
         ))}
@@ -382,7 +382,7 @@ export default function TestimonialsPage() {
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
           <Button variant="outline" asChild className="w-full sm:w-auto">
             <Link href="/#testimonials" target="_blank" rel="noopener noreferrer">
-              <span className="material-symbols-outlined text-lg">open_in_new</span>
+              <span className="material-symbols-outlined text-lg" aria-hidden="true">open_in_new</span>
               View on Home
             </Link>
           </Button>
@@ -391,7 +391,7 @@ export default function TestimonialsPage() {
             onClick={() => setIsCreateModalOpen(true)}
             className="w-full sm:w-auto"
           >
-            <span className="material-symbols-outlined mr-2 text-lg">add</span>
+            <span className="material-symbols-outlined mr-2 text-lg" aria-hidden="true">add</span>
             Add Testimonial
           </Button>
         </div>
@@ -418,7 +418,7 @@ export default function TestimonialsPage() {
             description="Add customer testimonials to build trust and credibility"
             action={
               <Button variant="primary" onClick={() => setIsCreateModalOpen(true)}>
-                <span className="material-symbols-outlined mr-2 text-lg">add</span>
+                <span className="material-symbols-outlined mr-2 text-lg" aria-hidden="true">add</span>
                 Add Testimonial
               </Button>
             }
@@ -542,14 +542,14 @@ export default function TestimonialsPage() {
                           className="rounded-lg p-2 text-[#6b7280] transition hover:bg-[#f3f1ed] hover:text-[#1a1f2e] focus:ring-2 focus:ring-[#b89a5e] focus:ring-offset-2 focus:outline-none"
                           title="Edit"
                         >
-                          <span className="material-symbols-outlined text-lg">edit</span>
+                          <span className="material-symbols-outlined text-lg" aria-hidden="true">edit</span>
                         </button>
                         <button
                           onClick={() => openDeleteDialog(testimonial)}
                           className="rounded-lg p-2 text-[#9ca3af] transition hover:bg-red-50 hover:text-red-600 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                           title="Delete"
                         >
-                          <span className="material-symbols-outlined text-lg">delete</span>
+                          <span className="material-symbols-outlined text-lg" aria-hidden="true">delete</span>
                         </button>
                       </div>
                     </Td>

@@ -37,12 +37,28 @@ const config: PlaywrightTestConfig = defineConfig({
     screenshot: "only-on-failure",
     ignoreHTTPSErrors: true,
   },
+  /*
+   * Production build, not `next dev`.
+   *
+   * The dev server was both slow to become ready (this timed out at 180s
+   * locally) and the wrong target: security headers, redirects, the CSP and
+   * image optimization are all gated behind `isProduction` in next.config.mjs
+   * and src/proxy.ts, and `images.unoptimized` is true in dev — so the
+   * performance and cross-browser suites were measuring something the public
+   * never sees.
+   *
+   * Set QA_USE_DEV_SERVER=1 to opt back into dev for quick local iteration, or
+   * QA_SKIP_WEBSERVER=1 to point at a server you started yourself.
+   */
   webServer: shouldStartServer
     ? {
-        command: "node ./node_modules/next/dist/bin/next dev -H 127.0.0.1 -p 3000",
+        command:
+          process.env.QA_USE_DEV_SERVER === "1"
+            ? "node ./node_modules/next/dist/bin/next dev -H 127.0.0.1 -p 3000"
+            : "node ./node_modules/next/dist/bin/next build && node ./node_modules/next/dist/bin/next start -H 127.0.0.1 -p 3000",
         url: BASE_URL,
         reuseExistingServer: true,
-        timeout: 180_000,
+        timeout: 300_000,
       }
     : undefined,
   projects: [

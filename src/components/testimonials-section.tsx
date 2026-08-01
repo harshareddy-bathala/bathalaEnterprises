@@ -33,7 +33,7 @@ export default function TestimonialsSection({ testimonials }: TestimonialsSectio
         className="reveal-up flex min-h-[300px] flex-col rounded-[16px] border border-[#f0ede7] bg-[#fdfcfa] px-5 pb-5 pt-5 sm:min-h-[315px] sm:px-6 sm:pb-6 sm:pt-6 md:min-h-[335px] md:px-8 md:pb-8 md:pt-8"
         style={revealDelay(140 + index * 85)}
       >
-        <span className="material-symbols-outlined text-[24px] text-[#d4b87a]">format_quote</span>
+        <span className="material-symbols-outlined text-[24px] text-[#d4b87a]" aria-hidden="true">format_quote</span>
 
         <p className="mt-4 text-[14px] leading-[1.75] text-[#4a5568] sm:text-[14.5px]">"{item.content}"</p>
 
@@ -48,8 +48,7 @@ export default function TestimonialsSection({ testimonials }: TestimonialsSectio
                   fontVariationSettings: isFilled
                     ? "'FILL' 1, 'wght' 760, 'GRAD' 200, 'opsz' 20"
                     : "'FILL' 0, 'wght' 330, 'GRAD' 0, 'opsz' 20",
-                }}
-              >
+                }} aria-hidden="true">
                 star
               </span>
             );
@@ -72,7 +71,7 @@ export default function TestimonialsSection({ testimonials }: TestimonialsSectio
 
   return (
     <section id="testimonials" className="bg-white py-14 sm:py-16 md:py-20">
-      <div className="mx-auto max-w-[1200px] px-5 sm:px-6 md:px-10">
+      <div className="bathala-container">
         <header className="reveal-up mx-auto max-w-[640px] text-center" style={revealDelay(70)}>
           <div className="flex items-center justify-center gap-2">
             <span className="h-[1.5px] w-8 bg-[#b89a5e]" />
