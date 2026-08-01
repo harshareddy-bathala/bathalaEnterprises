@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next';
+import { siteUrl as baseUrl } from '@/lib/seo';
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://bathalaenterprises.com';
   const host = (() => {
     try {
       return new URL(baseUrl).host;
@@ -9,7 +9,7 @@ export default function robots(): MetadataRoute.Robots {
       return 'bathalaenterprises.com';
     }
   })();
-  
+
   return {
     rules: [
       {

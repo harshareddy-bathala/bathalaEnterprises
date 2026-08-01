@@ -4,15 +4,14 @@ import type { Metadata } from "next";
 import { JsonLd } from "@/components/json-ld";
 import { generateBreadcrumbSchema, generateWebPageSchema } from "@/lib/structured-data";
 import { cn } from "@/lib/utils";
+import { buildMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildMetadata({
   title: "About Us",
   description:
     "Learn about Bathala Enterprises, our values, journey, and what makes our property services trusted by families across Electronic City, Bangalore.",
-  alternates: {
-    canonical: "/about",
-  },
-};
+  path: "/about",
+});
 
 const trustStats = [
   { value: "50+", label: "Properties Managed" },

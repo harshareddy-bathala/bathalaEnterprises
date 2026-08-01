@@ -1,7 +1,16 @@
 import type { ReactNode } from "react";
 
-export const metadata = {
-  title: "Admin | Bathala Enterprises"
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  // The root layout's title template appends " | Bathala Enterprises".
+  title: "Admin",
+  // robots.txt disallow is a crawl directive, not an indexing guarantee — the
+  // admin surface needs an explicit noindex too.
+  robots: {
+    index: false,
+    follow: false,
+  },
 };
 
 export default function AdminLayout({ children }: { children: ReactNode }) {

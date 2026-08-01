@@ -4,17 +4,14 @@ import ContactForm from "@/components/contact-form";
 import { JsonLd } from "@/components/json-ld";
 import { generateBreadcrumbSchema, generateWebPageSchema } from "@/lib/structured-data";
 import { getResolvedPublicSiteSettings } from "@/lib/public-site-settings";
+import { buildMetadata, siteUrl as baseUrl } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Contact | Bathala Enterprises",
+export const metadata: Metadata = buildMetadata({
+  title: "Contact",
   description:
     "Reach Bathala Enterprises for property rentals, sales, leasing and management support in Electronic City, Bengaluru.",
-  alternates: {
-    canonical: "/contact",
-  },
-};
-
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://bathalaenterprises.com";
+  path: "/contact",
+});
 
 type ContactPageProps = {
   searchParams?:

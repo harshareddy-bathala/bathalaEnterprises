@@ -1,17 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { buildMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildMetadata({
   title: "Offline",
   description: "Offline fallback page for Bathala Enterprises.",
-  robots: {
-    index: false,
-    follow: false,
-  },
-  alternates: {
-    canonical: "/offline",
-  },
-};
+  path: "/offline",
+  index: false,
+});
 
 export default function OfflinePage() {
   return (

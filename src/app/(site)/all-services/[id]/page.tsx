@@ -12,9 +12,9 @@ import {
 } from "@/lib/structured-data";
 import { getServiceById, getServicesFromSupabase } from "@/lib/supabase-queries";
 import { getServiceIconFromRecord, getServiceSummary } from "@/lib/service-format";
+import { buildMetadata, SITE_NAME, siteUrl as baseUrl } from "@/lib/seo";
 
 export const revalidate = 60;
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://bathalaenterprises.com";
 
 type ServiceDetailPageProps = {
   params: Promise<{ id: string }>;
@@ -27,24 +27,25 @@ export async function generateMetadata({
   const service = await getServiceById(id);
 
   if (!service) {
-    return {
-      title: "Service Not Found | Bathala Enterprises",
+    return buildMetadata({
+      title: "Service Not Found",
       description:
         "The requested service could not be found. Explore all available services from Bathala Enterprises.",
-    };
+      path: "/all-services",
+      index: false,
+    });
   }
 
-  return {
-    title: `${service.title} | Services | Bathala Enterprises`,
+  return buildMetadata({
+    title: `${service.title} | Services`,
     description: getServiceSummary(
       service,
       "Explore premium property services from Bathala Enterprises.",
       155
     ),
-    alternates: {
-      canonical: `/all-services/${service.id}`,
-    },
-  };
+    path: `/all-services/${service.id}`,
+    type: "article",
+  });
 }
 
 export default async function ServiceDetailPage({ params }: ServiceDetailPageProps) {
@@ -84,7 +85,7 @@ export default async function ServiceDetailPage({ params }: ServiceDetailPagePro
   const serviceSchema = generateServiceSchema(service);
   const webPageSchema = generateWebPageSchema(
     `${baseUrl}/all-services/${service.id}`,
-    `${service.title} | Services | Bathala Enterprises`,
+    `${service.title} | Services | ${SITE_NAME}`,
     summary
   );
   const breadcrumbSchema = generateBreadcrumbSchema([

@@ -9,19 +9,16 @@ import { SERVICE_ICON_THEME } from "@/lib/theme-constants";
 import { generateBreadcrumbSchema, generateWebPageSchema } from "@/lib/structured-data";
 import { getServicesFromSupabase } from "@/lib/supabase-queries";
 import { getServiceIconFromRecord, getServiceSummary } from "@/lib/service-format";
+import { buildMetadata, siteUrl as baseUrl } from "@/lib/seo";
 
 export const revalidate = 60;
 
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://bathalaenterprises.com";
-
-export const metadata: Metadata = {
+export const metadata: Metadata = buildMetadata({
   title: "All Services",
   description:
     "Explore all Bathala Enterprises services including property management, leasing support, maintenance, and advisory in Bengaluru.",
-  alternates: {
-    canonical: "/all-services",
-  },
-};
+  path: "/all-services",
+});
 
 export default async function AllServicesPage() {
   const services = await getServicesFromSupabase();

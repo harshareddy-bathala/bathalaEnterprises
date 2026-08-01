@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { buildMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildMetadata({
   title: "Maintenance",
   description: "Bathala Enterprises is temporarily under maintenance.",
-  alternates: {
-    canonical: "/maintenance",
-  },
-};
+  path: "/maintenance",
+  index: false,
+});
 
 export default function MaintenancePage() {
   return (

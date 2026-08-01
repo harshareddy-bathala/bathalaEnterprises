@@ -7,6 +7,7 @@ import {
 } from "@/lib/supabase-queries";
 import { JsonLd } from "@/components/json-ld";
 import { generateWebPageSchema, generateBreadcrumbSchema } from "@/lib/structured-data";
+import { siteUrl as baseUrl } from "@/lib/seo";
 import type { Testimonial } from "@/types/tables";
 
 const Hero = dynamic(() => import("@/components/hero"), {
@@ -40,8 +41,6 @@ const CtaSection = dynamic(() => import("@/components/cta-section"), {
 });
 
 export const revalidate = 60; // ISR: revalidate every 60 seconds
-
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://bathalaenterprises.com";
 
 export default async function HomePage() {
   const [services, properties, featuredTestimonials] = await Promise.all([

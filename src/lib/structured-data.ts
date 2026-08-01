@@ -4,10 +4,17 @@
  */
 
 import { siteConfig } from "./site-config";
+import { siteUrl as baseUrl } from "./seo";
 import type { Property } from "./supabase-queries";
 import type { Service } from "./supabase-queries";
 
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://bathalaenterprises.com";
+/**
+ * Schema.org consumers fetch these directly, so they must be stable, real URLs
+ * — not the hashed `opengraph-image` route. `android-chrome-512x512.png` is the
+ * existing square brand mark in `public/`.
+ */
+const LOGO_URL = `${baseUrl}/android-chrome-512x512.png`;
+const SOCIAL_IMAGE_URL = `${baseUrl}/opengraph-image`;
 
 export interface OrganizationSchema {
   "@context": "https://schema.org";
@@ -164,7 +171,7 @@ export function generateOrganizationSchema(): OrganizationSchema {
     "@type": "Organization",
     name: siteConfig.businessName,
     url: baseUrl,
-    logo: `${baseUrl}/logo.png`,
+    logo: LOGO_URL,
     description: "Premium real estate services, property management, and advisory in Bangalore. Building trust, one property at a time.",
     contactPoint: {
       "@type": "ContactPoint",
@@ -188,8 +195,8 @@ export function generateLocalBusinessSchema(): LocalBusinessSchema {
     name: siteConfig.businessName,
     description: "Premium real estate services including property rental, lease, sale, and property management in Electronic City, Bangalore.",
     url: baseUrl,
-    logo: `${baseUrl}/logo.png`,
-    image: `${baseUrl}/og-image.jpg`,
+    logo: LOGO_URL,
+    image: SOCIAL_IMAGE_URL,
     telephone: siteConfig.contact.phone,
     email: siteConfig.contact.email,
     address: {
@@ -235,7 +242,9 @@ export function generatePropertySchema(property: Property): RealEstateListingSch
     description: property.description || `${property.bedrooms} BHK ${property.type} property in ${property.location}`,
     url: `${baseUrl}/properties/${property.id}`,
     image: [property.image_url, property.thumbnail_url].filter(Boolean) as string[],
-    datePosted: new Date().toISOString(),
+    // Must be the real listing date. Stamping `new Date()` told Google every
+    // property was posted at render time, on every render.
+    datePosted: property.created_at ?? property.updated_at ?? new Date().toISOString(),
     offers: {
       "@type": "Offer",
       price: priceValue,

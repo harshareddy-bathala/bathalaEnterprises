@@ -4,6 +4,7 @@ import Script from "next/script";
 import { Suspense } from "react";
 import "./globals.css";
 import { cn } from "@/lib/utils";
+import { SITE_NAME, siteUrl } from "@/lib/seo";
 import AnalyticsTracking from "@/components/analytics-tracking";
 import RumMonitor from "@/components/rum-monitor";
 
@@ -43,34 +44,27 @@ export const metadata: Metadata = {
   authors: [{ name: "Bathala Enterprises" }],
   creator: "Bathala Enterprises",
   publisher: "Bathala Enterprises",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://bathalaenterprises.com"),
+  metadataBase: new URL(siteUrl),
   alternates: {
     canonical: "/",
     languages: {
       "en-IN": "/",
     },
   },
+  // Open Graph / Twitter images come from the `opengraph-image.tsx` file
+  // convention (root + per-route), so they are deliberately not set here.
   openGraph: {
     type: "website",
     locale: "en_IN",
     url: "/",
     title: "Bathala Enterprises | Premium Real Estate Services in Bangalore",
     description: "Bathala Enterprises offers premium real estate services, property management, and advisory in Bangalore. Building trust, one property at a time.",
-    siteName: "Bathala Enterprises",
-    images: [
-      {
-        url: "/og-image.jpg",
-        width: 1200,
-        height: 630,
-        alt: "Bathala Enterprises - Premium Real Estate Services",
-      },
-    ],
+    siteName: SITE_NAME,
   },
   twitter: {
     card: "summary_large_image",
     title: "Bathala Enterprises | Premium Real Estate in Bangalore",
     description: "Premium real estate services, property management, and advisory in Bangalore.",
-    images: ["/og-image.jpg"],
   },
   robots: {
     index: true,
@@ -109,7 +103,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     process.env.NODE_ENV === "production" && process.env.NEXT_PUBLIC_ENABLE_RUM !== "false";
 
   return (
-    <html lang="en" className="bg-[var(--color-background)]">
+    // en-IN matches metadata.alternates.languages and site.webmanifest
+    <html lang="en-IN" className="bg-[var(--color-background)]">
       <head>
         {process.env.NODE_ENV !== "production" ? (
           <Script id="dev-sw-cleanup" src="/dev-sw-cleanup.js" strategy="beforeInteractive" />

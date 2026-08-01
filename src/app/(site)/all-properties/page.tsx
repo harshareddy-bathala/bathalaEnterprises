@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { generateBreadcrumbSchema, generateWebPageSchema } from "@/lib/structured-data";
 import { getPropertiesFromSupabase } from "@/lib/supabase-queries";
 import UniversalLoading from "@/components/ui/universal-loading";
+import { buildMetadata, siteUrl as baseUrl } from "@/lib/seo";
 
 const AllPropertiesClient = dynamic(
   () => import("@/components/all-properties-client"),
@@ -21,16 +22,12 @@ const AllPropertiesClient = dynamic(
 
 export const revalidate = 60;
 
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://bathalaenterprises.com";
-
-export const metadata: Metadata = {
+export const metadata: Metadata = buildMetadata({
   title: "All Properties",
   description:
     "Browse all Bathala Enterprises property listings for rent, lease, and sale in Electronic City, Bengaluru.",
-  alternates: {
-    canonical: "/all-properties",
-  },
-};
+  path: "/all-properties",
+});
 
 export default async function AllPropertiesPage() {
   const properties = await getPropertiesFromSupabase(false);

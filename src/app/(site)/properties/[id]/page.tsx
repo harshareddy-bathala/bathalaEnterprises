@@ -18,6 +18,7 @@ import {
   generatePropertySchema,
   generateWebPageSchema,
 } from "@/lib/structured-data";
+import { buildMetadata, SITE_NAME, siteUrl as baseUrl } from "@/lib/seo";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   getPropertiesByIds,
@@ -49,7 +50,6 @@ type PropertyDetailPageProps = {
 };
 
 export const revalidate = 60;
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://bathalaenterprises.com";
 
 export async function generateMetadata({
   params,
@@ -58,27 +58,25 @@ export async function generateMetadata({
   const property = await getPropertyById(id);
 
   if (!property) {
-    return {
-      title: "Property Not Found | Bathala Enterprises",
+    return buildMetadata({
+      title: "Property Not Found",
       description:
         "The requested property listing could not be found. Browse available Bathala Enterprises properties in Bengaluru.",
-      alternates: {
-        canonical: "/all-properties",
-      },
-    };
+      path: "/all-properties",
+      index: false,
+    });
   }
 
   const summary =
     property.description?.trim() ||
     `${property.bedrooms} BHK ${property.type} property in ${property.location}.`;
 
-  return {
-    title: `${property.title} | Properties | Bathala Enterprises`,
+  return buildMetadata({
+    title: `${property.title} | Properties`,
     description: summary.slice(0, 155),
-    alternates: {
-      canonical: `/properties/${property.id}`,
-    },
-  };
+    path: `/properties/${property.id}`,
+    type: "article",
+  });
 }
 
 async function resolveRelatedProperties(property: Property): Promise<Property[]> {
@@ -144,7 +142,7 @@ export default async function PropertyDetailPage({ params }: PropertyDetailPageP
   const propertySchema = generatePropertySchema(property);
   const webPageSchema = generateWebPageSchema(
     `${baseUrl}/properties/${property.id}`,
-    `${property.title} | Properties | Bathala Enterprises`,
+    `${property.title} | Properties | ${SITE_NAME}`,
     property.description || `${property.bedrooms} BHK ${property.type} property in ${property.location}.`
   );
   const breadcrumbSchema = generateBreadcrumbSchema([

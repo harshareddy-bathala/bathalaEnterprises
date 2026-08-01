@@ -1,4 +1,4 @@
-import { unstable_noStore as noStore } from "next/cache";
+import { cache } from "react";
 import { siteConfig } from "@/lib/site-config";
 import { getSiteSettings } from "@/lib/settings-queries";
 
@@ -72,9 +72,45 @@ export type ResolvedPublicSiteSettings = {
   mapEmbedUrl: string;
 };
 
-export async function getResolvedPublicSiteSettings(): Promise<ResolvedPublicSiteSettings> {
-  noStore();
+/**
+ * Static fallback for callers that cannot tolerate a failed settings read
+ * (e.g. the chat route, which must never present placeholder contact details).
+ */
+export const FALLBACK_PUBLIC_SITE_SETTINGS: ResolvedPublicSiteSettings = {
+  businessName: siteConfig.businessName,
+  siteTitle: siteConfig.businessName,
+  phone: siteConfig.contact.phone,
+  phoneDisplay: siteConfig.contact.phoneDisplay,
+  email: siteConfig.contact.email,
+  legalEmail: siteConfig.contact.legalEmail,
+  address: createAddressVariants(siteConfig.address.full),
+  social: {
+    facebook: siteConfig.social.facebook,
+    twitter: siteConfig.social.twitter,
+    instagram: siteConfig.social.instagram,
+    linkedin: siteConfig.social.linkedin,
+  },
+  hours: {
+    weekdays: siteConfig.hours.weekdays,
+    sunday: siteConfig.hours.sunday,
+  },
+  mapEmbedUrl: siteConfig.mapEmbedUrl,
+};
 
+/**
+ * Resolved, CMS-editable business identity, with `siteConfig` as a per-field
+ * fallback.
+ *
+ * Wrapped in `React.cache()` so the Footer (rendered in the `(site)` layout on
+ * every page) and the page body share one Supabase round-trip per render.
+ *
+ * This previously called `unstable_noStore()`, which opted every page in the
+ * `(site)` group out of static rendering — the Footer is in the shared layout,
+ * so `export const revalidate = 60` on the pages was being silently defeated.
+ * Freshness now comes from ISR revalidation, which is the right granularity:
+ * these settings change rarely and are edited through the admin CMS.
+ */
+export const getResolvedPublicSiteSettings = cache(async (): Promise<ResolvedPublicSiteSettings> => {
   const dbSettings = await getSiteSettings();
 
   const phone = normalizeOptionalText(dbSettings?.phone) ?? siteConfig.contact.phone;
@@ -102,4 +138,4 @@ export async function getResolvedPublicSiteSettings(): Promise<ResolvedPublicSit
     },
     mapEmbedUrl: siteConfig.mapEmbedUrl,
   };
-}
+});
