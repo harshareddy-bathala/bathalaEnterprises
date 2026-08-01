@@ -599,7 +599,7 @@ export default function ContactForm({
                   </option>
                 ))}
               </select>
-              <span className="material-symbols-outlined pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[14px] text-[#9ca3af]">
+              <span className="material-symbols-outlined pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[14px] text-[#9ca3af]" aria-hidden="true">
                 expand_more
               </span>
             </div>
@@ -618,7 +618,7 @@ export default function ContactForm({
                   </option>
                 ))}
               </select>
-              <span className="material-symbols-outlined pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[14px] text-[#9ca3af]">
+              <span className="material-symbols-outlined pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[14px] text-[#9ca3af]" aria-hidden="true">
                 expand_more
               </span>
             </div>
@@ -649,16 +649,16 @@ export default function ContactForm({
           >
             {status === "submitting" ? (
               <>
-                <span className="material-symbols-outlined animate-spin text-[15px]">progress_activity</span>
+                <span className="material-symbols-outlined animate-spin text-[15px]" aria-hidden="true">progress_activity</span>
                 Sending...
               </>
             ) : (
               <>
                 {!isHydrated ? (
-                  <span className="material-symbols-outlined animate-spin text-[15px]">progress_activity</span>
+                  <span className="material-symbols-outlined animate-spin text-[15px]" aria-hidden="true">progress_activity</span>
                 ) : null}
                 Send Enquiry
-                <span className="material-symbols-outlined text-[15px]">arrow_forward</span>
+                <span className="material-symbols-outlined text-[15px]" aria-hidden="true">arrow_forward</span>
               </>
             )}
           </button>
@@ -705,7 +705,7 @@ export default function ContactForm({
                     disabled={status === "rate-limited" && retryAfterMs > 0}
                     className="inline-flex h-[38px] items-center gap-1 rounded-full border border-red-200 bg-white px-4 text-[12px] font-semibold text-[#4a5568] transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    <span className="material-symbols-outlined text-[14px]">refresh</span>
+                    <span className="material-symbols-outlined text-[14px]" aria-hidden="true">refresh</span>
                     Retry submission
                   </button>
                 </div>

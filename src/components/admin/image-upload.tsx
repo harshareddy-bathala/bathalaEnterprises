@@ -165,7 +165,7 @@ export default function ImageUpload({
                 onClick={handleClick}
                 className="flex-1 bg-white"
               >
-                <span className="material-symbols-outlined mr-2 text-[18px]">sync</span>
+                <span className="material-symbols-outlined mr-2 text-[18px]" aria-hidden="true">sync</span>
                 Change Image
               </Button>
               <Button
@@ -175,7 +175,7 @@ export default function ImageUpload({
                 onClick={handleRemove}
                 className="flex-1 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 border-red-100"
               >
-                <span className="material-symbols-outlined mr-2 text-[18px]">delete</span>
+                <span className="material-symbols-outlined mr-2 text-[18px]" aria-hidden="true">delete</span>
                 Remove
               </Button>
             </div>
@@ -193,7 +193,7 @@ export default function ImageUpload({
               : "border-[#e8e4dc] bg-[#f8f6f2] hover:bg-[#efebe4]"
           } ${disabled ? "cursor-not-allowed opacity-50" : ""}`}
         >
-          <span className="material-symbols-outlined mb-2 text-4xl text-[#6b7280]">
+          <span className="material-symbols-outlined mb-2 text-4xl text-[#6b7280]" aria-hidden="true">
             cloud_upload
           </span>
           <p className="mb-1 text-sm font-medium text-[#1a1f2e]">{label}</p>
@@ -209,7 +209,7 @@ export default function ImageUpload({
       {/* Error Message */}
       {error && (
         <div className="flex items-start gap-2 rounded-lg bg-red-50 p-3">
-          <span className="material-symbols-outlined text-lg text-red-600">
+          <span className="material-symbols-outlined text-lg text-red-600" aria-hidden="true">
             error
           </span>
           <p className="text-sm text-red-600">{error}</p>

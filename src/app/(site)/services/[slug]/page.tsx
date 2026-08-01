@@ -123,7 +123,7 @@ export default async function ServiceDetailPage({ params }: ServiceDetailPagePro
           href="/services"
           className="inline-flex items-center gap-1 text-[14px] font-medium text-[#b89a5e] transition-colors hover:text-[#9f8450]"
         >
-          <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+          <span className="material-symbols-outlined text-[16px]" aria-hidden="true">arrow_back</span>
           Back to Services
         </Link>
 
@@ -203,7 +203,7 @@ export default async function ServiceDetailPage({ params }: ServiceDetailPagePro
             <div className="mt-6 border-t border-[#ece7de] pt-5">
               <Button asChild variant="secondary" className="w-full gap-2">
                 <Link href={contactUrl}>
-                  <span className="material-symbols-outlined text-[17px]">send</span>
+                  <span className="material-symbols-outlined text-[17px]" aria-hidden="true">send</span>
                   Contact Team
                 </Link>
               </Button>
@@ -261,7 +261,7 @@ export default async function ServiceDetailPage({ params }: ServiceDetailPagePro
                       className="mt-4 inline-flex items-center gap-1 text-[13px] font-medium text-[#b89a5e] transition-colors hover:text-[#9f8450]"
                     >
                       View Details
-                      <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+                      <span className="material-symbols-outlined text-[14px]" aria-hidden="true">arrow_forward</span>
                     </Link>
                   </article>
                 );

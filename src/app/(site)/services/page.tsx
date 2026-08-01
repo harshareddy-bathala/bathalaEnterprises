@@ -112,7 +112,7 @@ export default async function AllServicesPage() {
                         className="group/details inline-flex items-center gap-1 text-[13px] font-medium text-[#b89a5e] hover:text-[#9f8450]"
                       >
                         View Details
-                        <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+                        <span className="material-symbols-outlined text-[14px]" aria-hidden="true">arrow_forward</span>
                       </Link>
                     </div>
                   </div>
@@ -135,7 +135,7 @@ export default async function AllServicesPage() {
         <RevealOnView className="mt-10 flex justify-center" delayMs={220} threshold={0.12}>
           <Link href="/" className="inline-flex items-center gap-1 text-[14px] font-medium text-[#b89a5e] transition-colors hover:text-[#9f8450]">
             Back to Home
-            <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+            <span className="material-symbols-outlined text-[14px]" aria-hidden="true">arrow_forward</span>
           </Link>
         </RevealOnView>
       </div>

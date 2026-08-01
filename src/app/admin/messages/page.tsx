@@ -460,7 +460,7 @@ export default function AdminMessagesPage() {
       adminName={adminName}
       action={
         <div className="inline-flex items-center gap-2 rounded-full bg-[#f1ede6] px-3 py-1.5 text-xs font-semibold text-[#7c6442]">
-          <span className="material-symbols-outlined text-[15px]">mark_email_unread</span>
+          <span className="material-symbols-outlined text-[15px]" aria-hidden="true">mark_email_unread</span>
           {unreadCount} unread
         </div>
       }
@@ -615,7 +615,7 @@ export default function AdminMessagesPage() {
                         href={buildReplyMailto(selectedMessage)}
                         className="inline-flex items-center gap-1.5 rounded-lg border border-[#e8e4dc] bg-[#faf9f6] px-4 py-2 text-sm font-semibold text-[#1a1f2e] transition hover:border-[#b89a5e] hover:bg-white hover:text-[#b89a5e] shadow-sm"
                       >
-                        <span className="material-symbols-outlined text-[18px]">reply</span>
+                        <span className="material-symbols-outlined text-[18px]" aria-hidden="true">reply</span>
                         Reply via Email
                       </a>
 
@@ -626,7 +626,7 @@ export default function AdminMessagesPage() {
                         className="h-[38px] rounded-lg border border-[#fecaca] bg-[#fef2f2] px-3 text-sm font-semibold text-[#b91c1c] hover:bg-[#fee2e2]"
                         disabled={deletingMessage}
                       >
-                        <span className="material-symbols-outlined text-[16px]">delete</span>
+                        <span className="material-symbols-outlined text-[16px]" aria-hidden="true">delete</span>
                         {deletingMessage ? "Deleting..." : "Delete"}
                       </Button>
                     </div>

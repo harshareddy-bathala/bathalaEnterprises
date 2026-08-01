@@ -116,7 +116,7 @@ export default function ServiceDetailModal({
               className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full text-[#6b7280] transition-colors hover:bg-[#f8f6f2] hover:text-[#1a1f2e]"
               aria-label="Close modal"
             >
-              <span className="material-symbols-outlined text-2xl">close</span>
+              <span className="material-symbols-outlined text-2xl" aria-hidden="true">close</span>
             </button>
 
             {/* Icon */}
@@ -163,7 +163,7 @@ export default function ServiceDetailModal({
             {service.price_range && (
               <div className="mt-6 rounded-xl border border-[#e8e4dc] bg-[#fdfcfa] p-4">
                 <div className="flex items-center gap-2 text-sm font-medium text-[#6b7280]">
-                  <span className="material-symbols-outlined text-base text-[#b89a5e]">
+                  <span className="material-symbols-outlined text-base text-[#b89a5e]" aria-hidden="true">
                     payments
                   </span>
                   <span>Pricing:</span>
@@ -198,7 +198,7 @@ export default function ServiceDetailModal({
                   className="min-h-[44px] w-full whitespace-nowrap xs:flex-1 sm:w-auto sm:flex-none"
                 >
                   <Link href={contactHref} className="inline-flex items-center justify-center whitespace-nowrap">
-                    <span className="material-symbols-outlined mr-2 text-base">
+                    <span className="material-symbols-outlined mr-2 text-base" aria-hidden="true">
                       send
                     </span>
                     Get in Touch

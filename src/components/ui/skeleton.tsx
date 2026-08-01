@@ -1,5 +1,3 @@
-"use client";
-
 import { cn } from "@/lib/utils";
 
 interface SkeletonProps {
@@ -13,13 +11,10 @@ export function Skeleton({ className }: SkeletonProps) {
   return (
     <div
       className={cn(
-        "animate-pulse bg-gradient-to-r from-[#ece7de] via-[#f5f2ed] to-[#ece7de] bg-[length:200%_100%]",
+        "animate-shimmer bg-gradient-to-r from-[#ece7de] via-[#f5f2ed] to-[#ece7de] bg-[length:200%_100%]",
         "rounded-md",
         className
       )}
-      style={{
-        animation: 'shimmer 1.5s ease-in-out infinite',
-      }}
     />
   );
 }
@@ -191,10 +186,7 @@ export function LazySection({
   fallback?: React.ReactNode;
 }) {
   return (
-    <div 
-      className={cn("content-auto", className)}
-      style={{ contentVisibility: 'auto', containIntrinsicSize: '0 500px' }}
-    >
+    <div className={cn("content-auto", className)}>
       {children}
     </div>
   );

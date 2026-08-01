@@ -115,7 +115,7 @@ export default async function ContactPage({ searchParams }: ContactPageProps) {
             <div className="mt-9 space-y-7">
               <div className="flex gap-4">
                 <div className="flex h-10 w-10 items-center justify-center rounded-[11px] border border-[rgba(184,154,94,0.18)] bg-[rgba(184,154,94,0.08)]">
-                  <span className="material-symbols-outlined text-[18px] text-[#b89a5e]">call</span>
+                  <span className="material-symbols-outlined text-[18px] text-[#b89a5e]" aria-hidden="true">call</span>
                 </div>
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#b89a5e]">Phone</p>
@@ -130,7 +130,7 @@ export default async function ContactPage({ searchParams }: ContactPageProps) {
 
               <div className="flex gap-4">
                 <div className="flex h-10 w-10 items-center justify-center rounded-[11px] border border-[rgba(184,154,94,0.18)] bg-[rgba(184,154,94,0.08)]">
-                  <span className="material-symbols-outlined text-[18px] text-[#b89a5e]">mail</span>
+                  <span className="material-symbols-outlined text-[18px] text-[#b89a5e]" aria-hidden="true">mail</span>
                 </div>
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#b89a5e]">Email</p>
@@ -146,7 +146,7 @@ export default async function ContactPage({ searchParams }: ContactPageProps) {
 
               <div className="flex gap-4">
                 <div className="flex h-10 w-10 items-center justify-center rounded-[11px] border border-[rgba(184,154,94,0.18)] bg-[rgba(184,154,94,0.08)]">
-                  <span className="material-symbols-outlined text-[18px] text-[#b89a5e]">location_on</span>
+                  <span className="material-symbols-outlined text-[18px] text-[#b89a5e]" aria-hidden="true">location_on</span>
                 </div>
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#b89a5e]">Office</p>
@@ -157,7 +157,7 @@ export default async function ContactPage({ searchParams }: ContactPageProps) {
 
               <div className="flex gap-4">
                 <div className="flex h-10 w-10 items-center justify-center rounded-[11px] border border-[rgba(184,154,94,0.18)] bg-[rgba(184,154,94,0.08)]">
-                  <span className="material-symbols-outlined text-[18px] text-[#b89a5e]">schedule</span>
+                  <span className="material-symbols-outlined text-[18px] text-[#b89a5e]" aria-hidden="true">schedule</span>
                 </div>
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#b89a5e]">Office Hours</p>

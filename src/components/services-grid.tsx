@@ -71,7 +71,7 @@ function ServicesGridCard({ service, idx, onQuickPreview }: ServicesGridCardProp
           className="group/quick inline-flex min-h-[44px] touch-manipulation items-center gap-1 whitespace-nowrap text-[13px] font-medium text-[#b89a5e] hover:text-[#9f8450]"
         >
           Quick Preview
-          <span className="material-symbols-outlined text-[14px]">visibility</span>
+          <span className="material-symbols-outlined text-[14px]" aria-hidden="true">visibility</span>
         </button>
 
         <Link
@@ -79,7 +79,7 @@ function ServicesGridCard({ service, idx, onQuickPreview }: ServicesGridCardProp
           className="group/details inline-flex min-h-[44px] touch-manipulation items-center gap-1 whitespace-nowrap text-[13px] font-medium text-[#b89a5e] hover:text-[#9f8450]"
         >
           View Details
-          <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+          <span className="material-symbols-outlined text-[14px]" aria-hidden="true">arrow_forward</span>
         </Link>
       </div>
     </article>
@@ -196,7 +196,7 @@ export default function ServicesGrid({
                   className="inline-flex items-center gap-1 self-start text-[14px] font-medium text-[#b89a5e] transition-colors hover:text-[#9f8450] md:mb-1 md:self-auto"
                 >
                   View All Services
-                  <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+                  <span className="material-symbols-outlined text-[14px]" aria-hidden="true">arrow_forward</span>
                 </Link>
               ) : null}
             </div>
@@ -204,7 +204,7 @@ export default function ServicesGrid({
 
           {usingCachedData ? (
             <div className="mt-4 flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs text-amber-800">
-              <span className="material-symbols-outlined text-sm">history</span>
+              <span className="material-symbols-outlined text-sm" aria-hidden="true">history</span>
               <span>
                 Refreshing services. Showing saved results{cachedAtLabel ? ` from ${cachedAtLabel}` : ""} for now.
               </span>

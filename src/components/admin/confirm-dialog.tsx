@@ -101,8 +101,7 @@ export default function ConfirmDialog({
                 className={`mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full ${style.iconBg}`}
               >
                 <span
-                  className={`material-symbols-outlined text-2xl ${style.iconColor}`}
-                >
+                  className={`material-symbols-outlined text-2xl ${style.iconColor}`} aria-hidden="true">
                   {style.icon}
                 </span>
               </div>

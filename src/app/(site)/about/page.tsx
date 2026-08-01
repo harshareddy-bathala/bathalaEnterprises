@@ -185,7 +185,7 @@ export default function AboutPage() {
                 )}
               >
                 <div className="inline-flex h-[52px] w-[52px] items-center justify-center rounded-[14px] border border-[rgba(184,154,94,0.18)] bg-[rgba(184,154,94,0.08)]">
-                  <span className="material-symbols-outlined text-[22px] text-[#b89a5e]">{value.icon}</span>
+                  <span className="material-symbols-outlined text-[22px] text-[#b89a5e]" aria-hidden="true">{value.icon}</span>
                 </div>
                 <h3 className="mt-5 font-display text-[22px] font-semibold leading-[1.2] text-[#1a1f2e]">
                   {value.title}
@@ -251,7 +251,7 @@ export default function AboutPage() {
               {differentiators.map((item) => (
                 <li key={item} className="flex items-start gap-3 text-[14.5px] leading-[1.5] text-[#4a5568]">
                   <span className="mt-[1px] inline-flex h-5 w-5 items-center justify-center rounded-full border border-[#d9c492] text-[#b89a5e]">
-                    <span className="material-symbols-outlined text-[12px]">check</span>
+                    <span className="material-symbols-outlined text-[12px]" aria-hidden="true">check</span>
                   </span>
                   <span>{item}</span>
                 </li>
@@ -263,7 +263,7 @@ export default function AboutPage() {
               className="mt-8 inline-flex h-[47px] items-center gap-2 rounded-[10px] bg-[#b89a5e] px-7 text-[14px] font-semibold text-[#2c3340] transition-colors hover:bg-[#a88c52]"
             >
               Contact Us
-              <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+              <span className="material-symbols-outlined text-[16px]" aria-hidden="true">arrow_forward</span>
             </Link>
           </div>
         </div>

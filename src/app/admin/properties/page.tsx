@@ -434,7 +434,7 @@ export default function PropertiesPage() {
             className="w-full sm:w-auto"
             disabled={loading}
           >
-            <span className="material-symbols-outlined mr-2 text-lg">refresh</span>
+            <span className="material-symbols-outlined mr-2 text-lg" aria-hidden="true">refresh</span>
             Refresh
           </Button>
           <Button
@@ -442,7 +442,7 @@ export default function PropertiesPage() {
             onClick={() => setIsCreateModalOpen(true)}
             className="w-full sm:w-auto"
           >
-            <span className="material-symbols-outlined mr-2 text-lg">add</span>
+            <span className="material-symbols-outlined mr-2 text-lg" aria-hidden="true">add</span>
             Add Property
           </Button>
         </div>
@@ -462,7 +462,7 @@ export default function PropertiesPage() {
             description="Create your first property listing to get started"
             action={
               <Button variant="primary" onClick={() => setIsCreateModalOpen(true)}>
-                <span className="material-symbols-outlined mr-2 text-lg">add</span>
+                <span className="material-symbols-outlined mr-2 text-lg" aria-hidden="true">add</span>
                 Add Property
               </Button>
             }
@@ -550,7 +550,7 @@ export default function PropertiesPage() {
                           </div>
                         ) : (
                           <div className="flex h-14 w-20 flex-shrink-0 items-center justify-center rounded-md border border-[var(--admin-border)] bg-[#faf9f6]">
-                            <span className="material-symbols-outlined text-[var(--admin-text-muted)]">imagesmode</span>
+                            <span className="material-symbols-outlined text-[var(--admin-text-muted)]" aria-hidden="true">imagesmode</span>
                           </div>
                         )}
                         <div className="flex flex-col justify-center min-w-0">
@@ -574,7 +574,7 @@ export default function PropertiesPage() {
                     <Td priority="optional" className="py-4 align-middle">
                       {property.gallery_images && property.gallery_images.length > 0 ? (
                         <div className="flex items-center gap-1.5 text-[var(--admin-text-muted)]">
-                          <span className="material-symbols-outlined text-[18px]">photo_library</span>
+                          <span className="material-symbols-outlined text-[18px]" aria-hidden="true">photo_library</span>
                           <span className="text-xs font-bold">{property.gallery_images.length}</span>
                         </div>
                       ) : (
@@ -602,14 +602,14 @@ export default function PropertiesPage() {
                           className="flex h-8 w-8 items-center justify-center rounded-md border border-transparent text-[var(--admin-text-muted)] transition-colors hover:border-[var(--admin-border)] hover:bg-[#faf9f6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--admin-accent)]"
                           title="Edit"
                         >
-                          <span className="material-symbols-outlined text-[18px]">edit</span>
+                          <span className="material-symbols-outlined text-[18px]" aria-hidden="true">edit</span>
                         </button>
                         <button
                           onClick={() => openDeleteDialog(property)}
                           className="flex h-8 w-8 items-center justify-center rounded-md border border-transparent text-[var(--admin-text-muted)] transition-colors hover:border-red-100 hover:bg-red-50 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
                           title="Delete"
                         >
-                          <span className="material-symbols-outlined text-[18px]">delete</span>
+                          <span className="material-symbols-outlined text-[18px]" aria-hidden="true">delete</span>
                         </button>
                       </div>
                     </Td>

@@ -90,7 +90,7 @@ export default function PropertyGalleryLightbox({
             className="absolute right-4 top-4 z-50 min-h-[44px] min-w-[44px] rounded-full p-2 text-white transition hover:bg-white/10 touch-manipulation"
             aria-label="Close"
           >
-            <span className="material-symbols-outlined text-3xl">close</span>
+            <span className="material-symbols-outlined text-3xl" aria-hidden="true">close</span>
           </button>
 
           {images.length > 1 && (
@@ -103,7 +103,7 @@ export default function PropertyGalleryLightbox({
                 className="absolute left-2 xs:left-4 z-50 min-h-[44px] min-w-[44px] rounded-full bg-black/30 p-2 text-white transition hover:bg-black/50 touch-manipulation"
                 aria-label="Previous"
               >
-                <span className="material-symbols-outlined text-2xl xs:text-3xl">chevron_left</span>
+                <span className="material-symbols-outlined text-2xl xs:text-3xl" aria-hidden="true">chevron_left</span>
               </button>
               <button
                 onClick={(event) => {
@@ -113,7 +113,7 @@ export default function PropertyGalleryLightbox({
                 className="absolute right-2 xs:right-4 z-50 min-h-[44px] min-w-[44px] rounded-full bg-black/30 p-2 text-white transition hover:bg-black/50 touch-manipulation"
                 aria-label="Next"
               >
-                <span className="material-symbols-outlined text-2xl xs:text-3xl">chevron_right</span>
+                <span className="material-symbols-outlined text-2xl xs:text-3xl" aria-hidden="true">chevron_right</span>
               </button>
             </>
           )}

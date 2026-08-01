@@ -375,7 +375,7 @@ export default function DashboardPage() {
       action={
         <Button asChild variant="secondary" size="sm">
           <Link href="/admin/messages" prefetch>
-            <span className="material-symbols-outlined mr-2 text-[18px]">mark_email_unread</span>
+            <span className="material-symbols-outlined mr-2 text-[18px]" aria-hidden="true">mark_email_unread</span>
             {unreadMessagesCount} unread
           </Link>
         </Button>
@@ -402,7 +402,7 @@ export default function DashboardPage() {
           <AdminCard key={metric.id} className="flex flex-col p-5 sm:p-6">
             <div className="mb-4 flex items-center justify-between">
               <div className={cn("grid h-10 w-10 place-items-center rounded-xl", metric.accentClassName)}>
-                <span className="material-symbols-outlined text-[20px]">{metric.icon}</span>
+                <span className="material-symbols-outlined text-[20px]" aria-hidden="true">{metric.icon}</span>
               </div>
             </div>
             <p className="text-sm font-medium text-[var(--admin-text-muted)]">{metric.label}</p>

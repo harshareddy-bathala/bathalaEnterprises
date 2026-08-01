@@ -475,7 +475,7 @@ export default function SettingsPage() {
                   : "border-transparent text-[#6b7280] hover:text-[#1a1f2e]"
               }`}
             >
-              <span className="material-symbols-outlined text-lg">{tab.icon}</span>
+              <span className="material-symbols-outlined text-lg" aria-hidden="true">{tab.icon}</span>
               <span>{tab.label}</span>
             </button>
           ))}

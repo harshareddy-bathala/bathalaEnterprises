@@ -325,7 +325,7 @@ export default function ServicesPage() {
             className="w-full sm:w-auto"
             disabled={loading}
           >
-            <span className="material-symbols-outlined mr-2 text-lg">refresh</span>
+            <span className="material-symbols-outlined mr-2 text-lg" aria-hidden="true">refresh</span>
             Refresh
           </Button>
           <Button
@@ -333,7 +333,7 @@ export default function ServicesPage() {
             onClick={() => setIsCreateModalOpen(true)}
             className="w-full sm:w-auto"
           >
-            <span className="material-symbols-outlined mr-2 text-lg">add</span>
+            <span className="material-symbols-outlined mr-2 text-lg" aria-hidden="true">add</span>
             Add Service
           </Button>
         </div>
@@ -353,7 +353,7 @@ export default function ServicesPage() {
             description="Create your first service to showcase what you offer"
             action={
               <Button variant="primary" onClick={() => setIsCreateModalOpen(true)}>
-                <span className="material-symbols-outlined mr-2 text-lg">add</span>
+                <span className="material-symbols-outlined mr-2 text-lg" aria-hidden="true">add</span>
                 Add Service
               </Button>
             }
@@ -397,7 +397,7 @@ export default function ServicesPage() {
                               disabled={index === 0}
                               className="bg-[#f3f1ed] text-[#b89a5e] disabled:opacity-30 rounded p-1 p-0.5"
                             >
-                              <span className="material-symbols-outlined text-[16px] block">expand_less</span>
+                              <span className="material-symbols-outlined text-[16px] block" aria-hidden="true">expand_less</span>
                             </button>
                             <button
                               type="button"
@@ -415,7 +415,7 @@ export default function ServicesPage() {
                               disabled={index === services.length - 1}
                               className="bg-[#f3f1ed] text-[#b89a5e] disabled:opacity-30 rounded p-1 p-0.5"
                             >
-                              <span className="material-symbols-outlined text-[16px] block">expand_more</span>
+                              <span className="material-symbols-outlined text-[16px] block" aria-hidden="true">expand_more</span>
                             </button>
                           </div>
                         )}
@@ -434,7 +434,7 @@ export default function ServicesPage() {
                           aria-label="Drag to reorder"
                           title="Drag to reorder"
                         >
-                          <span className="material-symbols-outlined text-[18px]">drag_indicator</span>
+                          <span className="material-symbols-outlined text-[18px]" aria-hidden="true">drag_indicator</span>
                         </button>
                         <span className="hidden sm:block font-medium text-[#1a1f2e]">{service.display_order}</span>
                       </div>
@@ -442,7 +442,7 @@ export default function ServicesPage() {
                     <Td className="w-full">
                       <div className="flex items-center gap-3 py-1">
                         <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-[#f3f1ed]">
-                          <span className="material-symbols-outlined text-xl text-[#b89a5e]">
+                          <span className="material-symbols-outlined text-xl text-[#b89a5e]" aria-hidden="true">
                             {getServiceIconFromRecord(service)}
                           </span>
                         </div>
@@ -463,14 +463,14 @@ export default function ServicesPage() {
                           className="rounded-lg p-2 text-[#6b7280] transition hover:bg-[#f3f1ed] hover:text-[#1a1f2e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b89a5e]"
                           title="Edit"
                         >
-                          <span className="material-symbols-outlined text-lg">edit</span>
+                          <span className="material-symbols-outlined text-lg" aria-hidden="true">edit</span>
                         </button>
                         <button
                           onClick={() => openDeleteDialog(service)}
                           className="rounded-lg p-2 text-[#9ca3af] transition hover:bg-red-50 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
                           title="Delete"
                         >
-                          <span className="material-symbols-outlined text-lg">delete</span>
+                          <span className="material-symbols-outlined text-lg" aria-hidden="true">delete</span>
                         </button>
                       </div>
                     </Td>

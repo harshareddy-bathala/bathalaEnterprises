@@ -88,7 +88,7 @@ export default function IconPicker({
       {/* Current Selection */}
       {value && (
         <div className="flex items-center gap-2 rounded-lg border border-[#e8e4dc] bg-[#f8f6f2] p-3">
-          <span className="material-symbols-outlined text-2xl text-[#1a1f2e]">
+          <span className="material-symbols-outlined text-2xl text-[#1a1f2e]" aria-hidden="true">
             {value}
           </span>
           <span className="text-sm text-[#6b7280]">Selected: {value}</span>
@@ -112,7 +112,7 @@ export default function IconPicker({
                 } ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
                 title={iconName}
               >
-                <span className="material-symbols-outlined text-xl text-[#1a1f2e]">
+                <span className="material-symbols-outlined text-xl text-[#1a1f2e]" aria-hidden="true">
                   {iconName}
                 </span>
               </button>

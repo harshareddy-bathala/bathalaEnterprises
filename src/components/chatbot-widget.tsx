@@ -294,7 +294,7 @@ export default function ChatbotWidget() {
             <div className="flex items-center justify-between border-b border-[#ece7de] bg-[#f8f6f2] px-4 py-3">
               <div className="flex items-center gap-3">
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#f6f1e5]">
-                  <span className="material-symbols-outlined text-sm text-primary">smart_toy</span>
+                  <span className="material-symbols-outlined text-sm text-primary" aria-hidden="true">smart_toy</span>
                 </div>
                 <div>
                   <p className="text-sm font-bold text-[#1a1f2e]">Bathala AI</p>
@@ -306,7 +306,7 @@ export default function ChatbotWidget() {
                 aria-label="Close chat"
                 className="rounded-full p-1.5 transition hover:bg-[#efebe4]"
               >
-                <span className="material-symbols-outlined text-lg text-[#6b7280]">close</span>
+                <span className="material-symbols-outlined text-lg text-[#6b7280]" aria-hidden="true">close</span>
               </button>
             </div>
 
@@ -333,7 +333,7 @@ export default function ChatbotWidget() {
                       ? "bg-primary"
                       : "border border-[#e8e4dc] bg-white"
                   }`}>
-                    <span className={`material-symbols-outlined text-xs ${msg.role === "user" ? "text-[#2c3340]" : "text-[#6b7280]"}`}>
+                    <span className={`material-symbols-outlined text-xs ${msg.role === "user" ? "text-[#2c3340]" : "text-[#6b7280]"}`} aria-hidden="true">
                       {msg.role === "user" ? "person" : "smart_toy"}
                     </span>
                   </div>
@@ -357,7 +357,7 @@ export default function ChatbotWidget() {
                   className="flex gap-2"
                 >
                   <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border border-[#e8e4dc] bg-white">
-                    <span className="material-symbols-outlined text-xs text-[#6b7280]">smart_toy</span>
+                    <span className="material-symbols-outlined text-xs text-[#6b7280]" aria-hidden="true">smart_toy</span>
                   </div>
                   <div className="inline-block rounded-2xl rounded-tl-sm border border-[#e8e4dc] bg-white px-4 py-3">
                     <div className="flex gap-1">
@@ -411,7 +411,7 @@ export default function ChatbotWidget() {
                 disabled={isLoading || !input.trim()}
                 className="self-end flex-shrink-0"
               >
-                <span className="material-symbols-outlined text-sm">send</span>
+                <span className="material-symbols-outlined text-sm" aria-hidden="true">send</span>
               </Button>
             </div>
           </motion.div>
@@ -436,7 +436,7 @@ export default function ChatbotWidget() {
                 className="rounded-full p-1 text-[#7b8593] hover:bg-[#f3eee5]"
                 aria-label="Dismiss assistant hint"
               >
-                <span className="material-symbols-outlined text-sm">close</span>
+                <span className="material-symbols-outlined text-sm" aria-hidden="true">close</span>
               </button>
             </div>
           </motion.div>
@@ -462,7 +462,7 @@ export default function ChatbotWidget() {
         aria-haspopup="dialog"
         aria-label="Open chat"
       >
-        <span className="material-symbols-outlined text-2xl">chat</span>
+        <span className="material-symbols-outlined text-2xl" aria-hidden="true">chat</span>
       </motion.button>
     </div>
   );

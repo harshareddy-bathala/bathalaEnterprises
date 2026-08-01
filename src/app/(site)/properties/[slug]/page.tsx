@@ -217,7 +217,7 @@ export default async function PropertyDetailPage({ params }: PropertyDetailPageP
               </h1>
 
               <p className="mt-1.5 xs:mt-2 flex items-center gap-1 text-[12px] xs:text-[13px] text-[rgba(255,255,255,0.82)]">
-                <span className="material-symbols-outlined text-[13px] xs:text-[14px]">location_on</span>
+                <span className="material-symbols-outlined text-[13px] xs:text-[14px]" aria-hidden="true">location_on</span>
                 {property.location}
               </p>
             </div>
@@ -236,13 +236,13 @@ export default async function PropertyDetailPage({ params }: PropertyDetailPageP
 
             <div className="grid grid-cols-2 gap-3 xs:gap-4">
               <div className="bathala-panel p-4 xs:p-5 text-center">
-                <span className="material-symbols-outlined text-[24px] xs:text-[28px] text-[#b89a5e]">bed</span>
+                <span className="material-symbols-outlined text-[24px] xs:text-[28px] text-[#b89a5e]" aria-hidden="true">bed</span>
                 <p className="mt-1.5 xs:mt-2 text-[26px] xs:text-[30px] font-bold leading-[1] text-[#1a1f2e]">{property.bedrooms}</p>
                 <p className="mt-1 text-[11px] xs:text-[12px] text-[#6b7280]">Bedrooms</p>
               </div>
 
               <div className="bathala-panel p-4 xs:p-5 text-center">
-                <span className="material-symbols-outlined text-[24px] xs:text-[28px] text-[#b89a5e]">straighten</span>
+                <span className="material-symbols-outlined text-[24px] xs:text-[28px] text-[#b89a5e]" aria-hidden="true">straighten</span>
                 <p className="mt-1.5 xs:mt-2 text-[26px] xs:text-[30px] font-bold leading-[1] text-[#1a1f2e]">{formatNumber(property.sqft)}</p>
                 <p className="mt-1 text-[11px] xs:text-[12px] text-[#6b7280]">Sq. Ft.</p>
               </div>
@@ -269,7 +269,7 @@ export default async function PropertyDetailPage({ params }: PropertyDetailPageP
                       key={`${amenity}-${index}`}
                       className="inline-flex items-center gap-1.5 rounded-full border border-[#e8e4dc] bg-white px-3 py-1.5 text-[12px] font-medium text-[#4a5568]"
                     >
-                      <span className="material-symbols-outlined text-[14px] text-[#b89a5e]">check_circle</span>
+                      <span className="material-symbols-outlined text-[14px] text-[#b89a5e]" aria-hidden="true">check_circle</span>
                       {amenity}
                     </span>
                   ))}
@@ -312,7 +312,7 @@ export default async function PropertyDetailPage({ params }: PropertyDetailPageP
                 <p className="mb-3 text-[11px] uppercase tracking-[0.16em] text-[#9ca3af]">Contact Agent</p>
                 <Button asChild variant="secondary" className="w-full gap-2">
                   <Link href={contactUrl}>
-                    <span className="material-symbols-outlined text-[17px]">call</span>
+                    <span className="material-symbols-outlined text-[17px]" aria-hidden="true">call</span>
                     Contact Us
                   </Link>
                 </Button>
@@ -330,7 +330,7 @@ export default async function PropertyDetailPage({ params }: PropertyDetailPageP
                 className="inline-flex min-h-[44px] items-center gap-1 text-[12px] xs:text-[13px] font-medium text-[#b89a5e] transition-colors hover:text-[#9f8450] touch-manipulation"
               >
                 View all
-                <span className="material-symbols-outlined text-[13px] xs:text-[14px]">arrow_forward</span>
+                <span className="material-symbols-outlined text-[13px] xs:text-[14px]" aria-hidden="true">arrow_forward</span>
               </Link>
             </div>
 

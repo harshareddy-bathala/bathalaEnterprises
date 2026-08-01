@@ -98,15 +98,15 @@ export default function AdminLoginPage() {
 
             <div className="space-y-3 text-sm text-slate-200">
               <p className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-base text-[var(--color-gold-light)]">verified_user</span>
+                <span className="material-symbols-outlined text-base text-[var(--color-gold-light)]" aria-hidden="true">verified_user</span>
                 Role-based secured session management
               </p>
               <p className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-base text-[var(--color-gold-light)]">home_work</span>
+                <span className="material-symbols-outlined text-base text-[var(--color-gold-light)]" aria-hidden="true">home_work</span>
                 Real-time property portfolio operations
               </p>
               <p className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-base text-[var(--color-gold-light)]">inventory_2</span>
+                <span className="material-symbols-outlined text-base text-[var(--color-gold-light)]" aria-hidden="true">inventory_2</span>
                 Structured media and listing governance
               </p>
             </div>
@@ -124,7 +124,7 @@ export default function AdminLoginPage() {
               href="/"
               className="inline-flex items-center gap-1 rounded-full border border-[#e8e4dc] bg-[#fcfbf8] px-3 py-1.5 text-xs font-semibold text-[#6b7280] transition-colors hover:border-[#d8cfbe] hover:text-[#2c3340]"
             >
-              <span className="material-symbols-outlined text-[15px]">arrow_back</span>
+              <span className="material-symbols-outlined text-[15px]" aria-hidden="true">arrow_back</span>
               Back to Home
             </Link>
           </div>
@@ -168,7 +168,7 @@ export default function AdminLoginPage() {
                   aria-label={showPassword ? "Hide password" : "View password"}
                   aria-pressed={showPassword}
                 >
-                  <span className="material-symbols-outlined text-[18px]">{showPassword ? "visibility_off" : "visibility"}</span>
+                  <span className="material-symbols-outlined text-[18px]" aria-hidden="true">{showPassword ? "visibility_off" : "visibility"}</span>
                 </button>
               </div>
               {form.formState.errors.password && (
@@ -178,14 +178,14 @@ export default function AdminLoginPage() {
 
             {status === "error" && (
               <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-3">
-                <span className="material-symbols-outlined text-lg text-red-700">error</span>
+                <span className="material-symbols-outlined text-lg text-red-700" aria-hidden="true">error</span>
                 <p className="text-sm text-red-700">{errorMessage}</p>
               </div>
             )}
 
             {status === "success" && (
               <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-3">
-                <span className="material-symbols-outlined text-lg text-emerald-700">check_circle</span>
+                <span className="material-symbols-outlined text-lg text-emerald-700" aria-hidden="true">check_circle</span>
                 <p className="text-sm text-emerald-700">Login successful! Redirecting...</p>
               </div>
             )}
@@ -197,7 +197,7 @@ export default function AdminLoginPage() {
             >
               {status === "loading" ? (
                 <span className="flex items-center gap-2">
-                  <span className="material-symbols-outlined animate-spin text-lg">progress_activity</span>
+                  <span className="material-symbols-outlined animate-spin text-lg" aria-hidden="true">progress_activity</span>
                   Signing in...
                 </span>
               ) : status === "success" ? "Success!" : "Sign In"}

@@ -14,7 +14,7 @@ export default function MaintenancePage() {
   return (
     <div className="bathala-page flex min-h-[75vh] flex-col items-center justify-center px-6 text-center">
       <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-[#f6f1e5] text-[#b89a5e]">
-        <span className="material-symbols-outlined text-4xl">construction</span>
+        <span className="material-symbols-outlined text-4xl" aria-hidden="true">construction</span>
       </div>
       <h1 className="font-display text-4xl font-semibold text-[var(--color-text-primary)]">Scheduled Maintenance</h1>
       <p className="mt-3 max-w-lg text-sm text-[var(--color-text-muted)]">

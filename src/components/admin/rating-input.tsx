@@ -79,8 +79,7 @@ export default function RatingInput({
                 fontVariationSettings: isFilled
                   ? `'FILL' 1, 'wght' ${isSelected ? 820 : 700}, 'GRAD' 200, 'opsz' 24`
                   : "'FILL' 0, 'wght' 320, 'GRAD' 0, 'opsz' 24",
-              }}
-            >
+              }} aria-hidden="true">
               star
             </span>
           </button>

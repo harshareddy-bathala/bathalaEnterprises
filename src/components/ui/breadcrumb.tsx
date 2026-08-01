@@ -25,7 +25,7 @@ export default function Breadcrumb({ items, className }: BreadcrumbProps) {
               ) : (
                 <span className={isLast ? "inline-flex items-center font-semibold text-[var(--color-slate-primary)]" : "inline-flex items-center"}>{item.label}</span>
               )}
-              {!isLast ? <span className="material-symbols-outlined text-[15px] leading-none text-[#b9ad95]">chevron_right</span> : null}
+              {!isLast ? <span className="material-symbols-outlined text-[15px] leading-none text-[#b9ad95]" aria-hidden="true">chevron_right</span> : null}
             </li>
           );
         })}

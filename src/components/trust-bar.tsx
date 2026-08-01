@@ -26,7 +26,7 @@ export default function TrustBar() {
                   aria-hidden={duplicated}
                   className="inline-flex min-w-max items-center gap-2 text-center text-[11px] font-medium tracking-[0.06em] text-[rgba(255,255,255,0.62)]"
                 >
-                  <span className="material-symbols-outlined text-[14px] text-[#b89a5e]">{item.icon}</span>
+                  <span className="material-symbols-outlined text-[14px] text-[#b89a5e]" aria-hidden="true">{item.icon}</span>
                   <span>{item.label}</span>
 
                   {separatorVisible ? (
@@ -45,7 +45,7 @@ export default function TrustBar() {
               className="reveal-up inline-flex min-w-max items-center gap-2 text-center text-[11px] font-medium tracking-[0.06em] text-[rgba(255,255,255,0.62)]"
               style={revealDelay(90 + index * 70)}
             >
-              <span className="material-symbols-outlined text-[14px] text-[#b89a5e]">{item.icon}</span>
+              <span className="material-symbols-outlined text-[14px] text-[#b89a5e]" aria-hidden="true">{item.icon}</span>
               <span>{item.label}</span>
 
               {index < trustItems.length - 1 ? (
