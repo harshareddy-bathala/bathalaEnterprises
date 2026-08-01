@@ -67,6 +67,27 @@ See also `docs/deployment-monitoring.md` — the operational runbook with the re
 
 ## Known gaps
 
-<!-- To be filled in during the production readiness pass -->
-
--
+- **CI and deploy are now one workflow** (`.github/workflows/ci.yml`). They used
+  to be separate with no dependency, so production could deploy from a red
+  build. `deploy.yml` no longer exists. If branch protection references a
+  "Deploy" check, repoint it at "Quality and build".
+- **Production deploy now fails when Vercel secrets are missing** instead of
+  skipping silently. Set `VERCEL_TOKEN`, `VERCEL_ORG_ID` and
+  `VERCEL_PROJECT_ID` before the first push to `main`, or the run goes red.
+- **CI builds against placeholder Supabase credentials**
+  (`https://example.supabase.co`), so every DB-backed assertion exercises the
+  empty-state path rather than real behaviour. Point the CI env at a seeded
+  Supabase test project to make the suites meaningful.
+- **Two migrations must be run by hand** on an existing database before launch:
+  `SUPABASE_ADD_SLUGS.sql` and `SUPABASE_ADD_BUSINESS_PROFILE.sql`. Both are
+  idempotent and drop nothing. Do **not** run `SUPABASE_UNIVERSAL_SETUP.sql`
+  against a live database — it does `DROP TABLE public.services CASCADE`.
+- **`GOOGLE_SITE_VERIFICATION` and `INDEXNOW_KEY`** are read at runtime and are
+  optional; Search Console verification and IndexNow submission are both no-ops
+  until they are set.
+- **`.lighthouserc.qa.json` is orphaned** — no npm script and no workflow
+  references it. `.lighthouserc.production.json` is the one in use.
+- **Secret scan**: every blob in the full git history was scanned for JWT-,
+  API-key- and private-key-shaped strings — zero matches, and no `.env` file has
+  ever been committed. `.gitignore` covers `.env` and `.env.*` with an
+  exception for `.env.example`.

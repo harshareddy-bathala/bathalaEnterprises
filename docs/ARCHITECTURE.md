@@ -74,6 +74,38 @@ Both remote hosts are whitelisted in `next.config.mjs` `images.remotePatterns` a
 
 ## Known gaps
 
-<!-- To be filled in during the production readiness pass -->
+Filled in during the production-readiness pass (Aug 2026). These are the things
+a future change should know are *deliberately* unresolved.
 
--
+- **Soft 404s on unknown detail slugs.** `notFound()` renders the correct
+  not-found UI but returns HTTP 200, not 404. This is Next's streaming
+  behaviour: once the shell flushes, the status is locked. Verified it is not
+  caused by `loading.tsx`, `generateStaticParams`, or the root Suspense
+  boundaries. Mitigated because those responses carry `noindex, nofollow`, so
+  the URLs are never indexed; the residual cost is a "soft 404" report in
+  Search Console. Forcing `dynamicParams = false` would fix the status but make
+  any property added between deploys 404 until the next build.
+- **`script-src 'unsafe-inline'` in the CSP.** Nonce-based CSP requires a fresh
+  nonce per request, which forces dynamic rendering and would disable static
+  optimization and ISR sitewide. See the long comment in `src/proxy.ts`.
+- **19 `react-hooks` lint warnings**, almost all `set-state-in-effect` in admin
+  CRUD pages. The rules were "off" and are now "warn"; fixing them changes when
+  effects re-run, so each needs exercising against a live database.
+- **`reorderServices` is not atomic.** N updates, no transaction. Not converted
+  to an upsert because PostgREST upsert issues `INSERT .. ON CONFLICT` and the
+  tuple would omit `title`, which is `NOT NULL`. A true fix is a
+  `SECURITY DEFINER` function doing `UPDATE .. FROM (VALUES ..)`.
+- **`enforceFeaturedTestimonialsLimit` is a read-then-write with no
+  transaction**, so the "max 3 featured" cap is racy. The real fix is a DB
+  constraint or trigger.
+- **Schema drift**: `Property.amenities`, `Property.related_property_ids` and
+  `Service.is_active` exist in `src/types/tables.ts` but not in the setup SQL.
+  The query layer tolerates this via `isMissingColumnError` fallbacks.
+- **`/properties` sends the whole active catalogue to the client**, which
+  filters and paginates in the browser. Correct at ~50 listings and better UX
+  than round-tripping; revisit past a few hundred with `.range()`.
+- **`runSupabaseOperation<T = any>`** — rows are cast, not validated. Narrowing
+  it means threading generated Supabase types through every helper.
+- **~200 hardcoded arbitrary CSS values** (`text-[13.5px]`, `h-[47px]`) remain
+  in px. The Tailwind scales and CSS tokens are rem, so scale-based utilities
+  respond to browser text scaling, but these do not.

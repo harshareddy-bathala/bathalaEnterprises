@@ -431,9 +431,13 @@ ON public.site_settings FOR SELECT TO anon, authenticated
 USING (true);
 
 -- Admin can modify site settings
+-- WITH CHECK is explicit rather than relying on Postgres defaulting it to the
+-- USING expression for FOR ALL policies. Same behaviour, but it means an edit
+-- to USING cannot silently loosen what may be written.
 CREATE POLICY "admin_can_modify_site_settings"
 ON public.site_settings FOR ALL TO authenticated
-USING (public.is_admin_user());
+USING (public.is_admin_user())
+WITH CHECK (public.is_admin_user());
 
 -- Site Settings trigger
 DROP TRIGGER IF EXISTS site_settings_set_updated_at ON public.site_settings;

@@ -1,24 +1,35 @@
 # PROGRESS.md — Production Release Checklist
 
 > Session tracker for the prototype → production pass. Update as items complete.
-> Legend: `[ ]` pending · `[x]` done · `[~]` in progress · `[!]` needs owner input (see MANUAL_SETUP.md)
+> Legend: `[ ]` pending · `[x]` done · `[~]` in progress · `[!]` needs owner input (see LAUNCH_CHECKLIST.md)
 
 ## 0. Setup
 - [x] Create PROGRESS.md
 - [x] CLAUDE.md — already exists and documents stack/folders/schema/auth (verified, no rewrite needed)
 
 ## 1. Security & Secrets
-- [ ] Audit `/api/contact` for auth/authorization correctness
-- [ ] Audit `/api/chat` for auth/authorization correctness
-- [ ] Audit `/api/health` for information disclosure
-- [ ] Audit `/api/rum` for abuse potential
-- [ ] Search working tree for hardcoded API keys / service role keys
-- [ ] Search full git history for committed secrets / .env files
-- [ ] Confirm `.env*` gitignored
-- [ ] Review RLS policies for every table (admin_users, properties, services, testimonials, messages, site_settings, admin_notification_settings)
-- [ ] Review storage bucket policies (property-images, testimonial-avatars)
-- [ ] Assess admin route protection (client-side only today; RLS is enforcement boundary — evaluate & harden)
-- [ ] Section 1 summary written
+- [x] Audit `/api/contact` — zod-validated, sanitized, rate-limited 5/min/IP; anon INSERT is constrained by RLS to `status='new'`, `is_read=false`, valid `query_type`
+- [x] Audit `/api/chat` — rate-limited (40/min default), zod-validated, no secrets in responses; contact details now sourced from `site_settings` instead of hardcoded placeholders
+- [x] Audit `/api/health` — returns only ok/degraded/down per dependency, no versions, hostnames or error bodies
+- [x] Audit `/api/rum` — rate-limited 60/min/IP, zod-validated, returns 202
+- [x] Search working tree for hardcoded API keys / service role keys — none
+- [x] Search full git history for committed secrets / .env files — every blob across all commits scanned for JWT-, API-key- and private-key-shaped strings: **zero matches**, and no `.env` file has ever been committed
+- [x] Confirm `.env*` gitignored — `.gitignore` has `.env`, `.env.*`, `!.env.example`
+- [x] Review RLS policies for every table — all 7 have RLS enabled; admin paths gate on `is_admin_user()`, which is `SECURITY DEFINER` **with `SET search_path = public`**, revoked from PUBLIC and granted only to `authenticated`. anon can SELECT active properties / all services / testimonials / site_settings, and INSERT only constrained messages
+- [x] Review storage bucket policies — `property-images` and `testimonial-avatars` are public-read, admin-only insert/delete via `is_admin_user()`
+- [x] Assess admin route protection — no longer client-side only: `src/proxy.ts` verifies the Supabase session server-side with `auth.getUser()` and requires `is_admin_user()` on every `/admin/*` request except the login page. Admin pages also carry `robots: noindex`
+- [x] Section 1 summary written — see below
+
+**Section 1 summary.** No secrets have ever been committed. The authorization
+model is sound: RLS is enabled everywhere, the admin predicate is a hardened
+`SECURITY DEFINER` function, and there is now a server-side guard in front of the
+admin UI in addition to RLS at the data layer. Two residual items, both
+documented in `docs/ARCHITECTURE.md` → Known gaps: `script-src 'unsafe-inline'`
+in the CSP (nonces would disable static rendering sitewide), and the anon
+`messages` INSERT having no database-level rate limit — mitigated by
+application-level rate limiting in `/api/contact`. One clarity fix applied:
+the `site_settings` FOR ALL policy now states `WITH CHECK` explicitly rather
+than relying on Postgres defaulting it to the `USING` expression.
 
 ## 2. Database Integrity
 - [ ] Required fields / NOT NULL checks on all tables
@@ -97,4 +108,4 @@
 
 ## 7. Final Pass
 - [ ] All PROGRESS.md items checked or marked `[!]`
-- [ ] MANUAL_SETUP.md created with owner action items
+- [x] LAUNCH_CHECKLIST.md created with owner action items
