@@ -1,5 +1,7 @@
-"use client";
-
+// No hooks and no browser APIs — this is presentational. The "use client"
+// directive that used to be here forced every one of its ~29 importers
+// into the client tree. Consumers that need onClick are themselves
+// client components, which is all React requires.
 import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";

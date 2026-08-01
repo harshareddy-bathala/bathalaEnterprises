@@ -1,9 +1,8 @@
 import dynamic from "next/dynamic";
 import {
-  getFeaturedTestimonials,
+  getHomepageTestimonials,
   getPropertiesFromSupabase,
   getServicesFromSupabase,
-  getTestimonialsFromSupabase,
 } from "@/lib/supabase-queries";
 import { JsonLd } from "@/components/json-ld";
 import { generateWebPageSchema, generateBreadcrumbSchema } from "@/lib/structured-data";
@@ -56,17 +55,11 @@ const CtaSection = dynamic(() => import("@/components/cta-section"), {
 export const revalidate = 60; // ISR: revalidate every 60 seconds
 
 export default async function HomePage() {
-  const [services, properties, featuredTestimonials] = await Promise.all([
+  const [services, properties, homepageTestimonials] = await Promise.all([
     getServicesFromSupabase(),
     getPropertiesFromSupabase(false),
-    getFeaturedTestimonials(),
+    getHomepageTestimonials(),
   ]);
-
-  let homepageTestimonials = featuredTestimonials;
-  if (homepageTestimonials.length === 0) {
-    const latestTestimonials = await getTestimonialsFromSupabase();
-    homepageTestimonials = latestTestimonials.slice(0, 3);
-  }
 
   const webPageSchema = generateWebPageSchema(
     baseUrl,

@@ -24,6 +24,7 @@ import {
   getPropertiesByIds,
   getPropertiesFromSupabase,
   getPropertyBySlug,
+  getRelatedProperties,
   propertyPath,
 } from "@/lib/supabase-queries";
 import type { Property } from "@/lib/supabase-queries";
@@ -93,6 +94,8 @@ export async function generateMetadata({
   });
 }
 
+const RELATED_PROPERTY_COUNT = 3;
+
 async function resolveRelatedProperties(property: Property): Promise<Property[]> {
   const relatedIds = (property.related_property_ids ?? []).filter(
     (propertyId) => propertyId !== property.id
@@ -104,25 +107,27 @@ async function resolveRelatedProperties(property: Property): Promise<Property[]>
     resolvedRelated = await getPropertiesByIds(relatedIds, false);
   }
 
-  if (resolvedRelated.length < 3) {
-    const fallbackProperties = await getPropertiesFromSupabase(false);
+  if (resolvedRelated.length < RELATED_PROPERTY_COUNT) {
     const existingIds = new Set([
       property.id,
       ...resolvedRelated.map((candidate) => candidate.id),
     ]);
 
-    const fallbackCandidates = fallbackProperties
-      .filter(
-        (candidate) =>
-          !existingIds.has(candidate.id) &&
-          (candidate.type === property.type || candidate.location === property.location)
-      )
-      .slice(0, 3 - resolvedRelated.length);
+    // Was: fetch the entire properties table and filter in JS. Now the
+    // similarity filter and the limit run in the database. Over-fetch slightly
+    // so we can still drop any already-resolved ids.
+    const candidates = await getRelatedProperties(
+      property,
+      RELATED_PROPERTY_COUNT + existingIds.size
+    );
 
-    resolvedRelated = [...resolvedRelated, ...fallbackCandidates];
+    resolvedRelated = [
+      ...resolvedRelated,
+      ...candidates.filter((candidate) => !existingIds.has(candidate.id)),
+    ];
   }
 
-  return resolvedRelated.slice(0, 3);
+  return resolvedRelated.slice(0, RELATED_PROPERTY_COUNT);
 }
 
 export default async function PropertyDetailPage({ params }: PropertyDetailPageProps) {

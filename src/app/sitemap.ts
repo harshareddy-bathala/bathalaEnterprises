@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next';
 import { siteUrl } from '@/lib/seo';
 import { propertyPath, servicePath } from '@/lib/slug';
-import { getPropertiesFromSupabase, getServicesFromSupabase } from '@/lib/supabase-queries';
+import { getPropertyCatalogEntries, getServiceCatalogEntries } from '@/lib/supabase-queries';
 
 /**
  * Date the static (non-CMS) pages last meaningfully changed. Bump it when the
@@ -20,9 +20,10 @@ function toDate(value: string | undefined, fallback: Date): Date {
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = siteUrl;
 
+  // Column-projected reads: the sitemap only needs id/title/slug/timestamps.
   const [properties, services] = await Promise.all([
-    getPropertiesFromSupabase(false),
-    getServicesFromSupabase(),
+    getPropertyCatalogEntries(),
+    getServiceCatalogEntries(),
   ]);
 
   // Freshest listing timestamp doubles as the "last modified" for index pages.
