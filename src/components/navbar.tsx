@@ -92,6 +92,10 @@ export default function Navbar() {
       return;
     }
 
+    // Capture the trigger now; reading the ref inside cleanup would read
+    // whatever it points at when the effect tears down.
+    const trigger = menuButtonRef.current;
+
     const getFocusable = () =>
       Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(
         (element) => element.tabIndex !== -1
@@ -126,7 +130,7 @@ export default function Navbar() {
     return () => {
       document.removeEventListener("keydown", handleTabKey);
       // Return focus to the control that opened the panel.
-      menuButtonRef.current?.focus();
+      trigger?.focus();
     };
   }, [mobileOpen]);
 

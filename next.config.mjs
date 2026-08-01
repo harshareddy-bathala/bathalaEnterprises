@@ -160,13 +160,25 @@ const nextConfig = {
           }
         ]
       },
-      // Stale-while-revalidate for API routes
+      // Only /api/health is safe to cache publicly. This used to be
+      // `/api/:path*`, which put `public, s-maxage=60` on POST /api/contact,
+      // POST /api/chat and POST /api/rum, and would have silently made any
+      // future authenticated GET publicly cacheable by default.
       {
-        source: '/api/:path*',
+        source: '/api/health',
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, s-maxage=60, stale-while-revalidate=300'
+            value: 'public, s-maxage=30, stale-while-revalidate=120'
+          }
+        ]
+      },
+      {
+        source: '/api/:path((?!health).*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-store'
           }
         ]
       },

@@ -25,6 +25,7 @@ import type { PropertyFormSubmitData } from "@/components/admin/property-form";
 import type { Property } from "@/types/tables";
 import { notifySearchEngines } from "@/lib/notify-search-engines";
 import { propertyPath } from "@/lib/slug";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 
 const Modal = dynamic(() => import("@/components/modal"), { loading: () => null });
 const PropertyForm = dynamic(() => import("@/components/admin/property-form").then(mod => ({ default: mod.default })), { loading: () => null });
@@ -98,7 +99,7 @@ export default function PropertiesPage() {
 
   useEffect(() => {
     let isMounted = true;
-    let channel: any = null;
+    let channel: RealtimeChannel | null = null;
 
     const initialize = async () => {
       if (!supabase) {

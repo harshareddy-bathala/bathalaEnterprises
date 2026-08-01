@@ -33,6 +33,13 @@ type SupabaseOperationOptions = {
   isWrite?: boolean;
 };
 
+/*
+ * The generic defaults to `any` so call sites can destructure Supabase's
+ * `{ data, error }` without restating the row type. Narrowing this properly
+ * means threading generated Supabase types through every helper — worthwhile,
+ * but a separate change: `data` is cast (`as Property[]`) rather than validated
+ * at every call site today.
+ */
 async function runSupabaseOperation<T = any>(
   operation: () => PromiseLike<T> | T,
   {

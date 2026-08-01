@@ -63,7 +63,7 @@ function normalizeQueryType(value: unknown): MessageQueryType {
   return "other";
 }
 
-function mapMessage(row: any): AdminMessage {
+function mapMessage(row: Record<string, unknown>): AdminMessage {
   return {
     id: String(row.id),
     name: typeof row.name === "string" ? row.name : "Unknown",

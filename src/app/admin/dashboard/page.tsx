@@ -64,7 +64,7 @@ const STATUS_STYLES: Record<
   },
 };
 
-function normalizeInquiryStatus(value: string | null | undefined): InquiryStatus {
+function normalizeInquiryStatus(value: unknown): InquiryStatus {
   if (value === "new" || value === "in-progress" || value === "resolved") {
     return value;
   }
@@ -72,7 +72,7 @@ function normalizeInquiryStatus(value: string | null | undefined): InquiryStatus
   return "new";
 }
 
-function normalizeQueryType(value: string | null | undefined): "properties" | "services" | "other" {
+function normalizeQueryType(value: unknown): "properties" | "services" | "other" {
   if (value === "properties" || value === "services") {
     return value;
   }
@@ -174,7 +174,7 @@ export default function DashboardPage() {
         throw error;
       }
 
-      return (data || []).map((item: any) => ({
+      return (data || []).map((item: Record<string, unknown>) => ({
         id: String(item.id),
         title: typeof item.title === "string" ? item.title : "Untitled Property",
         type: item.type === "Lease" || item.type === "Sale" ? item.type : "Rent",
@@ -210,7 +210,7 @@ export default function DashboardPage() {
 
       setIsInquiryDataAvailable(true);
 
-      return (data || []).map((item: any) => ({
+      return (data || []).map((item: Record<string, unknown>) => ({
         id: String(item.id),
         name: typeof item.name === "string" ? item.name : "Unknown",
         query_type: normalizeQueryType(item.query_type),

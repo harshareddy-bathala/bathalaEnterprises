@@ -19,6 +19,7 @@ import type { Service } from "@/types/tables";
 import { getServiceIconFromRecord } from "@/lib/service-format";
 import { notifySearchEngines } from "@/lib/notify-search-engines";
 import { servicePath } from "@/lib/slug";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 
 const Modal = dynamic(() => import("@/components/modal"), { loading: () => null });
 const ServiceForm = dynamic(() => import("@/components/admin/service-form"), { loading: () => null });
@@ -100,7 +101,7 @@ export default function ServicesPage() {
 
   useEffect(() => {
     let isMounted = true;
-    let channel: any = null;
+    let channel: RealtimeChannel | null = null;
 
     const initialize = async () => {
       if (!supabase) {

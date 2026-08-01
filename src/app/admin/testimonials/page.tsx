@@ -23,6 +23,7 @@ import {
 import { BulkActionBar, SelectionCell, SortableTh, Table, TableEmptyState, TableSkeleton, Tbody, Td, Th, Thead, Tr } from "@/components/admin/table";
 import AdminLayout, { AdminCard, ErrorAlert } from "@/components/admin/admin-layout";
 import type { Testimonial } from "@/types/tables";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 
 const Modal = dynamic(() => import("@/components/modal"), { loading: () => null });
 const TestimonialForm = dynamic(() => import("@/components/admin/testimonial-form"), { loading: () => null });
@@ -82,7 +83,7 @@ export default function TestimonialsPage() {
 
   useEffect(() => {
     let isMounted = true;
-    let channel: any = null;
+    let channel: RealtimeChannel | null = null;
 
     const initialize = async () => {
       if (!supabase) {

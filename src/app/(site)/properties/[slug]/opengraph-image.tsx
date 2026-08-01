@@ -38,6 +38,8 @@ export default async function PropertyOpengraphImage({ params }: Props) {
         }}
       >
         {photo ? (
+          /* next/og ImageResponse renders its own JSX subset and cannot use next/image. */
+          // eslint-disable-next-line @next/next/no-img-element
           <img
             src={photo}
             alt=""

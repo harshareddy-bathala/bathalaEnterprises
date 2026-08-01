@@ -1,0 +1,41 @@
+# Normalise line endings.
+#
+# Commit 6f16651 rewrote 171 files to CRLF with no .gitattributes in place, so
+# every contributor on macOS or Linux would have re-churned the whole tree on
+# their next commit. Git now stores LF and checks out the platform's native
+# ending, which keeps diffs clean regardless of who is working.
+* text=auto
+
+# Explicit types for files where a wrong guess would corrupt content.
+*.ts     text
+*.tsx    text
+*.js     text
+*.mjs    text
+*.cjs    text
+*.json   text
+*.css    text
+*.md     text
+*.sql    text
+*.yml    text
+*.yaml   text
+*.html   text
+*.svg    text
+
+# Shell scripts must keep LF or they will not execute.
+*.sh     text eol=lf
+
+# Binary — never touch.
+*.png    binary
+*.jpg    binary
+*.jpeg   binary
+*.gif    binary
+*.ico    binary
+*.webp   binary
+*.avif   binary
+*.woff   binary
+*.woff2  binary
+*.pdf    binary
+
+# Keep generated/vendored files out of diffs and language stats.
+package-lock.json  -diff linguist-generated
+public/fonts/*.woff2 binary
