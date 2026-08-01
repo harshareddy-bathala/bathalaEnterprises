@@ -51,13 +51,23 @@ All data access lives in `src/lib/supabase-queries.ts` and `src/lib/settings-que
 - `tailwind.config.ts` maps them: `primary` / `primary-hover` / `gold` = gold accent, `bathala-bg|surface|border|ink|muted|slate|slate-soft`, shadows `brand-soft|medium|strong|gold`. **Use these token classes or `[var(--…)]` arbitrary values — don't hardcode new hex colors.** (Existing code does use raw hex in places; prefer tokens for new code.)
 - Custom breakpoints: `xs 360 / sm 480 / md 768 / lg 1024 / xl 1280 / 2xl 1440` — note `sm` is 480px, not Tailwind's default 640px.
 - Fonts: `font-sans` = Inter (`--font-body`), `font-display` = Playfair Display; display headings often via the `headline-display` utility class.
-- Admin surfaces have their own token module `src/lib/admin-design-tokens.ts` (`SPACING`, `TRANSITION`, `SHADOWS`, `STATUS_COLORS`, `INTERACTION_CLASSES`, `ADMIN_COLORS`) plus `bathala-admin-bg` / `bathala-panel-strong` CSS classes — use these for admin UI instead of the public-site tokens.
+- Admin surfaces get their tokens from arbitrary CSS variables declared on the shell root in `src/components/admin/admin-layout.tsx` (`--admin-bg`, `--admin-surface`, `--admin-border`, `--admin-text`, `--admin-accent`, `--admin-sidebar-w`, `--shadow-touch|medium|deep`), plus the `bathala-admin-bg` / `bathala-panel-strong` CSS classes. Use these for admin UI instead of the public-site tokens. (`src/lib/admin-design-tokens.ts` and `src/components/admin/ui/` were deleted — they had zero importers.)
 - Dark mode is configured (`darkMode: ["class"]`) but not used; `color-scheme: light` is forced.
 
 ## Other conventions
 
-- SEO: every public page renders `<JsonLd data={...} />` with schemas from `@/lib/structured-data` (WebPage + Breadcrumb per page; Organization + LocalBusiness in the site layout). Metadata via the exported `metadata` object; canonical/OG URLs derive from `NEXT_PUBLIC_SITE_URL`.
-- Business contact details come from `src/lib/site-config.ts` (static fallback) and the `site_settings` table (CMS-editable, read via `@/lib/public-site-settings`); prefer the settings-aware path for anything user-visible.
+- SEO: every public page renders `<JsonLd data={...} />` with schemas from `@/lib/structured-data` (WebPage + Breadcrumb per page; Organization + RealEstateAgent in the site layout; ItemList on listing pages; FAQPage on /about and /contact).
+- **Always build page metadata with `buildMetadata()` from `@/lib/seo`** — never hand-write a `metadata` object. Next does not deep-merge `openGraph`/`twitter`, so a page that sets one without the other silently inherits the homepage's social card. `buildMetadata` fills in canonical, Open Graph and Twitter together.
+  - Pass `title` **without** the " | Bathala Enterprises" suffix; the root title template appends it.
+  - `siteUrl` is exported from `@/lib/seo` — import it rather than re-deriving `process.env.NEXT_PUBLIC_SITE_URL`.
+- Public detail URLs are keyword slugs, not UUIDs. Build them with `propertyPath()` / `servicePath()` from `@/lib/slug` (pure, safe in client components) — never string-concatenate an id.
+- Business identity (name, phone, email, address, geo, social/GBP URLs) resolves through `getResolvedPublicSiteSettings()` in `@/lib/public-site-settings` — `site_settings` first, `src/lib/site-config.ts` as a per-field fallback. Use it for anything user-visible, including API routes.
+  - It is `React.cache()`d. **Do not reintroduce `unstable_noStore()` there**: the Footer calls it from the `(site)` layout, so that opts every public page out of static rendering and silently defeats `revalidate = 60`.
+- FAQ copy lives once in `@/lib/faq-content` and feeds FAQPage JSON-LD, the chatbot's grounding context and `/llms.txt`. Edit it there, not in three places.
 - Accessibility is a hard requirement: skip links, `aria-busy` on loading buttons, axe checks in Playwright QA (`tests/qa/accessibility.spec.ts`). Touch targets ≥ 44px (`min-w-[44px]` on icon buttons).
 - Never expose `SUPABASE_SERVICE_ROLE_KEY` in client code — it is server-only (API routes and `scripts/`).
-- When changing the DB schema, update **both** `SUPABASE_UNIVERSAL_SETUP.sql` and `src/types/tables.ts`, and keep query-layer fallbacks for older deployments.
+- When changing the DB schema, update **both** `SUPABASE_UNIVERSAL_SETUP.sql` and `src/types/tables.ts`, and keep query-layer fallbacks for older deployments. For an existing database also add a standalone idempotent `SUPABASE_ADD_*.sql` — the universal setup does `DROP TABLE public.services CASCADE` and must never be run against live data.
+- Reads that a page and its `generateMetadata` both need should be wrapped in `React.cache()`. Supabase calls are not `fetch`, so Next does not dedupe them; without it, every detail render hits the database two or three times for the same row.
+- Icons: after adding a `material-symbols-outlined` glyph anywhere, run `npm run icons:subset` and commit the regenerated `public/fonts/*.woff2`. An icon outside the subset renders as its raw ligature text.
+- Entrance animation: `.reveal-up-priority` above the fold (transform only, paints immediately), `.reveal-up` below it (fades from `opacity: 0`). Never put `.reveal-up` on an LCP candidate.
+- Page width comes from the `.bathala-container` class, not hand-written `mx-auto max-w-[1200px] px-…`.

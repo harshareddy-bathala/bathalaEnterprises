@@ -12,14 +12,15 @@ Supabase (Postgres + RLS + Storage + Realtime)
    │      → HTML rendered on server, revalidated every 60 s
    │
    ├── Client side (admin): /admin/* pages are "use client"; the browser
-   │      Supabase client (localStorage session) does CRUD directly;
-   │      RLS policies (is_admin_user()) are the authorization boundary
+   │      Supabase client (COOKIE session, via @supabase/ssr) does CRUD
+   │      directly. src/proxy.ts verifies the session server-side on every
+   │      /admin/* request; RLS (is_admin_user()) remains the data boundary
    │
    └── API routes: /api/contact writes messages (service-role fallback),
           /api/chat reads properties+services to build Gemini context
 ```
 
-There is one Supabase client module, `src/lib/supabase-client.ts`, created with the **anon key** and `persistSession: true`. It is imported by both server code (ISR pages, chat API) and client code (admin pages, contact form). Server-rendered pages therefore only ever see rows the `anon` role can see (e.g. `properties` with `status='active'`). `/api/contact` builds its own clients: anon + optional service-role (`SUPABASE_SERVICE_ROLE_KEY`) used as a fail-safe writer and settings reader.
+There is one Supabase client module, `src/lib/supabase-client.ts`, created with the **anon key** via `createBrowserClient` from `@supabase/ssr`, so the session lives in **cookies** and `src/proxy.ts` can verify it server-side. It is imported by both server code (ISR pages, chat API) and client code (admin pages, contact form). Server-rendered pages therefore only ever see rows the `anon` role can see (e.g. `properties` with `status='active'`). `/api/contact` builds its own clients: anon + optional service-role (`SUPABASE_SERVICE_ROLE_KEY`) used as a fail-safe writer and settings reader.
 
 ## Data-access layer
 
@@ -29,6 +30,9 @@ All reads/writes funnel through `src/lib/supabase-queries.ts` (properties/servic
 - **Reads degrade, writes throw.** Read helpers return `[]` or `null` on any error (missing table, timeout, RLS) so public pages render with empty sections instead of crashing. Write helpers throw `Error`s with user-displayable messages (`buildMutationError` maps RLS/permission/schema errors to actionable text).
 - Legacy-schema tolerance: queries detect "missing column" errors (`status` on properties, `display_order` on services) and re-query without them, then filter in JS.
 - Featured-testimonials cap (3) is enforced in the query layer (`enforceFeaturedTestimonialsLimit`), not the database.
+- **Request-level deduplication**: the catalog reads and the by-id/by-slug resolvers are wrapped in `React.cache()`. Supabase calls are not `fetch`, so Next does not dedupe them; without this every detail render hit the database twice (page + `generateMetadata`) or three times once the `opengraph-image` route existed.
+- **Column projection**: `getPropertyCatalogEntries()` / `getServiceCatalogEntries()` select only `id,title,slug,created_at,updated_at` for URL generation, so the sitemap does not pull descriptions and `gallery_images` JSON for every row.
+- URL slugs: `properties.slug` / `services.slug` are `<kebab title>-<first 6 hex of id>`. `getPropertyBySlug()` accepts a slug **or** a bare UUID, and falls back to matching on the id suffix so links published before the migration — and slugs left stale by a title edit — still resolve; the page then `permanentRedirect()`s to the canonical slug.
 
 ## Rendering strategy per route
 
@@ -37,7 +41,6 @@ All reads/writes funnel through `src/lib/supabase-queries.ts` (properties/servic
 | `/` | **ISR, revalidate 60 s** | services, active properties, featured testimonials (parallel `Promise.all`) |
 | `/properties` | ISR 60 s | active properties → client component `all-properties-client.tsx` for filtering/pagination |
 | `/properties/[slug]` | SSG + ISR 60 s | `generateStaticParams` pre-renders the catalog; unknown slugs render on demand |
-| `/properties/[id]` | ISR 60 s, params fetched on demand (no `generateStaticParams`) | single property + related |
 | `/services`, `/services/[slug]` | SSG + ISR 60 s | services |
 | `/all-properties`, `/all-services[/:id]` (legacy) | prod 301 → `/properties`, `/services[/:id]` |
 | `/about`, `/privacy`, `/terms` | Static (no data fetch) |
@@ -65,6 +68,25 @@ Home-page sections are `next/dynamic` imports with `ssr: true` and fixed-height 
 3. **Local `/public`**: favicons, PWA icons, OG image.
 
 Both remote hosts are whitelisted in `next.config.mjs` `images.remotePatterns` and in the CSP `img-src`. `next/image` optimization (AVIF/WebP, 1-year cache TTL) is enabled in production only (`unoptimized: true` in dev).
+
+## Machine-readable surface
+
+Generated at request time from live data, not committed as static files:
+
+| Route | Purpose | Revalidate |
+|---|---|---|
+| `/sitemap.xml` | Real `lastmod` from row timestamps; active listings only | per ISR |
+| `/robots.txt` | Names 12 AI crawlers explicitly and allows them; silence is ambiguous and several treat it conservatively | per ISR |
+| `/llms.txt` | Business details, key pages, the full catalogue with prices, and the FAQ — lets an agent understand the site from one fetch | 1 h |
+| `/feed.xml` | RSS 2.0 of listings for aggregators | 1 h |
+| `/.well-known/security.txt` | RFC 9116; a route so `Expires` never goes stale | 1 d |
+| `/opengraph-image` + per-route `opengraph-image.tsx` | Social cards via `next/og`. Property cards render the listing photo, price and beds/sqft | — |
+| `/indexnow-key.txt`, `POST /api/indexnow` | Pushes changed listings to Bing/Copilot. No-op unless `INDEXNOW_KEY` is set | — |
+
+JSON-LD per page: `Organization` + `RealEstateAgent` sitewide, `WebPage` +
+`BreadcrumbList` everywhere, `ItemList` on both listing pages, `FAQPage` on
+`/about` and `/contact`, `RealEstateListing` (with `Offer`, INR) on property
+detail, `Service` on service detail.
 
 ## Observability
 

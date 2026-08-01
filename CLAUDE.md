@@ -30,16 +30,14 @@ src/app/maintenance/   Standalone maintenance page (outside both layouts)
 src/components/        Public-site components (flat, kebab-case files)
 src/components/ui/     Reusable primitives (button, input, card... shadcn-style, cva)
 src/components/admin/  Admin-only components (forms, table, image upload)
-src/components/admin/ui/  Admin primitives (admin-button, admin-card, status-badge)
 src/lib/               Supabase clients/queries, auth, security, monitoring, formatters
 src/types/tables.ts    All DB row TypeScript interfaces
 src/proxy.ts           CSP middleware (production only)
-src/favicon_io/        Icon source assets (also copied into public/)
-public/                Static assets, sw.js (PWA service worker), dev-sw-cleanup.js
+public/                Static assets, fonts/ (subset icon font), sw.js (PWA service worker), dev-sw-cleanup.js
 scripts/predeploy/     Node scripts for env/SSL/email/analytics verification
 tests/qa/              Playwright QA specs (a11y, cross-browser, devices, perf)
 docs/                  ARCHITECTURE.md, DEPLOYMENT.md, deployment-monitoring.md runbook
-.github/workflows/     ci.yml, deploy.yml (Vercel CLI), lighthouse.yml
+.github/workflows/     ci.yml (quality gates + Vercel CLI deploys), lighthouse.yml
 SUPABASE_UNIVERSAL_SETUP.sql       Canonical one-shot schema (source of truth for DB)
 SUPABASE_FIX_MESSAGES_RLS.sql      Remediation script for messages RLS failures
 SUPABASE_ADD_SLUGS.sql             Idempotent migration adding url slugs to properties/services (run on live DBs)
@@ -108,7 +106,7 @@ Agent/machine-facing routes: `/llms.txt` (live catalogue + FAQ, `revalidate 3600
 - **Icons**: Material Symbols is self-hosted and *subset* (`public/fonts/material-symbols-outlined-subset.woff2`, ~12 KB). After adding a new `material-symbols-outlined` icon anywhere, run `npm run icons:subset` and commit the regenerated font — an icon that is not in the subset renders as its raw ligature text (e.g. the literal word "menu"). Do not point the `@font-face` back at a gstatic URL: those are version-pinned and unsubsetted (the previous one was 3.2 MB).
 - Page width comes from the `.bathala-container` class, not hand-written `mx-auto max-w-[1200px] px-…`.
 - Above-the-fold entrance animation uses `.reveal-up-priority` (transform only, paints immediately); everything below the fold uses `.reveal-up` (fades from opacity 0). Never put `.reveal-up` on an LCP candidate.
-- Design tokens are CSS variables in `src/app/globals.css` (`--color-gold-accent`, `--color-slate-primary`, etc.) mapped into Tailwind as `primary`, `bathala-*` colors; admin-specific tokens in `src/lib/admin-design-tokens.ts`.
+- Design tokens are CSS variables in `src/app/globals.css` (`--color-gold-accent`, `--color-slate-primary`, `--header-height`, etc.) mapped into Tailwind as `primary`, `bathala-*` colors. Admin surfaces get their tokens from arbitrary CSS variables declared on the root element in `src/components/admin/admin-layout.tsx` (`--admin-bg`, `--admin-surface`, `--admin-sidebar-w`, …); the old `src/lib/admin-design-tokens.ts` and `src/components/admin/ui/` were deleted as dead code.
 - Errors reported via `reportError()` in `src/lib/monitoring.ts` (webhook sink, not Sentry).
 - Business identity (name, phone, email, address, geo, social/GBP urls) resolves through `getResolvedPublicSiteSettings()` in `src/lib/public-site-settings.ts` — `site_settings` first, `src/lib/site-config.ts` as a per-field fallback. It is `React.cache()`d; do NOT reintroduce `unstable_noStore()` there, as the Footer calls it from the `(site)` layout and that opts every public page out of static rendering.
 - FAQ copy lives once in `src/lib/faq-content.ts` and feeds `FAQPage` JSON-LD, the chatbot's grounding context and `/llms.txt`, so they cannot diverge.

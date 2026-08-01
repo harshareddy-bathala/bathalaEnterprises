@@ -4,7 +4,7 @@ How the app ships to Vercel today, what it needs, and how to stand up a new envi
 
 ## Current deployment model
 
-Deployment is driven by **GitHub Actions using the Vercel CLI** (`.github/workflows/deploy.yml`), not by Vercel's Git integration:
+Deployment is driven by **GitHub Actions using the Vercel CLI** (`.github/workflows/ci.yml`, jobs `preview-deploy` and `production-deploy`), not by Vercel's Git integration. Both jobs `needs: quality-and-build`, so nothing deploys from a failing build:
 
 - **PR → preview**: on pull requests to `main`, the workflow runs `vercel pull --environment=preview`, `vercel build`, `vercel deploy --prebuilt`, and comments the preview URL on the PR.
 - **Push to `main` → production**: `vercel pull --environment=production`, `vercel build --prod`, `vercel deploy --prebuilt --prod`.
