@@ -173,7 +173,7 @@ export default function ServicesGrid({
   return (
     <>
       <section id="services" className="bg-white py-16 sm:py-20 md:py-24 lg:py-28">
-        <div className="mx-auto max-w-[1200px] px-5 sm:px-6 md:px-10">
+        <div className="bathala-container">
           {showHeader && (
             <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
               <div className="max-w-[420px]">

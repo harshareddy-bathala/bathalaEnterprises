@@ -129,7 +129,7 @@ export default function PropertiesCarousel({ properties }: { properties: Propert
 
   return (
     <section id="properties" className="bg-[#f8f6f2] py-16 sm:py-20 md:py-24 lg:py-28">
-      <div className="mx-auto max-w-[1200px] px-5 sm:px-6 md:px-10">
+      <div className="bathala-container">
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div className="max-w-[390px]">
             <div className="flex items-center gap-2">

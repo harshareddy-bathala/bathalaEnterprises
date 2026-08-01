@@ -155,7 +155,7 @@ export default function AllPropertiesClient({ properties }: { properties: Proper
 
   return (
     <div className="bathala-page pb-20 pt-14 sm:pt-16">
-      <div className="mx-auto max-w-[1200px] px-5 md:px-10">
+      <div className="bathala-container">
         <Breadcrumb className="mb-6 md:mb-7" items={[{ label: "Home", href: "/" }, { label: "Properties" }]} />
 
         {(isOffline || usingCachedData) && (

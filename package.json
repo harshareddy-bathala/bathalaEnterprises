@@ -17,7 +17,8 @@
     "check:predeploy": "node scripts/predeploy/predeploy-checklist.mjs",
     "check:contact-email": "node scripts/predeploy/test-contact-email-delivery.mjs",
     "check:analytics": "node scripts/predeploy/verify-analytics-tracking.mjs",
-    "lighthouse:production": "node ./node_modules/@lhci/cli/src/cli.js autorun --config=.lighthouserc.production.json"
+    "lighthouse:production": "node ./node_modules/@lhci/cli/src/cli.js autorun --config=.lighthouserc.production.json",
+    "icons:subset": "node ./scripts/generate-icon-subset.mjs"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

@@ -71,7 +71,7 @@ export default function TestimonialsSection({ testimonials }: TestimonialsSectio
 
   return (
     <section id="testimonials" className="bg-white py-14 sm:py-16 md:py-20">
-      <div className="mx-auto max-w-[1200px] px-5 sm:px-6 md:px-10">
+      <div className="bathala-container">
         <header className="reveal-up mx-auto max-w-[640px] text-center" style={revealDelay(70)}>
           <div className="flex items-center justify-center gap-2">
             <span className="h-[1.5px] w-8 bg-[#b89a5e]" />

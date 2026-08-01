@@ -110,8 +110,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Script id="dev-sw-cleanup" src="/dev-sw-cleanup.js" strategy="beforeInteractive" />
         ) : null}
 
-        {/* Preconnect to critical external domains */}
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        {/* next/font self-hosts Inter and Playfair, and the icon font is now
+            local too, so there are no runtime requests to gstatic. */}
         <link rel="preconnect" href="https://images.unsplash.com" crossOrigin="anonymous" />
         
         {/* Preconnect to Supabase for data fetching */}
@@ -119,10 +119,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <link rel="preconnect" href={process.env.NEXT_PUBLIC_SUPABASE_URL} />
         )}
         
-        {/* Preload Material Symbols font to prevent FOUT (Flash of Unstyled Text) */}
+        {/* Self-hosted, subset Material Symbols (11 KB). See globals.css. */}
         <link
           rel="preload"
-          href="https://fonts.gstatic.com/s/materialsymbolsoutlined/v205/kJEhBvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oFsI.woff2"
+          href="/fonts/material-symbols-outlined-subset.woff2"
           as="font"
           type="font/woff2"
           crossOrigin="anonymous"

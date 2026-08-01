@@ -76,7 +76,7 @@ export default async function Footer() {
 
   return (
     <footer className="bg-[#1a1f2e] safe-area-bottom" role="contentinfo" aria-label="Site footer">
-      <div className="mx-auto max-w-[1200px] px-4 xs:px-5 pt-9 xs:pt-10 md:px-10 md:pt-12">
+      <div className="bathala-container pt-9 xs:pt-10 md:pt-12">
         <div className="grid gap-7 xs:gap-8 sm:grid-cols-2 md:grid-cols-[1.1fr_0.8fr_0.8fr]">
           <div className="max-w-[280px] xs:max-w-[260px]">
             <div className="flex items-center gap-2">

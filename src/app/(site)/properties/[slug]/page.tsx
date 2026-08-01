@@ -177,7 +177,7 @@ export default async function PropertyDetailPage({ params }: PropertyDetailPageP
       <JsonLd data={propertySchema} />
       <JsonLd data={webPageSchema} />
       <JsonLd data={breadcrumbSchema} />
-      <div className="mx-auto max-w-[1200px] px-4 xs:px-5 md:px-10">
+      <div className="bathala-container">
         <Breadcrumb
           className="mb-3"
           items={[

@@ -18,6 +18,7 @@ Real-estate marketing site + admin CMS for Bathala Enterprises (Bangalore, India
 - `npm run lint:ci` (eslint on src), `npm run typecheck`
 - `npm run test:critical-flows` (Playwright critical spec)
 - `npm run check:predeploy` and other `check:*` scripts in `scripts/predeploy/`
+- `npm run icons:subset` — regenerate the self-hosted Material Symbols subset in `public/fonts/` after adding an icon, then commit the `.woff2`
 
 ## Folder structure
 
@@ -104,6 +105,9 @@ Agent/machine-facing routes: `/llms.txt` (live catalogue + FAQ, `revalidate 3600
 
 - All Supabase access goes through `src/lib/supabase-queries.ts` / `settings-queries.ts` wrappers (timeout + retry + friendly error mapping). Reads return `[]`/`null` on failure, never throw; writes throw user-displayable `Error`s.
 - API responses use `apiSuccess`/`apiError` from `src/lib/api-response.ts` with a `requestId`.
+- **Icons**: Material Symbols is self-hosted and *subset* (`public/fonts/material-symbols-outlined-subset.woff2`, ~12 KB). After adding a new `material-symbols-outlined` icon anywhere, run `npm run icons:subset` and commit the regenerated font — an icon that is not in the subset renders as its raw ligature text (e.g. the literal word "menu"). Do not point the `@font-face` back at a gstatic URL: those are version-pinned and unsubsetted (the previous one was 3.2 MB).
+- Page width comes from the `.bathala-container` class, not hand-written `mx-auto max-w-[1200px] px-…`.
+- Above-the-fold entrance animation uses `.reveal-up-priority` (transform only, paints immediately); everything below the fold uses `.reveal-up` (fades from opacity 0). Never put `.reveal-up` on an LCP candidate.
 - Design tokens are CSS variables in `src/app/globals.css` (`--color-gold-accent`, `--color-slate-primary`, etc.) mapped into Tailwind as `primary`, `bathala-*` colors; admin-specific tokens in `src/lib/admin-design-tokens.ts`.
 - Errors reported via `reportError()` in `src/lib/monitoring.ts` (webhook sink, not Sentry).
 - Business identity (name, phone, email, address, geo, social/GBP urls) resolves through `getResolvedPublicSiteSettings()` in `src/lib/public-site-settings.ts` — `site_settings` first, `src/lib/site-config.ts` as a per-field fallback. It is `React.cache()`d; do NOT reintroduce `unstable_noStore()` there, as the Footer calls it from the `(site)` layout and that opts every public page out of static rendering.

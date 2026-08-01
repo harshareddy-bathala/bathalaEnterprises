@@ -33,7 +33,7 @@ const COMMON_ICONS = [
   "engineering",
   "design_services",
   "architecture",
-  "floor_plan",
+  "square_foot",
   "straighten",
   "rule",
   "palette",

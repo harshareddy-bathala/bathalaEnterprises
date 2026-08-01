@@ -64,8 +64,8 @@ export default function AdminLayout({
   const isActive = (href: string) => pathname === href;
 
   return (
-    <div className="h-screen w-full overflow-hidden bg-[var(--admin-bg)] [--admin-bg:#f5f4f2] [--admin-surface:#fcfcfb] [--admin-border:#e5e2db] [--admin-text:#1a1f2e] [--admin-muted:#6b7280] [--admin-text-muted:#6b7280] [--admin-accent:#b89a5e] [--admin-success:#059669] [--admin-warning:#c2410c] [--admin-error:#dc2626] [--admin-info:#2563eb] [--shadow-touch:0_2px_4px_rgba(0,0,0,0.05)] [--shadow-medium:0_8px_16px_rgba(0,0,0,0.08)] [--shadow-deep:0_16px_32px_rgba(0,0,0,0.12)]">
-      <div className="flex h-screen">
+    <div className="h-[100dvh] w-full overflow-hidden bg-[var(--admin-bg)] [--admin-sidebar-w:280px] [--admin-bg:#f5f4f2] [--admin-surface:#fcfcfb] [--admin-border:#e5e2db] [--admin-text:#1a1f2e] [--admin-muted:#6b7280] [--admin-text-muted:#6b7280] [--admin-accent:#b89a5e] [--admin-success:#059669] [--admin-warning:#c2410c] [--admin-error:#dc2626] [--admin-info:#2563eb] [--shadow-touch:0_2px_4px_rgba(0,0,0,0.05)] [--shadow-medium:0_8px_16px_rgba(0,0,0,0.08)] [--shadow-deep:0_16px_32px_rgba(0,0,0,0.12)]">
+      <div className="flex h-[100dvh]">
         {/* Mobile Menu Toggle */}
         <div className="fixed left-0 right-0 top-0 z-50 flex items-center justify-between border-b border-[#e5e2db] bg-[#fcfcfb]/95 p-4 backdrop-blur-sm lg:hidden">
           <div className="flex items-center gap-3">
@@ -90,7 +90,7 @@ export default function AdminLayout({
         {/* Sidebar - Fixed, Non-scrollable structure */}
         <aside
           className={cn(
-            "fixed inset-y-0 left-0 z-40 flex h-screen w-[280px] flex-col border-r border-[var(--admin-border)] bg-[var(--admin-surface)] transition-transform duration-300 ease-out lg:translate-x-0",
+            "fixed inset-y-0 left-0 z-40 flex h-[100dvh] w-[var(--admin-sidebar-w)] flex-col border-r border-[var(--admin-border)] bg-[var(--admin-surface)] transition-transform duration-300 ease-out lg:translate-x-0",
             isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
           )}
         >
@@ -205,7 +205,7 @@ export default function AdminLayout({
         )}
 
         {/* Main Content - Full width with sidebar offset */}
-        <main className="flex h-screen min-w-0 flex-1 flex-col overflow-hidden pt-[72px] lg:ml-[280px] lg:pt-0">
+        <main className="flex h-[100dvh] min-w-0 flex-1 flex-col overflow-hidden pt-[72px] lg:ml-[var(--admin-sidebar-w)] lg:pt-0">
           {/* Page Header */}
           <header className="sticky top-0 z-20 flex flex-col gap-4 border-b border-[var(--admin-border)] bg-white/95 px-4 py-5 backdrop-blur-sm sm:flex-row sm:items-center sm:justify-between sm:px-5 lg:px-6">
             <div>

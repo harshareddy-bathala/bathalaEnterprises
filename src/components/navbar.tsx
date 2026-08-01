@@ -156,7 +156,7 @@ export default function Navbar() {
       />
 
       <header className="sticky top-0 z-50 border-b border-[#ece7de] bg-[rgba(248,246,242,0.95)] backdrop-blur-lg safe-area-top">
-        <div className="mx-auto max-w-[1200px] px-5 md:px-10">
+        <div className="bathala-container">
           <div className="flex h-[var(--header-height)] items-center justify-between gap-5">
             <Link
               href="/"
@@ -249,7 +249,7 @@ export default function Navbar() {
         aria-hidden={!mobileOpen}
       >
         <div className="max-h-[min(calc(100dvh-var(--header-height)),520px)] overflow-y-auto border-b border-[#ece7de] bg-[rgba(248,246,242,0.98)] backdrop-blur-lg">
-          <div className="mx-auto max-w-[1200px] space-y-1 px-5 py-4 md:px-10">
+          <div className="bathala-container space-y-1 py-4">
             {links.map((link, index) => {
               const active = linkIsActive(pathname, link.href);
 

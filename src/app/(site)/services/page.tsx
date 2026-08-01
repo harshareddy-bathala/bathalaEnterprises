@@ -53,7 +53,7 @@ export default async function AllServicesPage() {
       <JsonLd data={webPageSchema} />
       <JsonLd data={breadcrumbSchema} />
       <JsonLd data={itemListSchema} />
-      <div className="mx-auto max-w-[1200px] px-5 md:px-10">
+      <div className="bathala-container">
         <Breadcrumb className="mb-6 md:mb-7" items={[{ label: "Home", href: "/" }, { label: "Services" }]} />
 
         <RevealOnView className="mb-12 text-center" delayMs={70} threshold={0.14}>

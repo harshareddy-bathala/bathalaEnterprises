@@ -9,7 +9,7 @@ export default function Loading() {
   return (
     <div className="bathala-page pb-20 pt-14 sm:pt-16" aria-busy="true" aria-live="polite">
       <span className="sr-only">Loading properties</span>
-      <div className="mx-auto max-w-[1200px] px-5 md:px-10">
+      <div className="bathala-container">
         <PageHeaderSkeleton />
         <div className="mt-10">
           <PropertyGridSkeleton count={6} />

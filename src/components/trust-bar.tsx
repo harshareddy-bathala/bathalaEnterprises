@@ -13,7 +13,7 @@ export default function TrustBar() {
 
   return (
     <section className="border-y border-[#3a4250] bg-[#2c3340]">
-      <div className="mx-auto max-w-[1200px] px-4 py-2.5 md:px-10 md:py-3">
+      <div className="bathala-container py-2.5 md:py-3">
         <div className="overflow-hidden md:hidden" style={revealDelay(50)}>
           <div className="trust-marquee-track flex w-max items-center gap-4 whitespace-nowrap py-0.5">
             {marqueeItems.map((item, index) => {

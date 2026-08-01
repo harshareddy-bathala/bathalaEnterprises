@@ -9,6 +9,7 @@ import {
 } from "@/lib/structured-data";
 import { FAQ_ENTRIES } from "@/lib/faq-content";
 import { cn } from "@/lib/utils";
+import { BLUR_DATA_URL } from "@/lib/image-utils";
 import { buildMetadata, siteUrl as baseUrl } from "@/lib/seo";
 
 export const metadata: Metadata = buildMetadata({
@@ -105,7 +106,7 @@ export default function AboutPage() {
       <JsonLd data={webPageSchema} />
       <JsonLd data={breadcrumbSchema} />
       <JsonLd data={generateFaqSchema(FAQ_ENTRIES)} />
-      <section className="mx-auto max-w-[1200px] px-5 md:px-10">
+      <section className="bathala-container">
         <div className="flex items-center gap-2">
           <span className="h-[1.5px] w-8 rounded-[2px] bg-[#b89a5e]" />
           <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#b89a5e]">About Us</p>
@@ -135,6 +136,8 @@ export default function AboutPage() {
               alt="Bathala team meeting clients"
               fill
               loading="lazy"
+              placeholder="blur"
+              blurDataURL={BLUR_DATA_URL.default}
               sizes="(max-width: 768px) 100vw, 50vw"
               className="object-cover"
             />
@@ -162,7 +165,7 @@ export default function AboutPage() {
       </section>
 
       <section className="mt-20 bg-white py-16 sm:py-20">
-        <div className="mx-auto max-w-[1200px] px-5 md:px-10">
+        <div className="bathala-container">
           <div className="text-center">
             <div className="flex items-center justify-center gap-2">
               <span className="h-[1.5px] w-8 rounded-[2px] bg-[#b89a5e]" />
@@ -231,6 +234,8 @@ export default function AboutPage() {
               alt="Premium interior managed by Bathala"
               fill
               loading="lazy"
+              placeholder="blur"
+              blurDataURL={BLUR_DATA_URL.default}
               sizes="(max-width: 768px) 100vw, 50vw"
               className="object-cover"
             />

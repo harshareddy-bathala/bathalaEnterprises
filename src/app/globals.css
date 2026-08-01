@@ -51,23 +51,25 @@
   --radius-md: 16px;
   --radius-lg: 24px;
 
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-6: 24px;
-  --space-8: 32px;
-  --space-12: 48px;
-  --space-16: 64px;
+  /* rem so the scale tracks the user's browser font size (WCAG 1.4.4).
+     Identical rendered values at the default 16px root. */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
 
-  --text-xs: 12px;
-  --text-sm: 14px;
-  --text-md: 16px;
-  --text-lg: 18px;
-  --text-xl: 20px;
-  --text-2xl: 24px;
-  --text-3xl: 30px;
-  --text-4xl: 36px;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-md: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --text-4xl: 2.25rem;
   --leading-xs: 1.4;
   --leading-sm: 1.5;
   --leading-md: 1.6;
@@ -93,13 +95,27 @@ body {
   min-height: 100vh;
 }
 
-/* Material Symbols Icons - font-display: block prevents FOUT */
+/*
+ * Material Symbols, self-hosted and subset to the icons this site actually uses.
+ *
+ * This previously pointed at a version-pinned gstatic URL (…/v205/kJEhBvYX…).
+ * Two problems: Google rotates those URLs, and when v205 retired every icon on
+ * the site would have vanished with no fallback (including the mobile
+ * hamburger); and it was the FULL unsubsetted font — 3.2 MB downloaded by every
+ * visitor, preloaded, for about 50 glyphs. The subset is 11 KB.
+ *
+ * To regenerate after adding icons, see `npm run icons:subset`.
+ *
+ * font-display: block is deliberate: for an icon font a brief blank is better
+ * than flashing the raw ligature text ("arrow_forward") to the user. The block
+ * period is now negligible because the file is 11 KB, same-origin and preloaded.
+ */
 @font-face {
   font-family: 'Material Symbols Outlined';
   font-style: normal;
   font-weight: 400;
   font-display: block;
-  src: url(https://fonts.gstatic.com/s/materialsymbolsoutlined/v205/kJEhBvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oFsI.woff2) format('woff2');
+  src: url('/fonts/material-symbols-outlined-subset.woff2') format('woff2');
 }
 
 .material-symbols-outlined {
@@ -120,12 +136,6 @@ body {
   font-feature-settings: 'liga';
 }
 
-/* Hide icon text until font loads */
-.material-symbols-outlined:not(:defined),
-.material-symbols-outlined::before {
-  visibility: visible;
-}
-
 h1,
 h2,
 h3,
@@ -140,6 +150,15 @@ h3,
     linear-gradient(180deg, #fbfaf7 0%, var(--color-background) 100%);
   color: var(--color-text-primary);
   overflow-x: clip;
+}
+
+/*
+ * Canonical page container. Replaces `mx-auto max-w-[1200px] px-…` written by
+ * hand in ~15 files with three different padding ramps, which left stacked
+ * sections visibly misaligned at the left edge on tablet.
+ */
+.bathala-container {
+  @apply mx-auto w-full max-w-[1200px] px-5 md:px-10;
 }
 
 .bathala-page {
