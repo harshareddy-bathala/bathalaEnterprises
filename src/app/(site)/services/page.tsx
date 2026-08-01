@@ -6,7 +6,11 @@ import EmptyState from "@/components/ui/empty-state";
 import { JsonLd } from "@/components/json-ld";
 import { cn } from "@/lib/utils";
 import { SERVICE_ICON_THEME } from "@/lib/theme-constants";
-import { generateBreadcrumbSchema, generateWebPageSchema } from "@/lib/structured-data";
+import {
+  generateBreadcrumbSchema,
+  generateItemListSchema,
+  generateWebPageSchema,
+} from "@/lib/structured-data";
 import { getServicesFromSupabase, servicePath } from "@/lib/supabase-queries";
 import { getServiceIconFromRecord, getServiceSummary } from "@/lib/service-format";
 import { buildMetadata, SITE_NAME, siteUrl as baseUrl } from "@/lib/seo";
@@ -34,10 +38,21 @@ export default async function AllServicesPage() {
     { name: "Services", url: `${baseUrl}/services` },
   ]);
 
+  // Lets an agent enumerate the whole service catalogue from this one page.
+  const itemListSchema = generateItemListSchema(
+    "Bathala Enterprises property services",
+    `${baseUrl}/services`,
+    services.map((service) => ({
+      name: service.title,
+      url: `${baseUrl}${servicePath(service)}`,
+    }))
+  );
+
   return (
     <div className="bathala-page pb-20 pt-14 sm:pt-16">
       <JsonLd data={webPageSchema} />
       <JsonLd data={breadcrumbSchema} />
+      <JsonLd data={itemListSchema} />
       <div className="mx-auto max-w-[1200px] px-5 md:px-10">
         <Breadcrumb className="mb-6 md:mb-7" items={[{ label: "Home", href: "/" }, { label: "Services" }]} />
 

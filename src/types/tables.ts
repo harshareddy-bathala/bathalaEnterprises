@@ -64,6 +64,16 @@ export interface SiteSettings {
   phone?: string | null;
   email?: string | null;
   address?: string | null;
+  // Structured address + geo for schema.org. Added by
+  // SUPABASE_ADD_BUSINESS_PROFILE.sql; may be absent on older databases.
+  street_address?: string | null;
+  address_locality?: string | null;
+  address_region?: string | null;
+  postal_code?: string | null;
+  address_country?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  google_business_url?: string | null;
   facebook_url?: string | null;
   twitter_url?: string | null;
   instagram_url?: string | null;

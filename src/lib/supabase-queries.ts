@@ -1087,7 +1087,12 @@ async function enforceFeaturedTestimonialsLimit(excludeId?: string): Promise<voi
   }
 }
 
-export async function getTestimonialsFromSupabase(): Promise<Testimonial[]> {
+/**
+ * All testimonials. React.cache()d because the (site) layout reads them for
+ * Organization.aggregateRating on every page while the home page reads them
+ * again for the testimonials section — one round-trip per render, not two.
+ */
+export const getTestimonialsFromSupabase = cache(async (): Promise<Testimonial[]> => {
   if (!supabase) {
     console.warn("Supabase client not initialized");
     return [];
@@ -1116,7 +1121,7 @@ export async function getTestimonialsFromSupabase(): Promise<Testimonial[]> {
     console.error("Failed to fetch testimonials:", error);
     return [];
   }
-}
+});
 
 export async function getFeaturedTestimonials(): Promise<Testimonial[]> {
   if (!supabase) {

@@ -2,9 +2,14 @@ import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
 import { JsonLd } from "@/components/json-ld";
-import { generateBreadcrumbSchema, generateWebPageSchema } from "@/lib/structured-data";
+import {
+  generateBreadcrumbSchema,
+  generateFaqSchema,
+  generateWebPageSchema,
+} from "@/lib/structured-data";
+import { FAQ_ENTRIES } from "@/lib/faq-content";
 import { cn } from "@/lib/utils";
-import { buildMetadata } from "@/lib/seo";
+import { buildMetadata, siteUrl as baseUrl } from "@/lib/seo";
 
 export const metadata: Metadata = buildMetadata({
   title: "About Us",
@@ -83,8 +88,6 @@ const differentiators = [
   "10+ years of deep Electronic City expertise",
 ] as const;
 
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://bathalaenterprises.com";
-
 export default function AboutPage() {
   const webPageSchema = generateWebPageSchema(
     `${baseUrl}/about`,
@@ -101,6 +104,7 @@ export default function AboutPage() {
     <div className="bathala-page pb-24 pt-14 sm:pt-16">
       <JsonLd data={webPageSchema} />
       <JsonLd data={breadcrumbSchema} />
+      <JsonLd data={generateFaqSchema(FAQ_ENTRIES)} />
       <section className="mx-auto max-w-[1200px] px-5 md:px-10">
         <div className="flex items-center gap-2">
           <span className="h-[1.5px] w-8 rounded-[2px] bg-[#b89a5e]" />

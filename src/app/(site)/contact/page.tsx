@@ -2,7 +2,12 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import ContactForm from "@/components/contact-form";
 import { JsonLd } from "@/components/json-ld";
-import { generateBreadcrumbSchema, generateWebPageSchema } from "@/lib/structured-data";
+import {
+  generateBreadcrumbSchema,
+  generateFaqSchema,
+  generateWebPageSchema,
+} from "@/lib/structured-data";
+import { FAQ_ENTRIES } from "@/lib/faq-content";
 import { getResolvedPublicSiteSettings } from "@/lib/public-site-settings";
 import { buildMetadata, siteUrl as baseUrl } from "@/lib/seo";
 
@@ -71,6 +76,7 @@ export default async function ContactPage({ searchParams }: ContactPageProps) {
     <div className="bathala-page pb-0">
       <JsonLd data={webPageSchema} />
       <JsonLd data={breadcrumbSchema} />
+      <JsonLd data={generateFaqSchema(FAQ_ENTRIES)} />
       <section className="relative overflow-hidden bg-[#1a1f2e]">
         <div className="pointer-events-none absolute -right-16 -top-16 hidden h-[260px] w-[260px] rounded-full bg-[rgba(184,154,94,0.06)] sm:block md:-right-20 md:-top-20 md:h-[320px] md:w-[320px]" />
         <div className="pointer-events-none absolute -left-6 -bottom-20 hidden h-[180px] w-[180px] rounded-full bg-[rgba(184,154,94,0.04)] sm:block md:-left-8 md:bottom-[-90px] md:h-[210px] md:w-[210px]" />

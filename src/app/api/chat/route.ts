@@ -11,6 +11,7 @@ import {
 import { reportError } from "@/lib/monitoring";
 import { checkRateLimit as checkServerRateLimit } from "@/lib/rate-limit";
 import { getPropertiesFromSupabase, getServicesFromSupabase } from "@/lib/supabase-queries";
+import { faqAsText } from "@/lib/faq-content";
 import {
   FALLBACK_PUBLIC_SITE_SETTINGS,
   getResolvedPublicSiteSettings,
@@ -439,6 +440,9 @@ function buildCatalogSummary(
   // Sourced from site_settings (admin-editable) with siteConfig as fallback.
   // These were previously hardcoded placeholders — the assistant was giving
   // users a phone number, email and address that do not exist.
+  //
+  // The FAQ block is the same content rendered as FAQPage JSON-LD on /about and
+  // /contact, so the assistant and the structured data cannot diverge.
   return `
 COMPANY INFORMATION:
 - Name: ${settings.businessName}
@@ -446,6 +450,9 @@ COMPANY INFORMATION:
 - Email: ${settings.email}
 - Location: ${settings.address.full}
 - Operating Hours: ${settings.hours.weekdays}; Sunday: ${settings.hours.sunday}
+
+FREQUENTLY ASKED QUESTIONS (authoritative; prefer these answers verbatim):
+${faqAsText()}
 
 DATABASE SNAPSHOT:
 - Total properties: ${properties.length}

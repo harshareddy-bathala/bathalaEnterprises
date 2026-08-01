@@ -3,8 +3,8 @@
  * Implements Schema.org types for Organization, LocalBusiness, and RealEstateListing
  */
 
-import { siteConfig } from "./site-config";
-import { siteUrl as baseUrl } from "./seo";
+import { SITE_NAME, siteUrl as baseUrl } from "./seo";
+import type { ResolvedPublicSiteSettings } from "./public-site-settings";
 import type { Property } from "./supabase-queries";
 import type { Service } from "./supabase-queries";
 import { propertyPath, servicePath } from "./slug";
@@ -32,6 +32,13 @@ export interface OrganizationSchema {
     availableLanguage: string[];
   };
   sameAs: string[];
+  aggregateRating?: {
+    "@type": "AggregateRating";
+    ratingValue: number;
+    reviewCount: number;
+    bestRating: number;
+    worstRating: number;
+  };
 }
 
 export interface LocalBusinessSchema {
@@ -101,6 +108,34 @@ export interface RealEstateListingSchema {
   numberOfRooms?: number;
 }
 
+export interface ItemListSchema {
+  "@context": "https://schema.org";
+  "@type": "ItemList";
+  "@id": string;
+  name: string;
+  url: string;
+  numberOfItems: number;
+  itemListElement: {
+    "@type": "ListItem";
+    position: number;
+    name: string;
+    url: string;
+  }[];
+}
+
+export interface FaqPageSchema {
+  "@context": "https://schema.org";
+  "@type": "FAQPage";
+  mainEntity: {
+    "@type": "Question";
+    name: string;
+    acceptedAnswer: {
+      "@type": "Answer";
+      text: string;
+    };
+  }[];
+}
+
 export interface BreadcrumbSchema {
   "@context": "https://schema.org";
   "@type": "BreadcrumbList";
@@ -158,60 +193,77 @@ export interface ServiceSchema {
 }
 
 /**
- * Generate Organization schema for the company
+ * Generate Organization schema for the company.
+ *
+ * Takes resolved settings so the emitted identity matches what the admin CMS
+ * shows. `sameAs` was previously always empty because every siteConfig.social
+ * value is null; it now comes from site_settings, including the Google Business
+ * Profile URL.
  */
-export function generateOrganizationSchema(): OrganizationSchema {
-  const socialLinks: string[] = [];
-  if (siteConfig.social.facebook) socialLinks.push(siteConfig.social.facebook);
-  if (siteConfig.social.twitter) socialLinks.push(siteConfig.social.twitter);
-  if (siteConfig.social.instagram) socialLinks.push(siteConfig.social.instagram);
-  if (siteConfig.social.linkedin) socialLinks.push(siteConfig.social.linkedin);
-
-  return {
+export function generateOrganizationSchema(
+  settings: ResolvedPublicSiteSettings,
+  ratings?: { ratingValue: number; reviewCount: number }
+): OrganizationSchema {
+  const schema: OrganizationSchema = {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: siteConfig.businessName,
+    name: settings.businessName,
     url: baseUrl,
     logo: LOGO_URL,
     description: "Premium real estate services, property management, and advisory in Bangalore. Building trust, one property at a time.",
     contactPoint: {
       "@type": "ContactPoint",
-      telephone: siteConfig.contact.phone,
+      telephone: settings.phone,
       contactType: "customer service",
       areaServed: "IN",
       availableLanguage: ["English", "Hindi", "Kannada"]
     },
-    sameAs: socialLinks
+    sameAs: settings.sameAs
   };
+
+  if (ratings && ratings.reviewCount > 0) {
+    schema.aggregateRating = {
+      "@type": "AggregateRating",
+      ratingValue: Number(ratings.ratingValue.toFixed(1)),
+      reviewCount: ratings.reviewCount,
+      bestRating: 5,
+      worstRating: 1,
+    };
+  }
+
+  return schema;
 }
 
 /**
- * Generate LocalBusiness schema for local SEO
+ * Generate LocalBusiness schema for local SEO.
+ * Address and coordinates come from site_settings rather than constants.
  */
-export function generateLocalBusinessSchema(): LocalBusinessSchema {
+export function generateLocalBusinessSchema(
+  settings: ResolvedPublicSiteSettings
+): LocalBusinessSchema {
   return {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     "@id": `${baseUrl}/#business`,
-    name: siteConfig.businessName,
+    name: settings.businessName,
     description: "Premium real estate services including property rental, lease, sale, and property management in Electronic City, Bangalore.",
     url: baseUrl,
     logo: LOGO_URL,
     image: SOCIAL_IMAGE_URL,
-    telephone: siteConfig.contact.phone,
-    email: siteConfig.contact.email,
+    telephone: settings.phone,
+    email: settings.email,
     address: {
       "@type": "PostalAddress",
-      streetAddress: siteConfig.address.street,
-      addressLocality: siteConfig.address.city,
-      addressRegion: siteConfig.address.state,
-      postalCode: siteConfig.address.pincode,
-      addressCountry: "IN"
+      streetAddress: settings.address.streetAddress,
+      addressLocality: settings.address.addressLocality,
+      addressRegion: settings.address.addressRegion,
+      postalCode: settings.address.postalCode,
+      addressCountry: settings.address.addressCountry
     },
     geo: {
       "@type": "GeoCoordinates",
-      latitude: 12.8518078,
-      longitude: 77.6471197
+      latitude: settings.geo.latitude,
+      longitude: settings.geo.longitude
     },
     openingHoursSpecification: [
       {
@@ -269,6 +321,52 @@ export function generatePropertySchema(property: Property): RealEstateListingSch
 }
 
 /**
+ * Generate an ItemList for a listing page.
+ *
+ * This is the highest-value addition for AI agents and answer engines: it lets
+ * a crawler enumerate the entire catalog from a single fetch of the listing
+ * page rather than discovering each detail page individually.
+ */
+export function generateItemListSchema(
+  name: string,
+  listUrl: string,
+  items: { name: string; url: string }[]
+): ItemListSchema {
+  return {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "@id": `${listUrl}#list`,
+    name,
+    url: listUrl,
+    numberOfItems: items.length,
+    itemListElement: items.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: item.name,
+      url: item.url,
+    })),
+  };
+}
+
+/** Generate FAQPage schema from the shared FAQ content. */
+export function generateFaqSchema(
+  entries: readonly { question: string; answer: string }[]
+): FaqPageSchema {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: entries.map((entry) => ({
+      "@type": "Question",
+      name: entry.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: entry.answer,
+      },
+    })),
+  };
+}
+
+/**
  * Generate Breadcrumb schema
  */
 export function generateBreadcrumbSchema(
@@ -305,10 +403,10 @@ export function generateWebPageSchema(
       "@type": "WebSite",
       "@id": `${baseUrl}/#website`,
       url: baseUrl,
-      name: siteConfig.businessName,
+      name: SITE_NAME,
       publisher: {
         "@type": "Organization",
-        name: siteConfig.businessName
+        name: SITE_NAME
       }
     }
   };
@@ -322,7 +420,7 @@ export function generateServiceSchema(service: Service): ServiceSchema {
   const summary =
     service.card_description?.trim() ||
     service.detailed_description?.trim() ||
-    `Explore ${service.title} from ${siteConfig.businessName}.`;
+    `Explore ${service.title} from ${SITE_NAME}.`;
 
   const schema: ServiceSchema = {
     "@context": "https://schema.org",
@@ -332,7 +430,7 @@ export function generateServiceSchema(service: Service): ServiceSchema {
     description: summary,
     provider: {
       "@type": "Organization",
-      name: siteConfig.businessName,
+      name: SITE_NAME,
       url: baseUrl,
     },
     areaServed: {

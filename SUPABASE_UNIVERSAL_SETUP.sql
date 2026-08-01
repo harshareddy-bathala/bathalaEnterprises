@@ -390,6 +390,17 @@ CREATE TABLE IF NOT EXISTS public.site_settings (
   phone VARCHAR(20),
   email VARCHAR(100),
   address TEXT,
+  -- Structured address + geo for schema.org PostalAddress / GeoCoordinates.
+  -- See SUPABASE_ADD_BUSINESS_PROFILE.sql for the migration on existing DBs.
+  street_address TEXT,
+  address_locality TEXT,
+  address_region TEXT,
+  postal_code TEXT,
+  address_country TEXT DEFAULT 'IN',
+  latitude NUMERIC(10, 7),
+  longitude NUMERIC(10, 7),
+  -- Google Business Profile URL; feeds Organization.sameAs.
+  google_business_url TEXT,
   facebook_url VARCHAR(255),
   twitter_url VARCHAR(255),
   instagram_url VARCHAR(255),

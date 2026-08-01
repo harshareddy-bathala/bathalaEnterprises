@@ -1,8 +1,13 @@
 import dynamic from "next/dynamic";
 import { JsonLd } from "@/components/json-ld";
 import type { Metadata } from "next";
-import { generateBreadcrumbSchema, generateWebPageSchema } from "@/lib/structured-data";
+import {
+  generateBreadcrumbSchema,
+  generateItemListSchema,
+  generateWebPageSchema,
+} from "@/lib/structured-data";
 import { getPropertiesFromSupabase } from "@/lib/supabase-queries";
+import { propertyPath } from "@/lib/slug";
 import UniversalLoading from "@/components/ui/universal-loading";
 import { buildMetadata, SITE_NAME, siteUrl as baseUrl } from "@/lib/seo";
 
@@ -43,10 +48,21 @@ export default async function PropertiesPage() {
     { name: "Properties", url: `${baseUrl}/properties` },
   ]);
 
+  // Lets an agent enumerate the whole catalogue from this one page.
+  const itemListSchema = generateItemListSchema(
+    "Bathala Enterprises property listings",
+    `${baseUrl}/properties`,
+    properties.map((property) => ({
+      name: property.title,
+      url: `${baseUrl}${propertyPath(property)}`,
+    }))
+  );
+
   return (
     <>
       <JsonLd data={webPageSchema} />
       <JsonLd data={breadcrumbSchema} />
+      <JsonLd data={itemListSchema} />
       <AllPropertiesClient properties={properties} />
     </>
   );

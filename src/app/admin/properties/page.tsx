@@ -23,6 +23,8 @@ import { BulkActionBar, SelectionCell, SortableTh, Table, TableEmptyState, Table
 import AdminLayout, { AdminCard, ErrorAlert, LoadingState } from "@/components/admin/admin-layout";
 import type { PropertyFormSubmitData } from "@/components/admin/property-form";
 import type { Property } from "@/types/tables";
+import { notifySearchEngines } from "@/lib/notify-search-engines";
+import { propertyPath } from "@/lib/slug";
 
 const Modal = dynamic(() => import("@/components/modal"), { loading: () => null });
 const PropertyForm = dynamic(() => import("@/components/admin/property-form").then(mod => ({ default: mod.default })), { loading: () => null });
@@ -199,6 +201,7 @@ export default function PropertiesPage() {
       });
 
       await loadProperties();
+      notifySearchEngines(["/properties", "/sitemap.xml"]);
       setIsCreateModalOpen(false);
       setError(null);
     } catch (err: unknown) {
@@ -270,6 +273,11 @@ export default function PropertiesPage() {
       });
 
       await loadProperties();
+      notifySearchEngines([
+        "/properties",
+        propertyPath(selectedProperty),
+        "/sitemap.xml",
+      ]);
       setIsEditModalOpen(false);
       setSelectedProperty(null);
       setError(null);

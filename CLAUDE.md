@@ -42,6 +42,7 @@ docs/                  ARCHITECTURE.md, DEPLOYMENT.md, deployment-monitoring.md 
 SUPABASE_UNIVERSAL_SETUP.sql       Canonical one-shot schema (source of truth for DB)
 SUPABASE_FIX_MESSAGES_RLS.sql      Remediation script for messages RLS failures
 SUPABASE_ADD_SLUGS.sql             Idempotent migration adding url slugs to properties/services (run on live DBs)
+SUPABASE_ADD_BUSINESS_PROFILE.sql  Idempotent migration adding structured address/geo/GBP url to site_settings
 ```
 
 ## Supabase schema (from SUPABASE_UNIVERSAL_SETUP.sql — no migration tooling; the SQL files ARE the schema)
@@ -78,6 +79,7 @@ All tables have RLS **enabled**, `id UUID DEFAULT gen_random_uuid()`, `created_a
 Required: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_SITE_URL`
 Server-only: `SUPABASE_SERVICE_ROLE_KEY` (alias `NEXT_SUPABASE_SERVICE_ROLE_KEY`), `GOOGLE_AI_API_KEY`, `RESEND_API_KEY`, `CONTACT_EMAIL`, `SENDER_EMAIL`, `CONTACT_EMAIL_NOTIFICATIONS`, `CHAT_RATE_LIMIT_MAX`, `CHAT_RATE_LIMIT_WINDOW_MS`, `ERROR_TRACKING_WEBHOOK_URL`, `ERROR_TRACKING_WEBHOOK_TOKEN`, `LOG_INGEST_URL`, `LOG_INGEST_TOKEN`, `RUM_INGEST_URL`, `RUM_INGEST_TOKEN`, `SSL_MIN_DAYS`, `GOOGLE_SITE_VERIFICATION`
 Client-exposed optional: `NEXT_PUBLIC_GA_MEASUREMENT_ID`, `NEXT_PUBLIC_ENABLE_RUM`
+SEO optional: `INDEXNOW_KEY`
 CI secrets (GitHub Actions): `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`
 
 ## Routes
@@ -94,6 +96,9 @@ API route handlers:
 - `POST /api/chat` — Gemini chatbot; builds context from cached (5 min) properties+services catalog; rate-limited (default 40/min) by `x-chat-client-id` header/IP
 - `GET /api/health` — pings Supabase auth health, Google AI, Resend; returns ok/degraded/down
 - `POST /api/rum` — receives web-vitals beacons, optionally forwards to `RUM_INGEST_URL`
+- `POST /api/indexnow` — pushes changed listing URLs to Bing/Copilot; no-op unless `INDEXNOW_KEY` is set. Called fire-and-forget from the admin pages via `src/lib/notify-search-engines.ts`
+
+Agent/machine-facing routes: `/llms.txt` (live catalogue + FAQ, `revalidate 3600`), `/feed.xml` (RSS of listings), `/.well-known/security.txt` (RFC 9116), `/indexnow-key.txt`, `/opengraph-image` plus per-route `opengraph-image.tsx` for property and service detail.
 
 ## Conventions to preserve (details in .claude/skills/bathala-conventions/SKILL.md)
 
@@ -101,3 +106,5 @@ API route handlers:
 - API responses use `apiSuccess`/`apiError` from `src/lib/api-response.ts` with a `requestId`.
 - Design tokens are CSS variables in `src/app/globals.css` (`--color-gold-accent`, `--color-slate-primary`, etc.) mapped into Tailwind as `primary`, `bathala-*` colors; admin-specific tokens in `src/lib/admin-design-tokens.ts`.
 - Errors reported via `reportError()` in `src/lib/monitoring.ts` (webhook sink, not Sentry).
+- Business identity (name, phone, email, address, geo, social/GBP urls) resolves through `getResolvedPublicSiteSettings()` in `src/lib/public-site-settings.ts` — `site_settings` first, `src/lib/site-config.ts` as a per-field fallback. It is `React.cache()`d; do NOT reintroduce `unstable_noStore()` there, as the Footer calls it from the `(site)` layout and that opts every public page out of static rendering.
+- FAQ copy lives once in `src/lib/faq-content.ts` and feeds `FAQPage` JSON-LD, the chatbot's grounding context and `/llms.txt`, so they cannot diverge.

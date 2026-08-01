@@ -17,6 +17,8 @@ import { Table, TableEmptyState, TableSkeleton, Tbody, Td, Th, Thead, Tr } from 
 import AdminLayout, { AdminCard, ErrorAlert, InfoBanner } from "@/components/admin/admin-layout";
 import type { Service } from "@/types/tables";
 import { getServiceIconFromRecord } from "@/lib/service-format";
+import { notifySearchEngines } from "@/lib/notify-search-engines";
+import { servicePath } from "@/lib/slug";
 
 const Modal = dynamic(() => import("@/components/modal"), { loading: () => null });
 const ServiceForm = dynamic(() => import("@/components/admin/service-form"), { loading: () => null });
@@ -163,6 +165,7 @@ export default function ServicesPage() {
     try {
       setIsSubmitting(true);
       await createService(data);
+      notifySearchEngines(["/services", "/sitemap.xml"]);
       await loadServices();
       setIsCreateModalOpen(false);
       setError(null);
@@ -181,6 +184,7 @@ export default function ServicesPage() {
     try {
       setIsSubmitting(true);
       await updateService(selectedService.id, data);
+      notifySearchEngines(["/services", servicePath(selectedService), "/sitemap.xml"]);
       await loadServices();
       setIsEditModalOpen(false);
       setSelectedService(null);
