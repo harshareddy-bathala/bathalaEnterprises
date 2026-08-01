@@ -4,7 +4,7 @@ import Image from "next/image";
 import dynamic from "next/dynamic";
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import BackButton from "@/components/ui/back-button";
 import Breadcrumb from "@/components/ui/breadcrumb";
@@ -23,7 +23,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   getPropertiesByIds,
   getPropertiesFromSupabase,
-  getPropertyById,
+  getPropertyBySlug,
+  propertyPath,
 } from "@/lib/supabase-queries";
 import type { Property } from "@/lib/supabase-queries";
 
@@ -46,23 +47,36 @@ const PropertyGalleryLightbox = dynamic(
 const revealDelay = (ms: number) => ({ "--reveal-delay": `${ms}ms` } as CSSProperties);
 
 type PropertyDetailPageProps = {
-  params: Promise<{ id: string }>;
+  params: Promise<{ slug: string }>;
 };
 
 export const revalidate = 60;
 
+/**
+ * Pre-render the catalog at build time instead of leaving every listing as a
+ * cold ISR miss on first hit — which was also a slow first crawl. `revalidate`
+ * above still keeps them fresh, and slugs not in this list are rendered on
+ * demand (dynamicParams defaults to true).
+ */
+export async function generateStaticParams() {
+  const properties = await getPropertiesFromSupabase(false);
+  return properties.map((property) => ({
+    slug: propertyPath(property).replace("/properties/", ""),
+  }));
+}
+
 export async function generateMetadata({
   params,
 }: PropertyDetailPageProps): Promise<Metadata> {
-  const { id } = await params;
-  const property = await getPropertyById(id);
+  const { slug } = await params;
+  const property = await getPropertyBySlug(slug);
 
   if (!property) {
     return buildMetadata({
       title: "Property Not Found",
       description:
         "The requested property listing could not be found. Browse available Bathala Enterprises properties in Bengaluru.",
-      path: "/all-properties",
+      path: "/properties",
       index: false,
     });
   }
@@ -74,7 +88,7 @@ export async function generateMetadata({
   return buildMetadata({
     title: `${property.title} | Properties`,
     description: summary.slice(0, 155),
-    path: `/properties/${property.id}`,
+    path: propertyPath(property),
     type: "article",
   });
 }
@@ -112,11 +126,18 @@ async function resolveRelatedProperties(property: Property): Promise<Property[]>
 }
 
 export default async function PropertyDetailPage({ params }: PropertyDetailPageProps) {
-  const { id } = await params;
-  const property = await getPropertyById(id);
+  const { slug } = await params;
+  const property = await getPropertyBySlug(slug);
 
   if (!property) {
     notFound();
+  }
+
+  // Legacy UUID URLs and slugs stale after a title edit both resolve above;
+  // send them on to the canonical slug so only one URL is ever indexed.
+  const canonicalPath = propertyPath(property);
+  if (canonicalPath !== `/properties/${slug}`) {
+    permanentRedirect(canonicalPath);
   }
 
   const [relatedProperties, mapQuery] = await Promise.all([
@@ -141,14 +162,14 @@ export default async function PropertyDetailPage({ params }: PropertyDetailPageP
 
   const propertySchema = generatePropertySchema(property);
   const webPageSchema = generateWebPageSchema(
-    `${baseUrl}/properties/${property.id}`,
+    `${baseUrl}${canonicalPath}`,
     `${property.title} | Properties | ${SITE_NAME}`,
     property.description || `${property.bedrooms} BHK ${property.type} property in ${property.location}.`
   );
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: "Home", url: baseUrl },
-    { name: "Properties", url: `${baseUrl}/all-properties` },
-    { name: property.title, url: `${baseUrl}/properties/${property.id}` },
+    { name: "Properties", url: `${baseUrl}/properties` },
+    { name: property.title, url: `${baseUrl}${canonicalPath}` },
   ]);
 
   return (
@@ -161,12 +182,12 @@ export default async function PropertyDetailPage({ params }: PropertyDetailPageP
           className="mb-3"
           items={[
             { label: "Home", href: "/" },
-            { label: "Properties", href: "/all-properties" },
+            { label: "Properties", href: "/properties" },
             { label: property.title }
           ]}
         />
 
-        <BackButton className="mb-6 xs:mb-8" fallbackHref="/all-properties" label="Back to Properties" />
+        <BackButton className="mb-6 xs:mb-8" fallbackHref="/properties" label="Back to Properties" />
 
         <div className="reveal-up" style={revealDelay(70)}>
           <div className="relative overflow-hidden rounded-[16px] xs:rounded-[22px] border border-[#e8e4dc] bg-[#ece7de]">
@@ -305,7 +326,7 @@ export default async function PropertyDetailPage({ params }: PropertyDetailPageP
             <div className="mb-4 flex items-center justify-between gap-3">
               <h2 className="font-display text-[28px] xs:text-[34px] font-semibold leading-[1.1] text-[#1a1f2e]">Related Properties</h2>
               <Link
-                href="/all-properties"
+                href="/properties"
                 className="inline-flex min-h-[44px] items-center gap-1 text-[12px] xs:text-[13px] font-medium text-[#b89a5e] transition-colors hover:text-[#9f8450] touch-manipulation"
               >
                 View all
@@ -317,7 +338,7 @@ export default async function PropertyDetailPage({ params }: PropertyDetailPageP
               {relatedProperties.map((relatedProperty, index) => (
                 <Link
                   key={relatedProperty.id}
-                  href={`/properties/${relatedProperty.id}`}
+                  href={propertyPath(relatedProperty)}
                   className="group overflow-hidden rounded-xl border border-[#e8e4dc] bg-white transition-shadow hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)]"
                 >
                   <div className="relative aspect-[4/3] overflow-hidden bg-[#ece7de]">

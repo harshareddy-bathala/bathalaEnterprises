@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { supabase } from "@/lib/supabase-client";
 import {
   isTransientNetworkError,
@@ -6,6 +7,11 @@ import {
   withTimeout,
 } from "@/lib/async-utils";
 import { reportError } from "@/lib/monitoring";
+import { idPrefixFromSlug, isUuid, propertyPath, servicePath, toSlug } from "@/lib/slug";
+
+// Re-exported so route files can import their data helpers and URL builders
+// from one place.
+export { propertyPath, servicePath };
 import type { Property, Service, Testimonial } from "@/types/tables";
 
 // Re-export types for backward compatibility
@@ -487,6 +493,125 @@ export async function getPropertyById(id: string): Promise<Property | null> {
   }
 }
 
+/**
+ * Resolve a property from a public URL segment.
+ *
+ * Accepts either a slug ("3-bhk-villa-electronic-city-3f9a1c") or a bare UUID,
+ * so links published before the slug migration keep resolving. Falls back to
+ * matching computed slugs in JS when the `slug` column is not present yet
+ * (i.e. SUPABASE_ADD_SLUGS.sql has not been run), consistent with the legacy
+ * schema tolerance elsewhere in this module.
+ *
+ * Wrapped in React.cache() because generateMetadata, the page body and the
+ * opengraph-image route each resolve the same row during one render.
+ */
+export const getPropertyBySlug = cache(async (slugOrId: string): Promise<Property | null> => {
+  if (isUuid(slugOrId)) {
+    return getPropertyById(slugOrId);
+  }
+
+  if (!supabase) {
+    console.warn("Supabase client not initialized");
+    return null;
+  }
+
+  try {
+    const { data, error } = await runSupabaseOperation(
+      () => supabase!.from("properties").select("*").eq("slug", slugOrId).maybeSingle(),
+      { context: "getPropertyBySlug", timeoutMs: SUPABASE_READ_TIMEOUT_MS }
+    );
+
+    if (error) {
+      if (isMissingColumnError(toErrorMessage(error), "slug")) {
+        return findPropertyByIdPrefix(slugOrId);
+      }
+      console.error("Error fetching property by slug:", error);
+      return null;
+    }
+
+    // No exact match: the title may have been edited since this URL was
+    // published. The id suffix is stable, so resolve on that and let the page
+    // 301 to the current canonical slug.
+    if (!data) {
+      return findPropertyByIdPrefix(slugOrId);
+    }
+
+    return normalizeProperty(data as Property);
+  } catch (error) {
+    console.error("Failed to fetch property by slug:", error);
+    return null;
+  }
+});
+
+/**
+ * Resolve via the trailing id fragment of a slug. Scans the catalog, so it is
+ * deliberately limited to the miss path — a stale slug or a database without
+ * the `slug` column. The catalog is small (tens of rows) and this keeps old
+ * inbound links alive after a title edit.
+ */
+async function findPropertyByIdPrefix(slug: string): Promise<Property | null> {
+  const idPrefix = idPrefixFromSlug(slug);
+  if (!idPrefix) {
+    return null;
+  }
+
+  const properties = await getPropertiesFromSupabase();
+  const match = properties.find(
+    (property) => property.id.replace(/-/g, "").slice(0, 6).toLowerCase() === idPrefix
+  );
+  return match ?? null;
+}
+
+/** Slug/UUID resolver for services. See getPropertyBySlug for the contract. */
+export const getServiceBySlug = cache(async (slugOrId: string): Promise<Service | null> => {
+  if (isUuid(slugOrId)) {
+    return getServiceById(slugOrId);
+  }
+
+  if (!supabase) {
+    console.warn("Supabase client not initialized");
+    return null;
+  }
+
+  try {
+    const { data, error } = await runSupabaseOperation(
+      () => supabase!.from("services").select("*").eq("slug", slugOrId).maybeSingle(),
+      { context: "getServiceBySlug", timeoutMs: SUPABASE_READ_TIMEOUT_MS }
+    );
+
+    if (error) {
+      if (isMissingColumnError(toErrorMessage(error), "slug")) {
+        return findServiceByIdPrefix(slugOrId);
+      }
+      console.error("Error fetching service by slug:", error);
+      return null;
+    }
+
+    if (!data) {
+      return findServiceByIdPrefix(slugOrId);
+    }
+
+    return data as Service;
+  } catch (error) {
+    console.error("Failed to fetch service by slug:", error);
+    return null;
+  }
+});
+
+/** See findPropertyByIdPrefix. */
+async function findServiceByIdPrefix(slug: string): Promise<Service | null> {
+  const idPrefix = idPrefixFromSlug(slug);
+  if (!idPrefix) {
+    return null;
+  }
+
+  const services = await getServicesFromSupabase();
+  const match = services.find(
+    (service) => service.id.replace(/-/g, "").slice(0, 6).toLowerCase() === idPrefix
+  );
+  return match ?? null;
+}
+
 export async function getPropertiesByIds(
   ids: string[],
   includeInactive = false
@@ -606,12 +731,18 @@ export async function updateProperty(
     throw new Error("Supabase client not initialized");
   }
 
+  // Keep the URL keyword-accurate when the title changes. Old slugs still
+  // resolve via the stable id suffix and 301 to the new one.
+  const withSlug = updates.title
+    ? { ...updates, slug: toSlug(updates.title, id) }
+    : updates;
+
   try {
-    const { data, error } = await runSupabaseOperation(
+    let { data, error } = await runSupabaseOperation(
       () =>
         supabase!
           .from("properties")
-          .update(updates)
+          .update(withSlug)
           .eq("id", id)
           .select()
           .maybeSingle(),
@@ -621,6 +752,27 @@ export async function updateProperty(
         timeoutMs: SUPABASE_WRITE_TIMEOUT_MS,
       }
     );
+
+    // Databases that have not run SUPABASE_ADD_SLUGS.sql have no slug column;
+    // retry without it rather than failing the admin's save.
+    if (error && withSlug !== updates && isMissingColumnError(toErrorMessage(error), "slug")) {
+      const retry = await runSupabaseOperation(
+        () =>
+          supabase!
+            .from("properties")
+            .update(updates)
+            .eq("id", id)
+            .select()
+            .maybeSingle(),
+        {
+          context: "updateProperty:withoutSlug",
+          retries: 1,
+          timeoutMs: SUPABASE_WRITE_TIMEOUT_MS,
+        }
+      );
+      data = retry.data;
+      error = retry.error;
+    }
 
     if (error) {
       throw buildMutationError("update", "property", error);
@@ -753,12 +905,17 @@ export async function updateService(
     throw new Error("Supabase client not initialized");
   }
 
+  // See updateProperty: keep the slug in step with the title.
+  const withSlug = updates.title
+    ? { ...updates, slug: toSlug(updates.title, id) }
+    : updates;
+
   try {
-    const { data, error } = await runSupabaseOperation(
+    let { data, error } = await runSupabaseOperation(
       () =>
         supabase!
           .from("services")
-          .update(updates)
+          .update(withSlug)
           .eq("id", id)
           .select()
           .maybeSingle(),
@@ -768,6 +925,26 @@ export async function updateService(
         timeoutMs: SUPABASE_WRITE_TIMEOUT_MS,
       }
     );
+
+    // See updateProperty: tolerate a database without the slug column.
+    if (error && withSlug !== updates && isMissingColumnError(toErrorMessage(error), "slug")) {
+      const retry = await runSupabaseOperation(
+        () =>
+          supabase!
+            .from("services")
+            .update(updates)
+            .eq("id", id)
+            .select()
+            .maybeSingle(),
+        {
+          context: "updateService:withoutSlug",
+          retries: 1,
+          timeoutMs: SUPABASE_WRITE_TIMEOUT_MS,
+        }
+      );
+      data = retry.data;
+      error = retry.error;
+    }
 
     if (error) {
       throw buildMutationError("update", "service", error);

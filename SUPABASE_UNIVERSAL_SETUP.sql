@@ -89,6 +89,9 @@ WITH CHECK (public.is_admin_user());
 CREATE TABLE IF NOT EXISTS public.properties (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   title VARCHAR(200) NOT NULL,
+  -- Public URL slug: "<slugified title>-<first 6 hex of id>". Populated by the
+  -- app and by the set_properties_slug trigger below. See src/lib/slug.ts.
+  slug TEXT,
   location VARCHAR(200) NOT NULL,
   price NUMERIC(12,2) NOT NULL DEFAULT 0,
   type VARCHAR(20) NOT NULL CHECK (type IN ('Rent', 'Lease', 'Sale')),
@@ -107,6 +110,7 @@ CREATE TABLE IF NOT EXISTS public.properties (
 -- Properties indexes
 CREATE INDEX IF NOT EXISTS idx_properties_status_created_at ON public.properties(status, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_properties_type_status ON public.properties(type, status);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_properties_slug ON public.properties(slug);
 
 -- Properties RLS
 ALTER TABLE public.properties ENABLE ROW LEVEL SECURITY;
@@ -158,6 +162,8 @@ DROP TABLE IF EXISTS public.services CASCADE;
 CREATE TABLE public.services (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   title VARCHAR(100) NOT NULL,
+  -- Public URL slug: "<slugified title>-<first 6 hex of id>". See src/lib/slug.ts.
+  slug TEXT,
   card_description VARCHAR(150),
   detailed_description TEXT,
   icon_name VARCHAR(50) DEFAULT 'home_repair_service',
@@ -171,6 +177,56 @@ CREATE TABLE public.services (
 -- Services indexes
 CREATE INDEX IF NOT EXISTS idx_services_display_order ON public.services(display_order);
 CREATE INDEX IF NOT EXISTS idx_services_featured ON public.services(is_featured) WHERE is_featured = TRUE;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_services_slug ON public.services(slug);
+
+-- -----------------------------------------------------------------------------
+-- Slug generation (shared by properties and services)
+-- -----------------------------------------------------------------------------
+-- Mirrors toSlug() in src/lib/slug.ts. The app sets the slug on create/update;
+-- these triggers cover rows added directly from the Supabase dashboard, which
+-- would otherwise be unreachable by URL.
+CREATE OR REPLACE FUNCTION public.bathala_build_slug(p_title TEXT, p_id UUID)
+RETURNS TEXT
+LANGUAGE sql
+IMMUTABLE
+AS $$
+  SELECT CASE WHEN parts.base = '' THEN parts.suffix
+              ELSE parts.base || '-' || parts.suffix
+         END
+  FROM (
+    SELECT
+      rtrim(
+        left(
+          trim(BOTH '-' FROM regexp_replace(lower(COALESCE(p_title, '')), '[^a-z0-9]+', '-', 'g')),
+          60
+        ),
+        '-'
+      ) AS base,
+      left(replace(p_id::text, '-', ''), 6) AS suffix
+  ) AS parts;
+$$;
+
+CREATE OR REPLACE FUNCTION public.bathala_set_slug()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  IF NEW.slug IS NULL OR NEW.slug = '' THEN
+    NEW.slug := public.bathala_build_slug(NEW.title, NEW.id);
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS set_properties_slug ON public.properties;
+CREATE TRIGGER set_properties_slug
+  BEFORE INSERT OR UPDATE ON public.properties
+  FOR EACH ROW EXECUTE FUNCTION public.bathala_set_slug();
+
+DROP TRIGGER IF EXISTS set_services_slug ON public.services;
+CREATE TRIGGER set_services_slug
+  BEFORE INSERT OR UPDATE ON public.services
+  FOR EACH ROW EXECUTE FUNCTION public.bathala_set_slug();
 
 -- Services RLS
 ALTER TABLE public.services ENABLE ROW LEVEL SECURITY;

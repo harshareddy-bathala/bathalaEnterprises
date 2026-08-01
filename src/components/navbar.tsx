@@ -7,13 +7,13 @@ import { cn } from "@/lib/utils";
 
 const links = [
   { href: "/", label: "Home" },
-  { href: "/all-properties", label: "Properties" },
-  { href: "/all-services", label: "Services" },
+  { href: "/properties", label: "Properties" },
+  { href: "/services", label: "Services" },
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
 ];
 
-const prefetchRoutes = ["/all-properties", "/all-services", "/about", "/contact", "/admin/login"];
+const prefetchRoutes = ["/properties", "/services", "/about", "/contact", "/admin/login"];
 
 function linkIsActive(pathname: string, href: string) {
   if (href.startsWith("/#")) {

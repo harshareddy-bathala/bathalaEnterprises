@@ -1,5 +1,6 @@
 import { MetadataRoute } from 'next';
 import { siteUrl } from '@/lib/seo';
+import { propertyPath, servicePath } from '@/lib/slug';
 import { getPropertiesFromSupabase, getServicesFromSupabase } from '@/lib/supabase-queries';
 
 /**
@@ -55,13 +56,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     },
     {
-      url: `${baseUrl}/all-properties`,
+      url: `${baseUrl}/properties`,
       lastModified: latestPropertyChange,
       changeFrequency: 'daily',
       priority: 0.9,
     },
     {
-      url: `${baseUrl}/all-services`,
+      url: `${baseUrl}/services`,
       lastModified: latestServiceChange,
       changeFrequency: 'weekly',
       priority: 0.85,
@@ -87,14 +88,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   const propertyPages: MetadataRoute.Sitemap = properties.map((property) => ({
-    url: `${baseUrl}/properties/${property.id}`,
+    url: `${baseUrl}${propertyPath(property)}`,
     lastModified: toDate(property.updated_at ?? property.created_at, STATIC_CONTENT_LAST_MODIFIED),
     changeFrequency: 'weekly' as const,
     priority: 0.6,
   }));
 
   const servicePages: MetadataRoute.Sitemap = services.map((service) => ({
-    url: `${baseUrl}/all-services/${service.id}`,
+    url: `${baseUrl}${servicePath(service)}`,
     lastModified: toDate(service.updated_at ?? service.created_at, STATIC_CONTENT_LAST_MODIFIED),
     changeFrequency: 'weekly' as const,
     priority: 0.58,

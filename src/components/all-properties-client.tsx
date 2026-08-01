@@ -12,6 +12,7 @@ import EmptyState from "@/components/ui/empty-state";
 import Pagination from "@/components/ui/pagination";
 import Breadcrumb from "@/components/ui/breadcrumb";
 import type { Property } from "@/lib/supabase-queries";
+import { propertyPath } from "@/lib/slug";
 
 type FilterValue = "all" | "apartments" | "villas" | "rent" | "sale" | "lease";
 const PROPERTIES_CACHE_KEY = "bathala:cache:all-properties:v1";
@@ -215,7 +216,7 @@ export default function AllPropertiesClient({ properties }: { properties: Proper
 
         <div className="grid gap-5 md:grid-cols-2 md:gap-6">
           {visibleProperties.map((property, idx) => (
-            <Link key={property.id} href={`/properties/${property.id}`}>
+            <Link key={property.id} href={propertyPath(property)}>
               <article className="group h-full cursor-pointer overflow-hidden rounded-[20px] border border-[#e8e4dc] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06),0_4px_16px_rgba(0,0,0,0.05)] transition-all duration-300 hover:-translate-y-[2px] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)]">
                 <div className="relative h-[268px] overflow-hidden rounded-t-[18px] bg-[#e8e4dc] sm:h-[304px] md:h-[334px] lg:h-[360px]">
                   <Image
@@ -305,7 +306,7 @@ export default function AllPropertiesClient({ properties }: { properties: Proper
             description="Try switching filters or clear your current selection to view all properties."
             icon="search_off"
             actionLabel="Clear Filters"
-            actionHref="/all-properties"
+            actionHref="/properties"
           />
         )}
 

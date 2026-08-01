@@ -7,6 +7,7 @@ import { siteConfig } from "./site-config";
 import { siteUrl as baseUrl } from "./seo";
 import type { Property } from "./supabase-queries";
 import type { Service } from "./supabase-queries";
+import { propertyPath, servicePath } from "./slug";
 
 /**
  * Schema.org consumers fetch these directly, so they must be stable, real URLs
@@ -237,10 +238,10 @@ export function generatePropertySchema(property: Property): RealEstateListingSch
   return {
     "@context": "https://schema.org",
     "@type": "RealEstateListing",
-    "@id": `${baseUrl}/properties/${property.id}`,
+    "@id": `${baseUrl}${propertyPath(property)}`,
     name: property.title,
     description: property.description || `${property.bedrooms} BHK ${property.type} property in ${property.location}`,
-    url: `${baseUrl}/properties/${property.id}`,
+    url: `${baseUrl}${propertyPath(property)}`,
     image: [property.image_url, property.thumbnail_url].filter(Boolean) as string[],
     // Must be the real listing date. Stamping `new Date()` told Google every
     // property was posted at render time, on every render.
@@ -317,7 +318,7 @@ export function generateWebPageSchema(
  * Generate Service schema for a service detail page.
  */
 export function generateServiceSchema(service: Service): ServiceSchema {
-  const url = `${baseUrl}/all-services/${service.id}`;
+  const url = `${baseUrl}${servicePath(service)}`;
   const summary =
     service.card_description?.trim() ||
     service.detailed_description?.trim() ||

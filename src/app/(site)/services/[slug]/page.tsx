@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { JsonLd } from "@/components/json-ld";
 import { cn } from "@/lib/utils";
@@ -10,28 +10,40 @@ import {
   generateServiceSchema,
   generateWebPageSchema,
 } from "@/lib/structured-data";
-import { getServiceById, getServicesFromSupabase } from "@/lib/supabase-queries";
+import {
+  getServiceBySlug,
+  getServicesFromSupabase,
+  servicePath,
+} from "@/lib/supabase-queries";
 import { getServiceIconFromRecord, getServiceSummary } from "@/lib/service-format";
 import { buildMetadata, SITE_NAME, siteUrl as baseUrl } from "@/lib/seo";
 
 export const revalidate = 60;
 
 type ServiceDetailPageProps = {
-  params: Promise<{ id: string }>;
+  params: Promise<{ slug: string }>;
 };
+
+/** Pre-render the service catalog at build time; see the properties route. */
+export async function generateStaticParams() {
+  const services = await getServicesFromSupabase();
+  return services.map((service) => ({
+    slug: servicePath(service).replace("/services/", ""),
+  }));
+}
 
 export async function generateMetadata({
   params,
 }: ServiceDetailPageProps): Promise<Metadata> {
-  const { id } = await params;
-  const service = await getServiceById(id);
+  const { slug } = await params;
+  const service = await getServiceBySlug(slug);
 
   if (!service) {
     return buildMetadata({
       title: "Service Not Found",
       description:
         "The requested service could not be found. Explore all available services from Bathala Enterprises.",
-      path: "/all-services",
+      path: "/services",
       index: false,
     });
   }
@@ -43,21 +55,28 @@ export async function generateMetadata({
       "Explore premium property services from Bathala Enterprises.",
       155
     ),
-    path: `/all-services/${service.id}`,
+    path: servicePath(service),
     type: "article",
   });
 }
 
 export default async function ServiceDetailPage({ params }: ServiceDetailPageProps) {
-  const { id } = await params;
+  const { slug } = await params;
 
   const [service, allServices] = await Promise.all([
-    getServiceById(id),
+    getServiceBySlug(slug),
     getServicesFromSupabase(),
   ]);
 
   if (!service) {
     notFound();
+  }
+
+  // Legacy UUID URLs and slugs stale after a title edit both resolve above;
+  // send them on to the canonical slug so only one URL is ever indexed.
+  const canonicalPath = servicePath(service);
+  if (canonicalPath !== `/services/${slug}`) {
+    permanentRedirect(canonicalPath);
   }
 
   const icon = getServiceIconFromRecord(service);
@@ -84,14 +103,14 @@ export default async function ServiceDetailPage({ params }: ServiceDetailPagePro
 
   const serviceSchema = generateServiceSchema(service);
   const webPageSchema = generateWebPageSchema(
-    `${baseUrl}/all-services/${service.id}`,
+    `${baseUrl}${canonicalPath}`,
     `${service.title} | Services | ${SITE_NAME}`,
     summary
   );
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: "Home", url: baseUrl },
-    { name: "All Services", url: `${baseUrl}/all-services` },
-    { name: service.title, url: `${baseUrl}/all-services/${service.id}` },
+    { name: "Services", url: `${baseUrl}/services` },
+    { name: service.title, url: `${baseUrl}${canonicalPath}` },
   ]);
 
   return (
@@ -101,7 +120,7 @@ export default async function ServiceDetailPage({ params }: ServiceDetailPagePro
       <JsonLd data={breadcrumbSchema} />
       <div className="mx-auto max-w-[1100px] px-5 md:px-10">
         <Link
-          href="/all-services"
+          href="/services"
           className="inline-flex items-center gap-1 text-[14px] font-medium text-[#b89a5e] transition-colors hover:text-[#9f8450]"
         >
           <span className="material-symbols-outlined text-[16px]">arrow_back</span>
@@ -139,7 +158,7 @@ export default async function ServiceDetailPage({ params }: ServiceDetailPagePro
               <Link href={contactUrl}>Request This Service</Link>
             </Button>
             <Button asChild variant="outline" size="lg">
-              <Link href="/all-services">Browse All Services</Link>
+              <Link href="/services">Browse All Services</Link>
             </Button>
           </div>
         </section>
@@ -238,7 +257,7 @@ export default async function ServiceDetailPage({ params }: ServiceDetailPagePro
                     </p>
 
                     <Link
-                      href={`/all-services/${item.id}`}
+                      href={servicePath(item)}
                       className="mt-4 inline-flex items-center gap-1 text-[13px] font-medium text-[#b89a5e] transition-colors hover:text-[#9f8450]"
                     >
                       View Details

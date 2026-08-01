@@ -12,6 +12,7 @@ export interface Admin {
 export interface Service {
   id: string;
   title: string;
+  slug?: string;                   // Public URL slug; see src/lib/slug.ts
   card_description?: string;       // Short one-liner for cards (max 180 chars)
   detailed_description?: string;   // Full description for modal
   icon_name?: string;
@@ -27,6 +28,7 @@ export interface Service {
 export interface Property {
   id: string;
   title: string;
+  slug?: string;                   // Public URL slug; see src/lib/slug.ts
   location: string;
   price: number;
   type: PropertyType;

@@ -1,17 +1,17 @@
 import { ImageResponse } from "next/og";
 import { SITE_NAME } from "@/lib/seo";
-import { getServiceById } from "@/lib/supabase-queries";
+import { getServiceBySlug } from "@/lib/supabase-queries";
 import { getServiceSummary } from "@/lib/service-format";
 
 export const alt = `Service offered by ${SITE_NAME}`;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-type Props = { params: Promise<{ id: string }> };
+type Props = { params: Promise<{ slug: string }> };
 
 export default async function ServiceOpengraphImage({ params }: Props) {
-  const { id } = await params;
-  const service = await getServiceById(id);
+  const { slug } = await params;
+  const service = await getServiceBySlug(slug);
 
   const title = service?.title ?? "Property Services";
   const summary = service

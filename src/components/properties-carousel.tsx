@@ -12,6 +12,7 @@ import { PROPERTY_FILTER_STATE_CLASSES, PROPERTY_TYPE_BADGE_CLASSES } from "@/li
 import { BLUR_DATA_URL, FALLBACK_IMAGES, getLoadingStrategy } from "@/lib/image-utils";
 import type { PropertyType } from "@/types/tables";
 import type { Property } from "@/lib/supabase-queries";
+import { propertyPath } from "@/lib/slug";
 
 const PROPERTIES_HOME_CACHE_KEY = "bathala:cache:home-properties:v1";
 
@@ -146,7 +147,7 @@ export default function PropertiesCarousel({ properties }: { properties: Propert
           </div>
 
           <Link
-            href="/all-properties"
+            href="/properties"
             className="inline-flex items-center gap-1 self-start text-[14px] font-medium text-[#b89a5e] transition-colors hover:text-[#9f8450] md:self-auto touch-manipulation"
           >
             View All Properties
@@ -208,7 +209,7 @@ export default function PropertiesCarousel({ properties }: { properties: Propert
           >
             {displayedProperties.map((property, idx) => (
               <RevealOnView key={property.id} delayMs={idx * 55} threshold={0.22}>
-                <Link href={`/properties/${property.id}`} className="block touch-manipulation">
+                <Link href={propertyPath(property)} className="block touch-manipulation">
                   <article className="group h-full cursor-pointer overflow-hidden rounded-[20px] border border-[#e8e4dc] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06),0_4px_16px_rgba(0,0,0,0.05)] transition-all duration-300 hover:-translate-y-[2px] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] active:scale-[0.99]">
                     <div className="relative h-[240px] overflow-hidden rounded-t-[18px] bg-[#e8e4dc] xs:h-[268px] sm:h-[304px] md:h-[334px] lg:h-[360px]">
                       <Image
@@ -312,7 +313,7 @@ export default function PropertiesCarousel({ properties }: { properties: Propert
         {hasMore && (
           <RevealOnView className="mt-8 flex justify-center" threshold={0.1}>
             <Button asChild variant="outline" size="lg">
-              <Link href="/all-properties">Browse Full Portfolio</Link>
+              <Link href="/properties">Browse Full Portfolio</Link>
             </Button>
           </RevealOnView>
         )}

@@ -96,7 +96,7 @@ export default function Hero() {
 
           <div className="reveal-up mt-6 xs:mt-8 flex flex-col gap-3 sm:mt-9 sm:flex-row sm:flex-wrap" style={revealDelay(220)}>
             <Link
-              href="/all-properties"
+              href="/properties"
               className="inline-flex h-[47px] min-h-[44px] w-full items-center justify-center gap-2 rounded-[8px] bg-[#b89a5e] px-7 text-[14px] font-semibold text-[#2c3340] transition-colors hover:bg-[#a88c52] touch-manipulation sm:w-auto"
             >
               Explore Properties
@@ -104,7 +104,7 @@ export default function Hero() {
             </Link>
 
             <Link
-              href="/all-services"
+              href="/services"
               className="inline-flex h-[49px] min-h-[44px] w-full items-center justify-center rounded-[8px] border border-[#2c3340] px-7 text-[14px] font-medium text-[#2c3340] transition-colors hover:bg-[#efebe4] touch-manipulation sm:w-auto"
             >
               Our Services

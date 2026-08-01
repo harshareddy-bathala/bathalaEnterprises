@@ -34,7 +34,7 @@ export default function CtaSection() {
               </Link>
 
               <Link
-                href="/all-properties"
+                href="/properties"
                 className="inline-flex h-[51px] w-full items-center justify-center rounded-[10px] border border-[rgba(255,255,255,0.2)] px-7 text-[14px] font-medium text-[rgba(255,255,255,0.8)] transition-colors hover:bg-[rgba(255,255,255,0.06)] sm:w-auto"
               >
                 Browse Properties

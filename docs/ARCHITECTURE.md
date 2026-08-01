@@ -35,11 +35,11 @@ All reads/writes funnel through `src/lib/supabase-queries.ts` (properties/servic
 | Route | Strategy | Data |
 |---|---|---|
 | `/` | **ISR, revalidate 60 s** | services, active properties, featured testimonials (parallel `Promise.all`) |
-| `/all-properties` | ISR 60 s | active properties → client component `all-properties-client.tsx` for filtering/pagination |
-| `/properties` (legacy) | ISR 60 s | same; prod redirect → `/all-properties` |
+| `/properties` | ISR 60 s | active properties → client component `all-properties-client.tsx` for filtering/pagination |
+| `/properties/[slug]` | SSG + ISR 60 s | `generateStaticParams` pre-renders the catalog; unknown slugs render on demand |
 | `/properties/[id]` | ISR 60 s, params fetched on demand (no `generateStaticParams`) | single property + related |
-| `/all-services`, `/all-services/[id]` | ISR 60 s | services |
-| `/services`, `/services/[id]` (legacy) | prod redirect → `/all-services` |
+| `/services`, `/services/[slug]` | SSG + ISR 60 s | services |
+| `/all-properties`, `/all-services[/:id]` (legacy) | prod 301 → `/properties`, `/services[/:id]` |
 | `/about`, `/privacy`, `/terms` | Static (no data fetch) |
 | `/contact` | Static shell; form is a client component POSTing to `/api/contact` |
 | `/offline`, `/maintenance` | Static |

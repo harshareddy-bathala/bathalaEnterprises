@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { SERVICE_ICON_THEME } from "@/lib/theme-constants";
 import { getServiceIconFromRecord, getServiceSummary } from "@/lib/service-format";
 import type { Service } from "@/lib/supabase-queries";
+import { servicePath } from "@/lib/slug";
 
 const SERVICES_HOME_CACHE_KEY = "bathala:cache:home-services:v1";
 
@@ -74,7 +75,7 @@ function ServicesGridCard({ service, idx, onQuickPreview }: ServicesGridCardProp
         </button>
 
         <Link
-          href={`/all-services/${service.id}`}
+          href={servicePath(service)}
           className="group/details inline-flex min-h-[44px] touch-manipulation items-center gap-1 whitespace-nowrap text-[13px] font-medium text-[#b89a5e] hover:text-[#9f8450]"
         >
           View Details
@@ -191,7 +192,7 @@ export default function ServicesGrid({
 
               {showViewAll ? (
                 <Link
-                  href="/all-services"
+                  href="/services"
                   className="inline-flex items-center gap-1 self-start text-[14px] font-medium text-[#b89a5e] transition-colors hover:text-[#9f8450] md:mb-1 md:self-auto"
                 >
                   View All Services

@@ -27,7 +27,7 @@ export default function PropertyError({
           Try Again
         </Button>
         <Button variant="secondary" asChild>
-          <Link href="/all-properties" className="gap-2">
+          <Link href="/properties" className="gap-2">
             <span className="material-symbols-outlined text-base" aria-hidden="true">apartment</span>
             View All Properties
           </Link>

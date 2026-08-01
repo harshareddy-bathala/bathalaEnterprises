@@ -41,6 +41,7 @@ docs/                  ARCHITECTURE.md, DEPLOYMENT.md, deployment-monitoring.md 
 .github/workflows/     ci.yml, deploy.yml (Vercel CLI), lighthouse.yml
 SUPABASE_UNIVERSAL_SETUP.sql       Canonical one-shot schema (source of truth for DB)
 SUPABASE_FIX_MESSAGES_RLS.sql      Remediation script for messages RLS failures
+SUPABASE_ADD_SLUGS.sql             Idempotent migration adding url slugs to properties/services (run on live DBs)
 ```
 
 ## Supabase schema (from SUPABASE_UNIVERSAL_SETUP.sql — no migration tooling; the SQL files ARE the schema)
@@ -60,6 +61,7 @@ All tables have RLS **enabled**, `id UUID DEFAULT gen_random_uuid()`, `created_a
 - **Storage buckets** (public): `property-images`, `testimonial-avatars`. Public read; admin-only insert/delete via `is_admin_user()`.
 - **Realtime** publication includes all app tables (admin dashboard subscribes for live updates).
 - **Schema drift warning**: `src/types/tables.ts` includes `Property.amenities`, `Property.related_property_ids`, and `Service.is_active` which are NOT in the setup SQL. Query code defensively falls back when columns are missing (`isMissingColumnError`). Both SQL scripts now gate admin access on `is_admin_user()` (the JWT `user_metadata.is_admin` check was removed from the fix script — it was privilege-escalatable since users can edit their own user_metadata).
+- **URL slugs**: `properties.slug` and `services.slug` are `TEXT UNIQUE`, format `<slugified title>-<first 6 hex of id>`. Written by the app on update and by the `set_*_slug` BEFORE-INSERT/UPDATE triggers. On an existing database run `SUPABASE_ADD_SLUGS.sql` — never the universal setup, which drops `services`. Query code tolerates the column being absent.
 - Setup SQL **drops and recreates `services`** (`DROP TABLE ... CASCADE`) — do not re-run it blindly on a live DB.
 
 ## Authentication
@@ -81,7 +83,9 @@ CI secrets (GitHub Actions): `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID
 ## Routes
 
 Public `(site)` group (all data pages are ISR, `revalidate = 60`):
-`/` home, `/all-properties`, `/properties` (legacy grid; prod redirects `/properties` → `/all-properties`), `/properties/[id]` detail, `/all-services`, `/all-services/[id]`, `/services` + `/services/[id]` (legacy; prod redirects to `/all-services`), `/about`, `/contact`, `/privacy`, `/terms`, `/offline` (PWA fallback). Also `/maintenance`, `robots.ts`, `sitemap.ts`.
+`/` home, `/properties` listing, `/properties/[slug]` detail, `/services` listing, `/services/[slug]` detail, `/about`, `/contact`, `/privacy`, `/terms`, `/offline` (PWA fallback). Also `/maintenance`, `robots.ts`, `sitemap.ts`.
+
+Detail URLs are keyword slugs (`3-bhk-villa-electronic-city-3f9a1c`), not UUIDs — see `src/lib/slug.ts`. Legacy paths 301 in production: `/all-properties` → `/properties`, `/all-services[/:id]` → `/services[/:id]`, `/home` → `/`. A UUID or a slug that is stale after a title edit still resolves and `permanentRedirect()`s to the canonical slug from inside the page.
 
 Admin (all `"use client"`, CSR, no ISR): `/admin/login`, `/admin/dashboard`, `/admin/properties`, `/admin/services`, `/admin/testimonials`, `/admin/messages`, `/admin/settings`. Pages wrap content in `AdminLayout` (`src/components/admin/admin-layout.tsx`) which renders sidebar nav + handles sign-out. Admin CRUD calls the shared query helpers in `src/lib/supabase-queries.ts` directly from the browser (RLS enforces permissions).
 

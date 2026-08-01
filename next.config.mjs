@@ -189,6 +189,10 @@ const nextConfig = {
       return [];
     }
 
+    // Canonical structure is /properties[/<slug>] and /services[/<slug>].
+    // The old "all-" listing paths and the UUID detail URLs both 301 here;
+    // slug resolution and the UUID -> slug hop happen in the page itself,
+    // since this config cannot know the id -> slug mapping.
     const redirects = [
       {
         source: '/home',
@@ -196,18 +200,18 @@ const nextConfig = {
         permanent: true,
       },
       {
-        source: '/services/:id',
-        destination: '/all-services/:id',
+        source: '/all-properties',
+        destination: '/properties',
         permanent: true,
       },
       {
-        source: '/services',
-        destination: '/all-services',
+        source: '/all-services/:id',
+        destination: '/services/:id',
         permanent: true,
       },
       {
-        source: '/properties',
-        destination: '/all-properties',
+        source: '/all-services',
+        destination: '/services',
         permanent: true,
       },
     ];

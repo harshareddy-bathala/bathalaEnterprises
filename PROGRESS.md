@@ -35,11 +35,11 @@
 
 ### Public (site)
 - [ ] `/` — home
-- [ ] `/all-properties` — property grid + filter bar (high risk on mobile)
-- [ ] `/properties` — legacy grid (prod redirects → /all-properties; verify redirect)
+- [ ] `/properties` — property grid + filter bar (high risk on mobile)
+- [ ] `/properties/[slug]` — detail page (verify legacy UUID URLs 301 to the slug)
 - [ ] `/properties/[id]` — property detail
-- [ ] `/all-services`
-- [ ] `/all-services/[id]`
+- [ ] `/services`
+- [ ] `/services/[slug]`
 - [ ] `/services` — legacy (redirects; verify)
 - [ ] `/services/[id]` — legacy (redirects; verify)
 - [ ] `/about`

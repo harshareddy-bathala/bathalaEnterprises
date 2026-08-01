@@ -5,8 +5,8 @@ type SocialPlatform = "facebook" | "instagram" | "linkedin" | "twitter";
 
 const companyLinks = [
   { href: "/about", label: "About Us" },
-  { href: "/all-services", label: "Our Services" },
-  { href: "/all-properties", label: "Properties" },
+  { href: "/services", label: "Our Services" },
+  { href: "/properties", label: "Properties" },
   { href: "/contact", label: "Contact" },
 ];
 

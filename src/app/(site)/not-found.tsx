@@ -17,7 +17,7 @@ export default function SiteNotFound() {
 					<Link href="/">Go Home</Link>
 				</Button>
 				<Button variant="secondary" asChild size="lg">
-					<Link href="/all-properties">View Properties</Link>
+					<Link href="/properties">View Properties</Link>
 				</Button>
 			</div>
 		</div>

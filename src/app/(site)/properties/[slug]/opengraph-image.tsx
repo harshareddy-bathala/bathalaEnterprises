@@ -2,17 +2,17 @@ import { ImageResponse } from "next/og";
 import { SITE_NAME } from "@/lib/seo";
 import { formatNumber } from "@/lib/format";
 import { displayPrice, prettyType, priceSuffix } from "@/lib/property-format";
-import { getPropertyById } from "@/lib/supabase-queries";
+import { getPropertyBySlug } from "@/lib/supabase-queries";
 
 export const alt = `Property listing at ${SITE_NAME}`;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-type Props = { params: Promise<{ id: string }> };
+type Props = { params: Promise<{ slug: string }> };
 
 export default async function PropertyOpengraphImage({ params }: Props) {
-  const { id } = await params;
-  const property = await getPropertyById(id);
+  const { slug } = await params;
+  const property = await getPropertyBySlug(slug);
 
   const title = property?.title ?? "Property Listing";
   const location = property?.location ?? "Electronic City, Bengaluru";

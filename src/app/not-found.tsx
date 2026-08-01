@@ -14,7 +14,7 @@ export default function NotFound() {
         Let&apos;s get you back on track.
       </p>
 
-      <form action="/all-properties" className="mb-6 flex w-full max-w-md items-center gap-2">
+      <form action="/properties" className="mb-6 flex w-full max-w-md items-center gap-2">
         <input
           type="search"
           name="q"
@@ -34,7 +34,7 @@ export default function NotFound() {
           </Link>
         </Button>
         <Button variant="secondary" asChild size="lg">
-          <Link href="/all-properties" className="gap-2">
+          <Link href="/properties" className="gap-2">
             <span className="material-symbols-outlined text-base">arrow_back</span>
             View Properties
           </Link>
@@ -42,7 +42,7 @@ export default function NotFound() {
       </div>
 
       <div className="mt-6 flex flex-wrap justify-center gap-3 text-sm text-[var(--color-text-muted)]">
-        <Link href="/all-services" className="rounded-full border border-[var(--color-border)] px-3 py-1.5 hover:text-[var(--color-slate-primary)]">Services</Link>
+        <Link href="/services" className="rounded-full border border-[var(--color-border)] px-3 py-1.5 hover:text-[var(--color-slate-primary)]">Services</Link>
         <Link href="/about" className="rounded-full border border-[var(--color-border)] px-3 py-1.5 hover:text-[var(--color-slate-primary)]">About</Link>
         <Link href="/contact" className="rounded-full border border-[var(--color-border)] px-3 py-1.5 hover:text-[var(--color-slate-primary)]">Contact</Link>
       </div>
